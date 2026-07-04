@@ -1,0 +1,64 @@
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  maxInstances: 10
+  minInstances: 0
+  concurrency: 80
+
+env:
+  - variable: FIREBASE_PROJECT_ID
+    secret: FIREBASE_PROJECT_ID
+
+  - variable: FIREBASE_PRIVATE_KEY_ID
+    secret: FIREBASE_PRIVATE_KEY_ID
+
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: FIREBASE_PRIVATE_KEY
+
+  - variable: FIREBASE_CLIENT_EMAIL
+    secret: FIREBASE_CLIENT_EMAIL
+
+  - variable: FIREBASE_CLIENT_ID
+    secret: FIREBASE_CLIENT_ID
+
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyA9isE7agOkeY9G_kEQAyLZrzWV4jf3d1Y
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: asian-groceries-c1b58.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: asian-groceries-c1b58
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: asian-groceries-c1b58.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "849583671027"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:849583671027:web:542148c8e5157fa5169986"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-KEN6TXDW2Q
+    availability:
+      - BUILD
+      - RUNTIME
