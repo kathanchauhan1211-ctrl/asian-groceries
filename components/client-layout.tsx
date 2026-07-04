@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { usePathname } from 'next/navigation'
 import { CartProvider } from '@/lib/cart-context'
 import { AuthProvider } from '@/lib/auth-context'
@@ -40,7 +41,9 @@ function AuthAwareLayout({ children }: { children: React.ReactNode }) {
         />
       </div>
 
-      <SiteHeader />
+      <Suspense>
+        <SiteHeader />
+      </Suspense>
       <main className="relative z-10">{children}</main>
       <SiteFooter />
       <CartSheet />
