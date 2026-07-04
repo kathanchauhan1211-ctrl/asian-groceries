@@ -1,0 +1,154 @@
+'use client'
+
+import { useState } from 'react'
+import { Check, Minus, Plus, ShoppingBag, Star } from 'lucide-react'
+import { useCart } from '@/lib/cart-context'
+import { ORIGIN_FLAG, type Product } from '@/lib/products'
+
+const STOCK_STYLES: Record<Product['stock'], string> = {
+  'In Stock': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  'Low Stock': 'bg-amber-50 text-amber-700 border border-amber-200',
+  'Out of Stock': 'bg-rose-50 text-rose-700 border border-rose-200',
+}
+
+export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+  const { addItem } = useCart()
+  const [variantIndex, setVariantIndex] = useState(0)
+  const [qty, setQty] = useState(1)
+  const [added, setAdded] = useState(false)
+
+  const variant = product.variants[variantIndex]
+  const soldOut = product.stock === 'Out of Stock'
+
+  function handleAdd() {
+    if (soldOut) return
+    addItem(product, variant, qty)
+    setAdded(true)
+    setQty(1)
+    setTimeout(() => setAdded(false), 1400)
+  }
+
+  return (
+    <article
+      className={`group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-accent hover:shadow-md card-enter card-enter-${Math.min((index % 6) + 1, 6)}`}
+    >
+      {/* Image */}
+      <div className="relative aspect-square overflow-hidden bg-slate-50 border-b border-slate-100">
+        <img
+          src={product.image || '/placeholder.svg'}
+          alt={product.name}
+          className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          onError={(e) => {
+            // fallback image using placehold.co
+            (e.target as HTMLImageElement).src = `https://placehold.co/400x400/F97316/ffffff?text=${encodeURIComponent(product.name.substring(0,6))}`;
+          }}
+        />
+        {/* Subtle hover overlay */}
+        <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        {/* Origin flag badge */}
+        <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-800 shadow-sm border border-slate-200 backdrop-blur-sm">
+          <span aria-hidden>{ORIGIN_FLAG[product.origin]}</span>
+          {product.origin}
+        </span>
+        {product.bestseller && (
+          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+            <Star className="size-3 fill-current" />
+            Bestseller
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-4">
+        <div className="mb-2.5 flex items-start justify-between gap-2">
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${STOCK_STYLES[product.stock]}`}
+          >
+            {product.stock === 'Low Stock' ? '⚠️ 3 Bags Left' : product.stock}
+          </span>
+          <div className="flex flex-wrap justify-end gap-1">
+            {product.diet.map((d) => (
+              <span
+                key={d}
+                className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600"
+              >
+                {d}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <h3 className="font-sans text-sm font-bold leading-snug text-slate-900 text-balance group-hover:text-accent transition-colors duration-200">
+          {product.name}
+        </h3>
+        <p className="mt-1 text-xs text-slate-500 line-clamp-2">{product.tagline}</p>
+
+        {/* Variant + price */}
+        <div className="mt-auto pt-4 flex items-center justify-between gap-2">
+          <label className="sr-only" htmlFor={`variant-${product.id}`}>
+            Choose size
+          </label>
+          <select
+            id={`variant-${product.id}`}
+            value={variantIndex}
+            onChange={(e) => setVariantIndex(Number(e.target.value))}
+            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+          >
+            {product.variants.map((v, i) => (
+              <option key={v.label} value={i}>
+                {v.label}
+              </option>
+            ))}
+          </select>
+          <span className="font-serif text-lg font-bold tabular-nums text-slate-900">
+            €{variant.price.toFixed(2)}
+          </span>
+        </div>
+
+        {/* Add to cart block */}
+        <div className="mt-3 flex items-stretch gap-2">
+          <div className="flex items-center rounded-md border border-slate-300 bg-slate-50 shadow-sm">
+            <button
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              disabled={soldOut}
+              className="flex size-9 items-center justify-center text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 disabled:opacity-40"
+              aria-label="Decrease quantity"
+            >
+              <Minus className="size-3.5" />
+            </button>
+            <span className="w-6 text-center text-xs font-bold tabular-nums text-slate-900">{qty}</span>
+            <button
+              onClick={() => setQty((q) => q + 1)}
+              disabled={soldOut}
+              className="flex size-9 items-center justify-center text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 disabled:opacity-40"
+              aria-label="Increase quantity"
+            >
+              <Plus className="size-3.5" />
+            </button>
+          </div>
+          <button
+            onClick={handleAdd}
+            disabled={soldOut}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 text-xs font-bold transition-all duration-300 shadow-sm disabled:cursor-not-allowed disabled:opacity-50 ${
+              added
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                : 'bg-accent text-white hover:bg-accent/90'
+            }`}
+          >
+            {soldOut ? (
+              'Sold Out'
+            ) : added ? (
+              <>
+                <Check className="size-3.5" /> Added
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="size-3.5" /> Add
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}
