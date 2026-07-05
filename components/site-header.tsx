@@ -1,6 +1,6 @@
 'use client'
 
-import { Search, ShoppingBag, Flame, User, LogOut, ChevronDown } from 'lucide-react'
+import { Search, ShoppingBag, Flame, User, LogOut, ChevronDown, Globe } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/cart-context'
@@ -33,13 +33,19 @@ export function SiteHeader() {
   const { user, signOut } = useAuth()
   const router = useRouter()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [langOpen, setLangOpen] = useState(false)
+  const [activeLang, setActiveLang] = useState('English')
   const profileRef = useRef<HTMLDivElement>(null)
+  const langRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false)
+      }
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false)
       }
     }
     document.addEventListener('mousedown', handler)
@@ -133,6 +139,48 @@ export function SiteHeader() {
 
           {/* Cart + Auth triggers */}
           <div className="flex items-center gap-2">
+
+            {/* Language Selector */}
+            <div className="relative hidden sm:block" ref={langRef}>
+              <button
+                type="button"
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex h-10 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 shadow-sm hover:border-accent/50 transition-all duration-200"
+                aria-label="Select Language"
+              >
+                <Globe className="size-4 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-700">
+                  {activeLang === 'Hindi' ? '🇮🇳 HI' : 
+                   activeLang === 'Lithuanian' ? '🇱🇹 LT' : 
+                   activeLang === 'Russian' ? '🇷🇺 RU' : '🇬🇧 EN'}
+                </span>
+                <ChevronDown className={`size-3 text-slate-400 transition-transform ${langOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {langOpen && (
+                <div className="absolute right-0 top-12 z-50 w-36 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="py-1">
+                    {[
+                      { name: 'English', flag: '🇬🇧' },
+                      { name: 'Lithuanian', flag: '🇱🇹' },
+                      { name: 'Russian', flag: '🇷🇺' },
+                      { name: 'Hindi', flag: '🇮🇳' }
+                    ].map(lang => (
+                      <button
+                        key={lang.name}
+                        onClick={() => { setActiveLang(lang.name); setLangOpen(false); }}
+                        className={`flex w-full items-center gap-2.5 px-4 py-2 text-sm transition-colors ${
+                          activeLang === lang.name ? 'bg-orange-50 text-orange-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>{lang.flag}</span>
+                        {lang.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Cart */}
             <Button

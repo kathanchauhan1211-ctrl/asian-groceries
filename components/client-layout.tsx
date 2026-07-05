@@ -32,7 +32,7 @@ function AuthAwareLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-white relative text-slate-900 pb-28">
       {/* Transparent global watermark */}
-      <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center opacity-[0.03]">
+      <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center opacity-[0.08]">
         <img
           src="/logo.png"
           alt=""

@@ -71,7 +71,7 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
         {/* Map */}
         <div className="relative">
           {/* Enhanced Indian-themed storefront flag */}
-          <div className="pointer-events-none absolute -left-2 -top-6 z-20 hidden sm:block lg:-left-10">
+          <div className="pointer-events-none absolute -left-10 -top-6 z-20 hidden lg:block">
             <div className="flag-sway flex flex-col items-center">
               {/* Flag body — with Indian tricolor accent & ornate design */}
               <div className="relative flex h-56 w-[4.5rem] flex-col items-center rounded-t-full rounded-b-lg overflow-hidden shadow-xl">
