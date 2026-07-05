@@ -32,7 +32,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
 
   return (
     <article
-      className={`group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-accent hover:shadow-md card-enter card-enter-${Math.min((index % 6) + 1, 6)}`}
+      className={`group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:border-accent/50 hover:shadow-md card-enter card-enter-${Math.min((index % 6) + 1, 6)}`}
     >
       {/* Image */}
       <LiquidGlassBox className="relative aspect-square bg-slate-50 border-b border-slate-100 rounded-b-none">
@@ -61,7 +61,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       </LiquidGlassBox>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="mb-2.5 flex items-start justify-between gap-2">
           <span
             className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${STOCK_STYLES[product.stock]}`}
@@ -86,22 +86,27 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <p className="mt-1 text-xs text-slate-500 line-clamp-2">{product.tagline}</p>
 
         {/* Variant + price */}
-        <div className="mt-auto pt-4 flex items-center justify-between gap-2">
+        <div className="mt-auto pt-3 sm:pt-4 flex items-center justify-between gap-2">
           <label className="sr-only" htmlFor={`variant-${product.id}`}>
             Choose size
           </label>
-          <select
-            id={`variant-${product.id}`}
-            value={variantIndex}
-            onChange={(e) => setVariantIndex(Number(e.target.value))}
-            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
-          >
-            {product.variants.map((v, i) => (
-              <option key={v.label} value={i}>
-                {v.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id={`variant-${product.id}`}
+              value={variantIndex}
+              onChange={(e) => setVariantIndex(Number(e.target.value))}
+              className="appearance-none cursor-pointer rounded-md border border-slate-200 bg-slate-50 pl-2.5 pr-6 py-1.5 text-xs font-semibold text-slate-700 outline-none transition-all duration-200 focus:border-accent focus:ring-0 hover:border-accent/60 hover:bg-white"
+            >
+              {product.variants.map((v, i) => (
+                <option key={v.label} value={i}>
+                  {v.label}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400">
+              <svg className="size-3" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </span>
+          </div>
           <span className="font-serif text-lg font-bold tabular-nums text-slate-900">
             €{variant.price.toFixed(2)}
           </span>

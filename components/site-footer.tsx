@@ -24,7 +24,7 @@ export function SiteFooter() {
       {/* Background gradient — deep saffron */}
       <div className="bg-primary text-primary-foreground relative">
         {/* Bold Indian silhouettes watermark */}
-        <SeamlessPattern className="[&_g]:!fill-white" opacity={0.12} />
+        <SeamlessPattern className="[&_g]:!fill-white" opacity={0.18} />
         
         {/* Faint mandala watermark */}
         <div className="absolute inset-0 opacity-[0.08] pointer-events-none" aria-hidden>
@@ -47,9 +47,9 @@ export function SiteFooter() {
         {/* Scattered Indian silhouettes watermark */}
         <div className="indian-icons-pattern absolute inset-0 pointer-events-none" aria-hidden />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-12 md:px-6">
-          <div className="grid gap-10 md:grid-cols-4">
-            <div className="md:col-span-1">
+        <div className="relative mx-auto max-w-7xl px-4 py-8 md:py-12 md:px-6">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2.5">
                 <span className="flex size-12 items-center justify-center rounded-full bg-primary-foreground shadow-md">
                   <img src="/logo.png" alt="Asian Groceries logo" className="size-10 object-contain" />
@@ -57,13 +57,12 @@ export function SiteFooter() {
                 <span className="leading-none">
                   <span className="block font-serif text-lg font-semibold">Asian Groceries</span>
                   <span className="block text-[10px] font-medium uppercase tracking-[0.2em] text-primary-foreground/60">
-                    Authentic Indian & South Asian Store
+                    Online Store · Vilnius
                   </span>
                 </span>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-primary-foreground/65">
-                Vilnius&apos; home for authentic Indian &amp; South Asian groceries, delivered across
-                Lithuania via the bus station courier network.
+                Order online and <strong className="text-white/90">pick up in-store</strong> at Šaltinių g. 22, or ship to any city in Lithuania via the bus station courier network.
               </p>
               {/* Small tricolor accent */}
               <div className="mt-3 flex gap-0.5">

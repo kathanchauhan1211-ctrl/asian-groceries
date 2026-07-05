@@ -30,13 +30,13 @@ function AuthAwareLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-white relative text-slate-900 pb-28">
-      {/* Transparent global watermark */}
-      <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center opacity-[0.08]">
+    <div className="flex min-h-dvh flex-col bg-white text-slate-900">
+      {/* Transparent global watermark — visible on every page & device */}
+      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center">
         <img
           src="/logo.png"
           alt=""
-          className="w-[80vw] max-w-[800px] object-contain"
+          className="w-[70vw] max-w-[600px] object-contain opacity-[0.07] mix-blend-multiply"
           aria-hidden
         />
       </div>
@@ -44,9 +44,13 @@ function AuthAwareLayout({ children }: { children: React.ReactNode }) {
       <Suspense>
         <SiteHeader />
       </Suspense>
-      <main className="relative z-10">{children}</main>
+
+      {/* main grows to push footer down */}
+      <main className="relative z-10 flex-1 pb-20 lg:pb-0">{children}</main>
+
       <SiteFooter />
       <CartSheet />
+      {/* Floating bottom nav — shown on all screens, replaces floating-navigation */}
       <FloatingNavigation />
     </div>
   )

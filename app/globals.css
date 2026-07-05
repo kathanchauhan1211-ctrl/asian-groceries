@@ -98,10 +98,50 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Prevent horizontal overflow on mobile */
+    box-sizing: border-box;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
+  /* Prevent any element from causing horizontal scroll */
+  .overflow-x-hidden {
+    overflow-x: hidden;
+  }
+}
+
+/* ────────────────────────────────────────
+   MOBILE UTILITIES
+──────────────────────────────────────── */
+
+/* Safe area for iPhone home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Hide scrollbars but keep scrollable */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* 
+  Clean select: remove OS cloud/fog hover effect by killing default appearance
+  Use on <select> elements to get consistent cross-browser look
+*/
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+select:focus {
+  box-shadow: none;
+  outline: none;
 }
 
 /* ========================================
