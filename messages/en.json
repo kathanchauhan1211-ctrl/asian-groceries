@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "searchPlaceholder": "Search rice, atta, spices, lentils…",
+    "clear": "Clear",
+    "basket": "Basket",
+    "login": "Log In",
+    "origin": "Origin:"
+  },
+  "hero": {
+    "basedIn": "Based in Vilnius · Delivering nationwide",
+    "title1": "Authentic",
+    "titleHighlight": "South Asian",
+    "title2": "flavors, hand-delivered to your city's bus station.",
+    "subtitle": "India, Pakistan & Sri Lanka's finest staples — shipped across Lithuania via the Autobusų Stotis courier network. Same-day or next-day, straight to your nearest station.",
+    "shopButton": "Shop the Pantry",
+    "trackButton": "Track a Parcel",
+    "trust1": "Same / Next-Day",
+    "trust2": "Halal Certified",
+    "trust3": "Fresh Weekly"
+  },
+  "catalog": {
+    "title": "The Pantry",
+    "productsCount": "{count} products",
+    "oneProduct": "1 product",
+    "filters": "Filters",
+    "category": "Category",
+    "availability": "Availability",
+    "dietary": "Dietary",
+    "clearAll": "Clear all filters",
+    "noProducts": "No products found",
+    "noProductsDesc": "Try adjusting your search or filters to discover more South Asian staples."
+  },
+  "product": {
+    "soldOut": "Sold Out",
+    "add": "Add",
+    "added": "Added",
+    "bestseller": "Bestseller"
+  },
+  "community": {
+    "badge": "Vilnius Community Hub",
+    "title1": "Live WhatsApp",
+    "titleHighlight": "Telemetry Stream",
+    "subtitle": "Real-time Vilnius store inventory, restocks, and warehouse notifications pushed directly from Šaltinių g. 22.",
+    "members": "Members",
+    "online": "{count} online",
+    "syncTitle": "Sync to Vilnius Food Group Channel",
+    "syncDesc": "Join {count} Vilnius residents getting real-time updates directly into their personal WhatsApp chat.",
+    "linkBtn": "Link WhatsApp Identity",
+    "quickBuy": "Quick Buy",
+    "secureYours": "Secure Yours"
+  }
+}

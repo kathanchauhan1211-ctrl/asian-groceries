@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "searchPlaceholder": "Ieškokite ryžių, atos, prieskonių, lęšių…",
+    "clear": "Išvalyti",
+    "basket": "Krepšelis",
+    "login": "Prisijungti",
+    "origin": "Kilmė:"
+  },
+  "hero": {
+    "basedIn": "Įsikūręs Vilniuje · Pristatymas visoje šalyje",
+    "title1": "Autentiškas",
+    "titleHighlight": "Pietų Azijos",
+    "title2": "skoniai, pristatyti į jūsų miesto autobusų stotį.",
+    "subtitle": "Geriausi Indijos, Pakistano ir Šri Lankos produktai – pristatomi visoje Lietuvoje per „Autobusų Stotis“ kurjerių tinklą. Tą pačią arba kitą dieną tiesiai į artimiausią stotį.",
+    "shopButton": "Apsipirkite sandėliuke",
+    "trackButton": "Siuntos sekimas",
+    "trust1": "Tą pačią / kitą dieną",
+    "trust2": "Halal sertifikuota",
+    "trust3": "Šviežia savaitraštis"
+  },
+  "catalog": {
+    "title": "Sandėliukas",
+    "productsCount": "{count} produktai",
+    "oneProduct": "1 produktas",
+    "filters": "Filtrai",
+    "category": "Kategorija",
+    "availability": "Prieinamumas",
+    "dietary": "Dietinis",
+    "clearAll": "Išvalyti visus filtrus",
+    "noProducts": "Nerasta jokių produktų",
+    "noProductsDesc": "Pabandykite pakoreguoti paiešką arba filtrus, kad atrastumėte daugiau Pietų Azijos patiekalų."
+  },
+  "product": {
+    "soldOut": "Išparduota",
+    "add": "Pridėti",
+    "added": "Pridėta",
+    "bestseller": "Bestseleris"
+  },
+  "community": {
+    "badge": "Vilnijos bendruomenės centras",
+    "title1": "Tiesioginis „WhatsApp“",
+    "titleHighlight": "Telemetrijos srautas",
+    "subtitle": "Realaus laiko pranešimai apie prekių atsargas, papildymus ir sandėlio informaciją iš Šaltinių g. 22.",
+    "members": "Nariai",
+    "online": "{count} prisijungęs",
+    "syncTitle": "Sinchronizuoti su „Vilnius Food Group“ kanalu",
+    "syncDesc": "Prisijunkite prie {count} vilniečių, kurie gauna realaus laiko atnaujinimus tiesiai į savo asmeninį „WhatsApp“ pokalbių langą.",
+    "linkBtn": "Susieti „WhatsApp“ tapatybę",
+    "quickBuy": "Greitas pirkimas",
+    "secureYours": "Apsaugokite savo"
+  }
+}

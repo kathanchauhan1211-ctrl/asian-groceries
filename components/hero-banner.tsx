@@ -2,6 +2,7 @@
 
 import { Bus, Clock, Leaf, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from '@/lib/translation-context'
 
 // Approximate relative positions on the map illustration (percent)
 const VILNIUS = { x: 72, y: 68 }
@@ -20,22 +21,22 @@ const TRUST = [
 ]
 
 export function HeroBanner({ onTrack }: { onTrack: () => void }) {
+  const { t } = useTranslation()
   return (
     <section className="relative overflow-hidden">
       <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 md:px-6 lg:grid-cols-2 lg:py-14">
         {/* Copy */}
         <div className="relative z-10">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm">
-            <MapPin className="size-3.5" /> Based in Vilnius · Delivering nationwide
+            <MapPin className="size-3.5" /> {t('hero.basedIn')}
           </span>
           <h1 className="mt-5 font-serif text-4xl font-semibold leading-[1.05] tracking-tight text-foreground text-balance md:text-5xl lg:text-[3.5rem]">
-            Authentic{' '}
-            <span className="text-spice-gradient">South Asian</span>{' '}
-            flavors, hand-delivered to your city&apos;s bus station.
+            {t('hero.title1')}{' '}
+            <span className="text-spice-gradient">{t('hero.titleHighlight')}</span>{' '}
+            {t('hero.title2')}
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground text-pretty">
-            India, Pakistan &amp; Sri Lanka&apos;s finest staples — shipped across Lithuania via the
-            Autobusų Stotis courier network. Same-day or next-day, straight to your nearest station.
+            {t('hero.subtitle')}
           </p>
 
           <div className="mt-7 flex flex-wrap gap-3">
@@ -44,7 +45,7 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
               className="h-12 rounded-full px-7 text-base shadow-lg"
               onClick={() => document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              <Sparkles className="size-4" /> Shop the Pantry
+              <Sparkles className="size-4" /> {t('hero.shopButton')}
             </Button>
             <Button
               variant="outline"
@@ -52,17 +53,21 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
               onClick={onTrack}
               className="h-12 rounded-full px-6 text-base shadow-sm"
             >
-              <Bus className="size-4" /> Track a Parcel
+              <Bus className="size-4" /> {t('hero.trackButton')}
             </Button>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
-            {TRUST.map((t) => (
-              <div key={t.label} className="flex items-center gap-2.5 text-sm font-medium text-foreground">
+            {[
+              { icon: Clock, label: t('hero.trust1') },
+              { icon: ShieldCheck, label: t('hero.trust2') },
+              { icon: Leaf, label: t('hero.trust3') },
+            ].map((t_obj, idx) => (
+              <div key={idx} className="flex items-center gap-2.5 text-sm font-medium text-foreground">
                 <span className="flex size-9 items-center justify-center rounded-xl bg-accent/20 text-accent-foreground shadow-sm">
-                  <t.icon className="size-4" />
+                  <t_obj.icon className="size-4" />
                 </span>
-                {t.label}
+                {t_obj.label}
               </div>
             ))}
           </div>

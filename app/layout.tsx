@@ -31,6 +31,7 @@ export const viewport: Viewport = {
 }
 
 import { ClientLayout } from '@/components/client-layout'
+import { TranslationProvider } from '@/lib/translation-context'
 
 export default function RootLayout({
   children,
@@ -40,9 +41,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable} bg-background`}>
       <body className="font-sans antialiased overflow-x-hidden">
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+        <TranslationProvider>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </TranslationProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

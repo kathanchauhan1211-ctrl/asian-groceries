@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/cart-context'
 import { useAuth } from '@/lib/auth-context'
+import { useTranslation } from '@/lib/translation-context'
 import { ORIGIN_FLAG, type Origin } from '@/lib/products'
 import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
@@ -31,10 +32,10 @@ const CATEGORY_PILLS = [
 export function SiteHeader() {
   const { count, setOpen } = useCart()
   const { user, signOut } = useAuth()
+  const { lang: activeLang, setLang: setActiveLang, t } = useTranslation()
   const router = useRouter()
   const [profileOpen, setProfileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
-  const [activeLang, setActiveLang] = useState('English')
   const profileRef = useRef<HTMLDivElement>(null)
   const langRef = useRef<HTMLDivElement>(null)
 
@@ -123,7 +124,7 @@ export function SiteHeader() {
                 id="site-search"
                 value={query}
                 onChange={(e) => updateFilters({ q: e.target.value })}
-                placeholder="Search rice, atta, spices, lentils…"
+                placeholder={t('nav.searchPlaceholder')}
                 className="w-full bg-transparent px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-500"
               />
               {query && (
@@ -131,7 +132,7 @@ export function SiteHeader() {
                   onClick={() => updateFilters({ q: '' })}
                   className="mr-3 text-xs text-slate-500 hover:text-slate-900 font-medium"
                 >
-                  Clear
+                  {t('nav.clear')}
                 </button>
               )}
             </div>
@@ -192,8 +193,8 @@ export function SiteHeader() {
               aria-label={`Open cart, ${count} items`}
             >
               <ShoppingBag className="size-4" />
-              <span className="hidden md:inline font-medium">Basket</span>
-              {count > 0 && (
+                <span className="hidden sm:inline text-slate-700 font-semibold">{t('nav.basket')}</span>
+                {count > 0 && (
                 <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white shadow-sm animate-in zoom-in-50">
                   {count}
                 </span>
@@ -209,7 +210,7 @@ export function SiteHeader() {
                 className="flex h-10 items-center gap-1.5 px-3.5"
               >
                 <User className="size-4" />
-                <span className="hidden sm:inline">Log In</span>
+                <span className="hidden sm:inline">{t('nav.login')}</span>
               </Button>
             ) : (
               <div className="relative" ref={profileRef}>
