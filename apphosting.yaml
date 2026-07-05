@@ -6,21 +6,6 @@ runConfig:
   concurrency: 80
 
 env:
-  - variable: FIREBASE_PROJECT_ID
-    secret: FIREBASE_PROJECT_ID
-
-  - variable: FIREBASE_PRIVATE_KEY_ID
-    secret: FIREBASE_PRIVATE_KEY_ID
-
-  - variable: FIREBASE_PRIVATE_KEY
-    secret: FIREBASE_PRIVATE_KEY
-
-  - variable: FIREBASE_CLIENT_EMAIL
-    secret: FIREBASE_CLIENT_EMAIL
-
-  - variable: FIREBASE_CLIENT_ID
-    secret: FIREBASE_CLIENT_ID
-
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyA9isE7agOkeY9G_kEQAyLZrzWV4jf3d1Y
     availability:
@@ -62,3 +47,4 @@ env:
     availability:
       - BUILD
       - RUNTIME
+
