@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { MessageCircle, Bell, Users, Zap, Shield, Sparkles, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { PRODUCTS } from '@/lib/products'
+import { Button } from '@/components/ui/button'
 
 export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string) => void }) {
   const { count } = useCart()
@@ -77,12 +78,14 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
                     Fresh <strong>Indian Sella Basmati Rice 5kg</strong> just stacked on shelves! Secure your bag before dispatch runs out.
                   </p>
                   
-                  <button
+                  <Button
                     onClick={() => onQuickBuy('basmati-rice')}
-                    className="mt-3 flex items-center gap-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white transition-all shadow-sm"
+                    variant="emerald"
+                    size="sm"
+                    className="mt-3 font-bold shadow-sm"
                   >
                     <ShoppingCart className="size-3" /> [Quick Buy]
-                  </button>
+                  </Button>
                 </div>
                 <span className="text-[10px] text-slate-500 mt-1 self-start ml-1">12:32 PM</span>
               </div>
@@ -100,12 +103,14 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
                     <strong>Everest Tikhalal Spices</strong> running low. Only 2 items remaining in-store! Lock in your reservation today.
                   </p>
                   
-                  <button
+                  <Button
                     onClick={() => onQuickBuy('everest-spices')}
-                    className="mt-3 flex items-center gap-1.5 rounded-md bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white transition-all shadow-sm"
+                    variant="amber"
+                    size="sm"
+                    className="mt-3 font-bold shadow-sm"
                   >
                     <ShoppingCart className="size-3" /> [Secure Yours]
-                  </button>
+                  </Button>
                 </div>
                 <span className="text-[10px] text-slate-500 mt-1 self-start ml-1">1:40 PM</span>
               </div>
@@ -137,14 +142,15 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
             <p className="text-[11px] text-slate-600 mt-1">
               Join {members} Vilnius residents getting real-time updates directly into their personal WhatsApp chat.
             </p>
-            <a
+            <Button
               href="https://wa.me/37060000000"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 py-2 text-xs font-bold text-white transition-all shadow-sm"
+              variant="emerald"
+              className="mt-3.5 w-full font-bold shadow-sm"
             >
               <MessageCircle className="size-4" /> Link WhatsApp Identity
-            </a>
+            </Button>
           </div>
         </div>
       </div>

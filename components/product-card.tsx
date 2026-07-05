@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Check, Minus, Plus, ShoppingBag, Star } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { ORIGIN_FLAG, type Product } from '@/lib/products'
+import { Button } from '@/components/ui/button'
+import { LiquidGlassBox } from '@/components/ui/liquid-glass-box'
 
 const STOCK_STYLES: Record<Product['stock'], string> = {
   'In Stock': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
@@ -33,7 +35,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       className={`group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-accent hover:shadow-md card-enter card-enter-${Math.min((index % 6) + 1, 6)}`}
     >
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-slate-50 border-b border-slate-100">
+      <LiquidGlassBox className="relative aspect-square bg-slate-50 border-b border-slate-100 rounded-b-none">
         <img
           src={product.image || '/placeholder.svg'}
           alt={product.name}
@@ -56,7 +58,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             Bestseller
           </span>
         )}
-      </div>
+      </LiquidGlassBox>
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-4">
@@ -126,14 +128,11 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
               <Plus className="size-3.5" />
             </button>
           </div>
-          <button
+          <Button
             onClick={handleAdd}
             disabled={soldOut}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 text-xs font-bold transition-all duration-300 shadow-sm disabled:cursor-not-allowed disabled:opacity-50 ${
-              added
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-accent text-white hover:bg-accent/90'
-            }`}
+            variant={added ? 'secondary' : 'default'}
+            className="flex-1 font-bold text-xs shadow-sm h-9"
           >
             {soldOut ? (
               'Sold Out'
@@ -146,7 +145,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
                 <ShoppingBag className="size-3.5" /> Add
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </article>

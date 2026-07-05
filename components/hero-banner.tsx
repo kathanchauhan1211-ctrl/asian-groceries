@@ -41,7 +41,7 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
           <div className="mt-7 flex flex-wrap gap-3">
             <Button
               size="lg"
-              className="btn-shimmer h-12 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all duration-300"
+              className="h-12 rounded-full px-7 text-base shadow-lg"
               onClick={() => document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' })}
             >
               <Sparkles className="size-4" /> Shop the Pantry
@@ -50,7 +50,7 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
               variant="outline"
               size="lg"
               onClick={onTrack}
-              className="h-12 rounded-full border-primary/30 px-6 text-base text-primary hover:bg-primary/5 transition-all duration-300"
+              className="h-12 rounded-full px-6 text-base shadow-sm"
             >
               <Bus className="size-4" /> Track a Parcel
             </Button>

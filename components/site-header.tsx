@@ -142,10 +142,11 @@ export function SiteHeader() {
 
             {/* Language Selector */}
             <div className="relative hidden sm:block" ref={langRef}>
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setLangOpen(!langOpen)}
-                className="flex h-10 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 shadow-sm hover:border-accent/50 transition-all duration-200"
+                className="flex h-10 items-center gap-1.5 px-2.5"
                 aria-label="Select Language"
               >
                 <Globe className="size-4 text-slate-500" />
@@ -155,7 +156,7 @@ export function SiteHeader() {
                    activeLang === 'Russian' ? '🇷🇺 RU' : '🇬🇧 EN'}
                 </span>
                 <ChevronDown className={`size-3 text-slate-400 transition-transform ${langOpen ? 'rotate-180' : ''}`} />
-              </button>
+              </Button>
               
               {langOpen && (
                 <div className="absolute right-0 top-12 z-50 w-36 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
@@ -201,21 +202,23 @@ export function SiteHeader() {
 
             {/* Auth: logged-out → Login button | logged-in → avatar dropdown */}
             {!user ? (
-              <Link
+              <Button
                 href="/auth"
+                variant="outline"
                 id="btn-header-login"
-                className="flex h-10 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-accent hover:text-accent transition-all duration-200"
+                className="flex h-10 items-center gap-1.5 px-3.5"
               >
                 <User className="size-4" />
                 <span className="hidden sm:inline">Log In</span>
-              </Link>
+              </Button>
             ) : (
               <div className="relative" ref={profileRef}>
-                <button
+                <Button
                   id="btn-header-profile"
                   type="button"
+                  variant="outline"
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white pl-1 pr-2.5 shadow-sm hover:border-accent/50 transition-all duration-200"
+                  className="flex h-10 items-center gap-2 pl-1 pr-2.5 shadow-sm"
                   aria-label="Account menu"
                 >
                   {/* Avatar circle */}
@@ -226,8 +229,8 @@ export function SiteHeader() {
                     {user.displayName ?? user.email?.split('@')[0]}
                   </span>
                   <ChevronDown className={`size-3.5 text-slate-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
-                </button>
-
+                </Button>
+                
                 {/* Dropdown */}
                 {profileOpen && (
                   <div className="absolute right-0 top-12 z-50 min-w-[180px] rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
@@ -304,18 +307,17 @@ export function SiteHeader() {
                 Origin:
               </span>
               {ORIGINS.map((o) => (
-                <button
+                <Button
                   key={o}
+                  variant={origin === o ? 'default' : 'outline'}
                   onClick={() => updateFilters({ origin: o })}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium transition-all duration-200 shadow-sm ${
-                    origin === o
-                      ? 'border-accent bg-accent/10 text-accent font-bold'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                  className={`flex shrink-0 items-center gap-1.5 px-3 py-1 text-xs shadow-sm h-8 ${
+                    origin === o ? 'bg-accent/10 text-accent hover:bg-accent/20' : 'bg-white text-slate-600'
                   }`}
                 >
                   {o !== 'All' && <span aria-hidden>{ORIGIN_FLAG[o]}</span>}
                   {o}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
