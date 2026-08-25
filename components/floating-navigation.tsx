@@ -16,85 +16,97 @@ const NAV_ITEMS = [
 const CSS = `
   @keyframes island-float {
     0%, 100% { transform: translateX(-50%) translateY(0px); }
-    50%       { transform: translateX(-50%) translateY(-4px); }
+    50%       { transform: translateX(-50%) translateY(-5px); }
   }
   @keyframes island-float-v {
-    0%, 100% { transform: translateY(-50%) translateX(0px); }
-    50%       { transform: translateY(-50%) translateX(-3px); }
+    0%, 100% { transform: translateY(-50%); }
+    50%       { transform: translateY(calc(-50% - 4px)); }
   }
   @keyframes badge-pop {
     0%   { transform: scale(0); opacity: 0; }
-    55%  { transform: scale(1.4); opacity: 1; }
-    75%  { transform: scale(0.88); }
+    60%  { transform: scale(1.45); opacity: 1; }
+    80%  { transform: scale(0.88); }
     100% { transform: scale(1); }
   }
-  @keyframes cart-ring {
-    0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.6); }
-    70%  { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
-    100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  @keyframes active-pill-in {
+    from { opacity: 0; transform: scaleX(0.7) scaleY(0.85); }
+    to   { opacity: 1; transform: scaleX(1) scaleY(1); }
   }
-  @keyframes active-in {
-    from { opacity:0; transform: scale(0.85); }
-    to   { opacity:1; transform: scale(1); }
+  @keyframes cart-ripple {
+    0%   { box-shadow: 0 0 0 0 rgba(249,115,22,0.8), 0 8px 32px rgba(15,32,68,0.55); }
+    60%  { box-shadow: 0 0 0 14px rgba(249,115,22,0), 0 8px 32px rgba(15,32,68,0.55); }
+    100% { box-shadow: 0 0 0 0 rgba(249,115,22,0), 0 8px 32px rgba(15,32,68,0.55); }
   }
-  .nav-island-item {
-    transition: transform 0.2s cubic-bezier(0.34,1.5,0.64,1);
+  .island-wrap {
+    box-shadow:
+      0 8px 32px rgba(15,32,68,0.55),
+      0 20px 56px rgba(9,18,40,0.4),
+      inset 0 1.5px 0 rgba(255,255,255,0.1),
+      inset 0 -1px 0 rgba(0,0,0,0.25);
+    transition: box-shadow 0.3s ease;
+  }
+  .island-wrap.cart-has-items {
+    box-shadow:
+      0 8px 32px rgba(249,115,22,0.3),
+      0 20px 56px rgba(9,18,40,0.4),
+      inset 0 1.5px 0 rgba(255,255,255,0.1),
+      inset 0 -1px 0 rgba(0,0,0,0.25);
+  }
+  .nav-item-btn {
     -webkit-tap-highlight-color: transparent;
+    transition: transform 0.2s cubic-bezier(0.34,1.5,0.64,1);
   }
-  .nav-island-item:hover  { transform: scale(1.1); }
-  .nav-island-item:active { transform: scale(0.9); }
-  .island-badge { animation: badge-pop 0.38s cubic-bezier(0.34,1.56,0.64,1) both; }
-  .cart-ring    { animation: cart-ring 0.65s ease-out; }
+  .nav-item-btn:hover  { transform: scale(1.08); }
+  .nav-item-btn:active { transform: scale(0.91); }
+  .island-badge { animation: badge-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+  .cart-ripple-anim { animation: cart-ripple 0.7s ease-out; }
 `
 
-// Subtle Indian-style dot mandala pattern as SVG data URI
-const DECOR_PATTERN = `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.07'%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='4' cy='4' r='1.2'/%3E%3Ccircle cx='36' cy='4' r='1.2'/%3E%3Ccircle cx='4' cy='36' r='1.2'/%3E%3Ccircle cx='36' cy='36' r='1.2'/%3E%3Ccircle cx='20' cy='4' r='0.8'/%3E%3Ccircle cx='20' cy='36' r='0.8'/%3E%3Ccircle cx='4' cy='20' r='0.8'/%3E%3Ccircle cx='36' cy='20' r='0.8'/%3E%3Cpath d='M20 14 L22 18 L18 18 Z' fill-opacity='0.06'/%3E%3Cpath d='M20 26 L22 22 L18 22 Z' fill-opacity='0.06'/%3E%3C/g%3E%3C/svg%3E")`
-
-function IslandItem({
-  href, icon: Icon, label, active, onClick, badge, pulseCart,
-}: {
+interface ItemProps {
   href?: string
   icon: any
   label: string
   active?: boolean
-  onClick?: () => void
   badge?: number
-  pulseCart?: boolean
-}) {
-  const content = (
+  onClick?: () => void
+  cartPulse?: boolean
+}
+
+function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: ItemProps) {
+  const inner = (
     <span
-      className="nav-island-item relative flex flex-col items-center justify-center gap-[4px]"
-      style={{ minWidth: 58, minHeight: 58 }}
+      className="nav-item-btn relative flex flex-col items-center justify-center gap-[5px]"
+      style={{ minWidth: 60, minHeight: 60 }}
     >
-      {/* Active highlight pill */}
+      {/* Active orange pill background */}
       {active && (
         <span
-          className="absolute inset-1 rounded-2xl"
+          className="absolute inset-[5px] rounded-[18px]"
           style={{
-            background: 'rgba(255,255,255,0.18)',
-            border: '1px solid rgba(255,255,255,0.35)',
-            backdropFilter: 'blur(4px)',
-            animation: 'active-in 0.25s ease both',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
+            background: 'linear-gradient(145deg, #F97316, #EA580C)',
+            boxShadow: '0 4px 14px rgba(249,115,22,0.45), inset 0 1px 0 rgba(255,255,255,0.2)',
+            animation: 'active-pill-in 0.22s cubic-bezier(0.34,1.4,0.64,1) both',
           }}
         />
       )}
 
-      {/* Icon + badge wrapper */}
+      {/* Icon */}
       <span className="relative z-10 flex items-center justify-center">
         <Icon
-          className="size-[24px]"
-          strokeWidth={active ? 2.4 : 1.8}
-          style={{ color: active ? '#fff' : 'rgba(255,255,255,0.72)' }}
+          className="size-[22px]"
+          strokeWidth={active ? 2.3 : 1.7}
+          style={{ color: '#fff', opacity: active ? 1 : 0.5 }}
         />
         {badge !== undefined && badge > 0 && (
           <span
             key={badge}
-            className="island-badge absolute -right-3 -top-2.5 flex items-center justify-center rounded-full text-[9px] font-black text-orange-600"
+            className="island-badge absolute -right-3 -top-2.5 flex items-center justify-center rounded-full font-black text-white"
             style={{
               minWidth: 18, height: 18, padding: '0 4px',
-              background: '#fff',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+              fontSize: 9,
+              background: 'linear-gradient(135deg,#F97316,#C2410C)',
+              border: '1.5px solid rgba(255,255,255,0.25)',
+              boxShadow: '0 2px 6px rgba(249,115,22,0.55)',
             }}
           >
             {badge > 9 ? '9+' : badge}
@@ -104,8 +116,8 @@ function IslandItem({
 
       {/* Label */}
       <span
-        className="relative z-10 text-[10px] font-bold uppercase tracking-widest leading-none"
-        style={{ color: active ? '#fff' : 'rgba(255,255,255,0.65)' }}
+        className="relative z-10 font-bold uppercase tracking-widest leading-none"
+        style={{ fontSize: 9, color: active ? '#fff' : 'rgba(255,255,255,0.45)' }}
       >
         {label}
       </span>
@@ -113,30 +125,59 @@ function IslandItem({
   )
 
   if (onClick) {
-    return (
-      <button
-        onClick={onClick}
-        aria-label={label}
-        className={pulseCart ? 'cart-ring rounded-2xl' : ''}
-      >
-        {content}
-      </button>
-    )
+    return <button onClick={onClick} aria-label={label} className={cartPulse ? 'cart-ripple-anim' : ''}>{inner}</button>
   }
-  return <Link href={href!} aria-label={label}>{content}</Link>
+  return <Link href={href!} aria-label={label}>{inner}</Link>
 }
 
-const ISLAND_STYLE: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #F97316 0%, #EA580C 50%, #C2410C 100%)',
-  backgroundImage: `${DECOR_PATTERN}, linear-gradient(135deg, #F97316 0%, #EA580C 50%, #C2410C 100%)`,
-  boxShadow: [
-    '0 8px 32px rgba(249,115,22,0.55)',
-    '0 20px 60px rgba(194,65,12,0.35)',
-    '0 2px 8px rgba(0,0,0,0.2)',
-    'inset 0 1px 0 rgba(255,255,255,0.25)',
-    'inset 0 -2px 0 rgba(0,0,0,0.15)',
+// The island background: deep navy with a hint of blue warmth
+const BG: React.CSSProperties = {
+  background: 'linear-gradient(160deg, #0D1E3D 0%, #0F2647 45%, #122B52 100%)',
+  border: '1.5px solid rgba(249,115,22,0.35)',
+  // Thin orange gradient line at top — the brand signature
+  backgroundImage: [
+    // Top orange accent stripe (via pseudo simulation via border)
+    'linear-gradient(160deg, #0D1E3D 0%, #0F2647 45%, #122B52 100%)',
   ].join(','),
-  border: '1.5px solid rgba(255,255,255,0.2)',
+}
+
+// Orange top-edge decorative line simulated with a wrapper
+function IslandShell({ children, className, style, cartHasItems }: {
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+  cartHasItems?: boolean
+}) {
+  return (
+    <div
+      className={`relative overflow-hidden ${className ?? ''}`}
+      style={style}
+    >
+      {/* Orange accent stripe across top */}
+      <div
+        className="absolute left-4 right-4 top-0 h-[2.5px] rounded-full"
+        style={{ background: 'linear-gradient(90deg, transparent, #F97316, #EA580C, transparent)' }}
+      />
+      {/* Blue-to-navy gradient body */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(160deg, #0D1E3D 0%, #0F2647 50%, #122B52 100%)',
+          opacity: 1,
+        }}
+      />
+      {/* Subtle warm top reflection */}
+      <div
+        className="pointer-events-none absolute left-0 right-0 top-0 h-[40%]"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(249,115,22,0.06) 0%, transparent 100%)',
+        }}
+      />
+      <div className="relative z-10 flex items-center">
+        {children}
+      </div>
+    </div>
+  )
 }
 
 export function FloatingNavigation() {
@@ -148,7 +189,7 @@ export function FloatingNavigation() {
   useEffect(() => {
     if (count > prevCount.current) {
       setCartPulse(true)
-      setTimeout(() => setCartPulse(false), 700)
+      setTimeout(() => setCartPulse(false), 750)
     }
     prevCount.current = count
   }, [count])
@@ -156,24 +197,24 @@ export function FloatingNavigation() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
+  const baseClass = `island-wrap${count > 0 ? ' cart-has-items' : ''}`
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-      {/* ── Mobile: floating bottom ─────────────── */}
+      {/* ── Mobile: floating bottom island ─────────────── */}
       <div
         className="fixed bottom-6 left-1/2 z-40 lg:hidden"
         style={{ animation: 'island-float 6s ease-in-out infinite' }}
       >
-        <nav
-          className="flex items-center gap-0 px-3 py-2 rounded-[28px]"
-          style={{
-            ...ISLAND_STYLE,
-            minWidth: 340,
-          }}
+        <IslandShell
+          className={`${baseClass} flex-row px-2 py-2 rounded-[26px]`}
+          style={{ display: 'flex', flexDirection: 'row' }}
+          cartHasItems={count > 0}
         >
-          {NAV_ITEMS.map((item, i) => (
-            <IslandItem
+          {NAV_ITEMS.map(item => (
+            <Item
               key={item.id}
               href={item.href}
               icon={item.icon}
@@ -182,55 +223,74 @@ export function FloatingNavigation() {
             />
           ))}
 
-          {/* Separator */}
+          {/* Orange-ish separator */}
           <span
-            className="mx-1 shrink-0 rounded-full"
-            style={{ width: 1.5, height: 36, background: 'rgba(255,255,255,0.2)' }}
+            className="mx-1 self-center rounded-full"
+            style={{ width: 1.5, height: 32, background: 'rgba(249,115,22,0.25)' }}
           />
 
-          {/* Cart */}
-          <IslandItem
+          <Item
             icon={ShoppingBag}
             label="Cart"
             active={count > 0}
             badge={count > 0 ? count : undefined}
             onClick={() => setOpen(true)}
-            pulseCart={cartPulse}
+            cartPulse={cartPulse}
           />
-        </nav>
+        </IslandShell>
       </div>
 
-      {/* ── Desktop: left vertical island ──────── */}
+      {/* ── Desktop: left vertical island ──────────────── */}
       <div
-        className="fixed left-5 top-1/2 z-40 hidden -translate-y-1/2 lg:flex flex-col items-center gap-0 px-2 py-3 rounded-[28px]"
-        style={{
-          ...ISLAND_STYLE,
-          animation: 'island-float-v 6s ease-in-out infinite',
-        }}
+        className="fixed left-5 top-1/2 z-40 hidden lg:block"
+        style={{ animation: 'island-float-v 7s ease-in-out infinite' }}
       >
-        {NAV_ITEMS.map(item => (
-          <IslandItem
-            key={item.id}
-            href={item.href}
-            icon={item.icon}
-            label={item.label}
-            active={isActive(item.href)}
+        <div
+          className={`${baseClass} relative overflow-hidden rounded-[26px]`}
+          style={{ border: '1.5px solid rgba(249,115,22,0.35)' }}
+        >
+          {/* Orange left-edge accent line for vertical */}
+          <div
+            className="absolute left-0 top-6 bottom-6 w-[2.5px] rounded-full"
+            style={{ background: 'linear-gradient(to bottom, transparent, #F97316, #EA580C, transparent)' }}
           />
-        ))}
+          {/* Top warm glow */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: 'linear-gradient(160deg, #0D1E3D 0%, #0F2647 50%, #122B52 100%)',
+            }}
+          />
+          <div
+            className="pointer-events-none absolute left-0 right-0 top-0 h-[35%]"
+            style={{ background: 'linear-gradient(to bottom, rgba(249,115,22,0.07) 0%, transparent 100%)' }}
+          />
+          <nav className="relative z-10 flex flex-col items-center gap-0 px-2 py-3">
+            {NAV_ITEMS.map(item => (
+              <Item
+                key={item.id}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={isActive(item.href)}
+              />
+            ))}
 
-        <span
-          className="my-1 rounded-full"
-          style={{ height: 1.5, width: 36, background: 'rgba(255,255,255,0.2)' }}
-        />
+            <span
+              className="my-1 rounded-full"
+              style={{ height: 1.5, width: 32, background: 'rgba(249,115,22,0.25)' }}
+            />
 
-        <IslandItem
-          icon={ShoppingBag}
-          label="Cart"
-          active={count > 0}
-          badge={count > 0 ? count : undefined}
-          onClick={() => setOpen(true)}
-          pulseCart={cartPulse}
-        />
+            <Item
+              icon={ShoppingBag}
+              label="Cart"
+              active={count > 0}
+              badge={count > 0 ? count : undefined}
+              onClick={() => setOpen(true)}
+              cartPulse={cartPulse}
+            />
+          </nav>
+        </div>
       </div>
     </>
   )
