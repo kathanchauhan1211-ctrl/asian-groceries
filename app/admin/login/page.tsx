@@ -2,131 +2,203 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const { user, signUp, signIn, signOut, loading: authLoading } = useAuth()
+  const { user, signIn, signOut, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [clearing, setClearing] = useState(false)
 
+  // If admin is already signed in → go to portal immediately
   useEffect(() => {
-    if (!authLoading) {
-      if (user?.email === 'indianmarket@test.com') {
-        // Already signed in as admin — go straight to portal
-        router.replace('/admin')
-      } else if (user && user.email !== 'indianmarket@test.com') {
-        // Wrong account — sign out silently so admin can log in
-        signOut()
-      }
+    if (!authLoading && user?.email === 'indianmarket@test.com') {
+      router.replace('/admin')
     }
-  }, [user, authLoading, router, signOut])
+  }, [user, authLoading]) // eslint-disable-line
+
+  // If a DIFFERENT (non-admin) user lands here → sign them out silently first
+  useEffect(() => {
+    if (!authLoading && user && user.email !== 'indianmarket@test.com') {
+      setClearing(true)
+      signOut().finally(() => setClearing(false))
+    }
+  }, [user?.uid, authLoading]) // eslint-disable-line — only run when uid changes
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null); setSuccess(null); setLoading(true)
+    if (email !== 'indianmarket@test.com') {
+      setError('This portal is for the store owner only.')
+      return
+    }
+    setError(null)
+    setSubmitting(true)
     try {
       await signIn(email, password)
-      if (email !== 'indianmarket@test.com') {
-        setError('Access denied. Not an admin account.')
-        setLoading(false)
-        return
-      }
-      router.replace('/admin')
-    } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? ''
-      // Auto-create admin account on first login
-      if ((code === 'auth/user-not-found' || code === 'auth/invalid-credential') && email === 'indianmarket@test.com' && password === 'IndianMarket@#00') {
-        try {
-          await signUp('Admin', email, password)
-          setSuccess('Admin account initialized! Redirecting...')
-          setTimeout(() => router.replace('/admin'), 1000)
-          return
-        } catch { /* fall through */ }
-      }
+      // onAuthStateChanged will fire → useEffect above will redirect
+    } catch (err: any) {
+      const code = err?.code ?? ''
       const map: Record<string, string> = {
-        'auth/wrong-password': 'Incorrect password.',
-        'auth/invalid-credential': 'Incorrect credentials.',
-        'auth/too-many-requests': 'Too many attempts. Please wait.',
+        'auth/wrong-password':       'Incorrect password.',
+        'auth/invalid-credential':   'Incorrect email or password.',
+        'auth/too-many-requests':    'Too many attempts. Please wait a moment.',
+        'auth/user-not-found':       'No account found with this email.',
+        'auth/network-request-failed': 'Network error. Check your connection.',
       }
-      setError(map[code] || 'Authentication failed.')
+      setError(map[code] ?? 'Authentication failed. Please try again.')
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
-  if (authLoading) return null
+  // Always show the login form — never a blank page.
+  // Show a subtle spinner overlay while auth is resolving or clearing a wrong session.
+  const showOverlay = authLoading || clearing
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4"
-      style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif", background: '#020617' }}>
-      {/* Subtle background grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+    <div
+      className="relative min-h-screen flex items-center justify-center px-4"
+      style={{ background: '#080C14', fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
+      {/* Dot grid background */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
 
-      <div className="relative w-full max-w-sm">
-        {/* Logo / brand */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-orange-500/10 border border-orange-500/20 shadow-lg shadow-orange-500/10">
-            <ShieldCheck className="size-8 text-orange-400" />
+      {/* Auth loading overlay — never blank, always branded */}
+      {showOverlay && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: '#080C14' }}>
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative size-10">
+              <div className="absolute inset-0 rounded-full border-2" style={{ borderColor: 'rgba(249,115,22,0.2)' }} />
+              <div className="absolute inset-0 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#F97316' }} />
+            </div>
+            <p className="text-sm" style={{ color: '#4B5563' }}>
+              {clearing ? 'Preparing login…' : 'Checking session…'}
+            </p>
           </div>
-          <h1 className="font-serif text-2xl font-bold text-white">Admin Portal</h1>
-          <p className="mt-1 text-sm text-slate-400">God-Mode access — restricted entry</p>
+        </div>
+      )}
+
+      {/* Login card */}
+      <div className="relative z-10 w-full max-w-[360px]">
+        {/* Brand mark */}
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <div
+            className="flex size-14 items-center justify-center rounded-2xl text-2xl"
+            style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 8px 24px rgba(249,115,22,0.3)' }}
+          >
+            🌶️
+          </div>
+          <div className="text-center">
+            <h1 className="text-xl font-bold text-white tracking-tight">IndianMarket</h1>
+            <p className="mt-0.5 text-[13px]" style={{ color: '#4B5563' }}>Owner portal — restricted access</p>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+        {/* Card */}
+        <div
+          className="rounded-2xl p-7"
+          style={{ background: '#0D1117', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="admin-email" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Email</label>
-              <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 focus-within:border-orange-500/50 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all">
-                <Mail className="size-4 shrink-0 text-slate-500" />
-                <input id="admin-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                  placeholder="indianmarket@test.com" autoComplete="email"
-                  className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600" />
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#4B5563' }}>
+                Email
+              </label>
+              <div
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                <Mail className="size-4 shrink-0" style={{ color: '#4B5563' }} />
+                <input
+                  id="admin-email"
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError(null) }}
+                  placeholder="indianmarket@test.com"
+                  autoComplete="email"
+                  className="flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-gray-700"
+                  required
+                />
               </div>
             </div>
 
             {/* Password */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="admin-password" className="text-xs font-bold uppercase tracking-wider text-slate-400">Password</label>
-              <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 focus-within:border-orange-500/50 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all">
-                <Lock className="size-4 shrink-0 text-slate-500" />
-                <input id="admin-password" type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
-                  placeholder="••••••••" autoComplete="current-password"
-                  className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600" />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="text-slate-500 hover:text-slate-300 transition-colors">
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#4B5563' }}>
+                Password
+              </label>
+              <div
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                <Lock className="size-4 shrink-0" style={{ color: '#4B5563' }} />
+                <input
+                  id="admin-password"
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError(null) }}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  className="flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-gray-700"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(v => !v)}
+                  className="transition-colors"
+                  style={{ color: '#4B5563' }}
+                >
                   {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
             </div>
 
+            {/* Error */}
             {error && (
-              <div className="flex items-start gap-2.5 rounded-lg border border-red-500/20 bg-red-500/10 px-3.5 py-3 text-sm text-red-400">
-                <AlertCircle className="mt-0.5 size-4 shrink-0" /><span>{error}</span>
-              </div>
-            )}
-            {success && (
-              <div className="flex items-start gap-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-3 text-sm text-emerald-400">
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0" /><span>{success}</span>
+              <div
+                className="flex items-start gap-2.5 rounded-lg p-3 text-[12px]"
+                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444' }}
+              >
+                <AlertCircle className="size-4 shrink-0 mt-0.5" />
+                {error}
               </div>
             )}
 
-            <button type="submit" disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-400 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
-              {loading ? 'Authenticating…' : 'Enter Admin Portal'}
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={submitting || !email || !password}
+              className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-[13px] font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.25)', marginTop: '8px' }}
+            >
+              {submitting
+                ? <><Loader2 className="size-4 animate-spin" />Authenticating…</>
+                : <><ArrowRight className="size-4" />Enter Portal</>
+              }
             </button>
           </form>
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-600">
-          Not the admin?{' '}
-          <a href="/" className="text-slate-400 hover:text-white transition-colors">Return to storefront →</a>
+        <p className="mt-5 text-center text-[12px]" style={{ color: '#374151' }}>
+          Not the owner?{' '}
+          <a href="/" className="transition-colors" style={{ color: '#6B7280' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#D1D5DB'}
+            onMouseLeave={e => e.currentTarget.style.color = '#6B7280'}
+          >
+            Return to store →
+          </a>
         </p>
       </div>
     </div>
