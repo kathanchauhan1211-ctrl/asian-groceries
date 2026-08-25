@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense } from 'react'
 import { usePathname } from 'next/navigation'
 import { CartProvider } from '@/lib/cart-context'
 import { AuthProvider } from '@/lib/auth-context'
@@ -36,34 +36,10 @@ function AuthAwareLayout({ children }: { children: React.ReactNode }) {
 }
 
 function StorefrontLayout({ children }: { children: React.ReactNode }) {
-  const [scrollY, setScrollY] = useState(0)
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const scale = Math.max(0.5, 1 - scrollY / 1500)
-  const opacity = Math.max(0.02, 0.15 - scrollY / 3000)
-  const translateY = scrollY * 0.3
-
   return (
     <div className="flex min-h-dvh flex-col bg-white text-slate-900">
-      {/* Dynamic scrolling global watermark */}
-      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
-        <img
-          src="/logo.png"
-          alt=""
-          className="w-[70vw] max-w-[600px] object-contain transition-transform duration-75 ease-out"
-          style={{
-            transform: `translateY(${translateY}px) scale(${scale})`,
-            opacity: opacity,
-            filter: `brightness(${Math.max(0.5, 1 - scrollY / 1000)})`,
-          }}
-          aria-hidden
-        />
-      </div>
+      {/* Tiled diagonal watermark — feels embedded, no pasted-image corners */}
+      <WatermarkTile />
 
       <Suspense>
         <SiteHeader />
@@ -75,5 +51,42 @@ function StorefrontLayout({ children }: { children: React.ReactNode }) {
       <CartSheet />
       <FloatingNavigation />
     </div>
+  )
+}
+
+function WatermarkTile() {
+  // Build an SVG data-URI that embeds the logo as a <image> inside a repeating tile.
+  // The SVG tile is 320×220 px, the logo sits rotated −25° in the centre.
+  // We use CSS background-repeat to tile it edge-to-edge with no visible corners.
+  const tileW = 320
+  const tileH = 220
+  const imgW = 160
+  const imgH = 80
+  const cx = tileW / 2 - imgW / 2
+  const cy = tileH / 2 - imgH / 2
+
+  // SVG wrapper — the <image> href points to the logo served by Next.js.
+  // opacity + mix-blend-mode do the heavy lifting to make it feel embedded.
+  const svgContent = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${tileW}" height="${tileH}">
+      <g transform="rotate(-25 ${tileW / 2} ${tileH / 2})" opacity="0.07">
+        <image href="/logo.png" x="${cx}" y="${cy}" width="${imgW}" height="${imgH}"
+          preserveAspectRatio="xMidYMid meet"/>
+      </g>
+    </svg>`
+
+  const encoded = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`
+
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-0"
+      style={{
+        backgroundImage: `url("${encoded}")`,
+        backgroundSize: `${tileW}px ${tileH}px`,
+        backgroundRepeat: 'repeat',
+        mixBlendMode: 'multiply',
+      }}
+    />
   )
 }
