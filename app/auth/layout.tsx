@@ -12,7 +12,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sign In — Asian Groceries',
+  title: 'Sign In — IndianMarket',
 }
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {

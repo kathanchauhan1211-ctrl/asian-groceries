@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useCart } from '@/lib/cart-context'
-import { PRODUCTS, type Product } from '@/lib/products'
+import { type Product } from '@/lib/products'
+import { useProducts } from '@/lib/use-products'
 import { Button } from '@/components/ui/button'
 import {
   User,
@@ -26,6 +27,7 @@ type SavedOrder = {
 
 export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) => void }) {
   const { addItem } = useCart()
+  const { products: liveProducts } = useProducts()
   const [history, setHistory] = useState<SavedOrder[]>([])
   const [preferredTerminal, setPreferredTerminal] = useState('')
 
@@ -85,7 +87,7 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
         const namePart = match[2].toLowerCase()
         
         // Find product by name prefix
-        const product = PRODUCTS.find((p) =>
+        const product = liveProducts.find((p) =>
           p.name.toLowerCase().includes(namePart) || 
           namePart.includes(p.name.toLowerCase())
         )

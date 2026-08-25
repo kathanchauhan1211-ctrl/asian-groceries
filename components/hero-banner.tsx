@@ -26,25 +26,25 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Premium bold tagline strip */}
-      <div className="bg-slate-900 text-white">
+      {/* Premium bold tagline strip — navy with orange accents */}
+      <div className="text-white" style={{ backgroundColor: 'var(--im-navy, #0F2044)' }}>
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="flex items-center gap-6 overflow-x-auto scrollbar-none py-2">
             <div className="flex shrink-0 items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-orange-400">
               <Store className="size-3.5" />
               <span>Order Online</span>
             </div>
-            <div className="h-4 w-px bg-slate-600 shrink-0" />
-            <div className="flex shrink-0 items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-white/80">
+            <div className="h-4 w-px bg-white/15 shrink-0" />
+            <div className="flex shrink-0 items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-white/75">
               <MapPin className="size-3.5 text-orange-400" />
               <span>Pickup at Šaltinių g. 22, Vilnius</span>
             </div>
-            <div className="h-4 w-px bg-slate-600 shrink-0" />
-            <div className="flex shrink-0 items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-white/80">
+            <div className="h-4 w-px bg-white/15 shrink-0" />
+            <div className="flex shrink-0 items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-white/75">
               <Bus className="size-3.5 text-orange-400" />
               <span>Delivered to Any City in Lithuania</span>
             </div>
-            <div className="h-4 w-px bg-slate-600 shrink-0" />
+            <div className="h-4 w-px bg-white/15 shrink-0" />
             <div className="flex shrink-0 items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-orange-400">
               <Package className="size-3.5" />
               <span>Pre-Orders Welcome</span>
@@ -90,7 +90,7 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
               variant="outline"
               size="lg"
               onClick={onTrack}
-              className="h-11 rounded-full px-5 text-sm shadow-sm sm:h-12 sm:px-6 sm:text-base"
+              className="h-11 rounded-full px-5 text-sm shadow-sm sm:h-12 sm:px-6 sm:text-base border-[var(--im-navy,#0F2044)] text-[var(--im-navy,#0F2044)] hover:bg-[var(--im-navy,#0F2044)] hover:text-white transition-all duration-200"
             >
               <Bus className="size-4" /> Track a Parcel
             </Button>
@@ -137,7 +137,7 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
                     <img src="/logo.png" alt="" className="size-10 object-contain" aria-hidden />
                   </span>
                   <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground" style={{ writingMode: 'vertical-rl' }}>
-                    Asian Groceries
+                    IndianMarket
                   </span>
                   <span className="text-[8px] font-medium uppercase tracking-[0.15em] text-primary-foreground/70" style={{ writingMode: 'vertical-rl' }}>
                     Since Vilnius

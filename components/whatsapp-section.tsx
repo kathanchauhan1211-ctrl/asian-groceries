@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { MessageCircle, Bell, Users, Zap, Shield, Sparkles, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
-import { PRODUCTS } from '@/lib/products'
+
 import { Button } from '@/components/ui/button'
 
 export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string) => void }) {

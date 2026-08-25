@@ -1,6 +1,10 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+// Import English synchronously so server & client first-render see the same
+// dictionary — prevents the hydration mismatch where t() returns the key on
+// the server but the translated string on the client.
+import enDict from '@/messages/en.json'
 
 type Dictionary = Record<string, any>
 
@@ -11,64 +15,58 @@ const TranslationContext = createContext<{
 } | null>(null)
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLang] = useState('English')
-  const [dict, setDict] = useState<Dictionary>({})
+  const [lang, setLangState] = useState('English')
+  // Initialise with English already loaded — identical on SSR and first hydration
+  const [dict, setDict] = useState<Dictionary>(enDict as Dictionary)
 
+  // On mount only: read saved language preference from localStorage
   useEffect(() => {
-    // Check local storage for saved language preference
     const saved = localStorage.getItem('ag_lang')
-    if (saved) {
-      setLang(saved)
+    if (saved && saved !== 'English') {
+      setLangState(saved)
     }
   }, [])
 
+  // Whenever language changes (user action), lazily load the right dictionary
   useEffect(() => {
-    // Load the correct dictionary whenever language changes
-    async function loadDictionary() {
+    if (lang === 'English') {
+      setDict(enDict as Dictionary)
+      localStorage.setItem('ag_lang', lang)
+      return
+    }
+    ;(async () => {
       try {
         let module
         switch (lang) {
-          case 'Hindi':
-            module = await import('@/messages/hi.json')
-            break
-          case 'Lithuanian':
-            module = await import('@/messages/lt.json')
-            break
-          case 'Russian':
-            module = await import('@/messages/ru.json')
-            break
-          case 'English':
-          default:
-            module = await import('@/messages/en.json')
-            break
+          case 'Hindi':      module = await import('@/messages/hi.json'); break
+          case 'Lithuanian': module = await import('@/messages/lt.json'); break
+          case 'Russian':    module = await import('@/messages/ru.json'); break
+          default:           module = await import('@/messages/en.json'); break
         }
         setDict(module.default || module)
         localStorage.setItem('ag_lang', lang)
       } catch (err) {
         console.error('Failed to load dictionary:', err)
       }
-    }
-    loadDictionary()
+    })()
   }, [lang])
 
-  // Simple string interpolation function
+  const setLang = (newLang: string) => setLangState(newLang)
+
   const t = (key: string, params?: Record<string, string | number>): string => {
     const keys = key.split('.')
     let val: any = dict
     for (const k of keys) {
-      if (!val) break
+      if (val == null) break
       val = val[k]
     }
     if (typeof val !== 'string') return key
-
-    if (params) {
-      let interpolated = val
-      for (const [k, v] of Object.entries(params)) {
-        interpolated = interpolated.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
-      }
-      return interpolated
+    if (!params) return val
+    let out = val
+    for (const [k, v] of Object.entries(params)) {
+      out = out.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
     }
-    return val
+    return out
   }
 
   return (
@@ -79,9 +77,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 }
 
 export function useTranslation() {
-  const context = useContext(TranslationContext)
-  if (!context) {
-    throw new Error('useTranslation must be used within a TranslationProvider')
-  }
-  return context
+  const ctx = useContext(TranslationContext)
+  if (!ctx) throw new Error('useTranslation must be used within a TranslationProvider')
+  return ctx
 }

@@ -25,7 +25,7 @@ const firebaseConfig = {
 // ─── Singleton (avoids duplicate app warnings in Next.js dev hot-reload) ─────
 const clientApp: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
-const clientDb: Firestore = getFirestore(clientApp)
+const clientDb: Firestore = getFirestore(clientApp, 'indianmarket')
 const clientAuth: Auth = getAuth(clientApp)
 
 // Analytics only works in the browser — guard against SSR

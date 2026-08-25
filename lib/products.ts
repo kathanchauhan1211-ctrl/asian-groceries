@@ -1,42 +1,56 @@
-export type Origin = 'India' | 'Pakistan' | 'Sri Lanka'
-
-export type Category = 'Spices' | 'Rice & Grains' | 'Frozen Foods' | 'Tea & Drinks' | 'Sweets'
-
-export type Diet = 'Halal' | 'Vegetarian' | 'Vegan'
-
-export type Stock = 'In Stock' | 'Low Stock' | 'Out of Stock'
+// ── Types (open strings so any Firestore value is accepted) ──────────────────
+export type Origin   = string
+export type Category = string
+export type Diet     = string
+export type Stock    = 'In Stock' | 'Low Stock' | 'Out of Stock'
 
 export type Variant = {
   label: string
+  size?: string
   price: number
-  weightKg: number
+  weightKg?: number  // optional — admin-portal variants don't have this
 }
 
 export type Product = {
   id: string
   name: string
+  brand?: string
   tagline: string
+  description?: string
   image: string
   category: Category
   origin: Origin
+  unit?: string
   diet: Diet[]
+  dietary?: Diet[]   // alias used by admin portal
   stock: Stock
   variants: Variant[]
   bestseller?: boolean
+  price?: number
 }
 
-export const ORIGIN_FLAG: Record<Origin, string> = {
-  India: '🇮🇳',
-  Pakistan: '🇵🇰',
+// ORIGIN_FLAG — falls back to a globe emoji for any unknown origin
+const KNOWN_FLAGS: Record<string, string> = {
+  'India':     '🇮🇳',
+  'Pakistan':  '🇵🇰',
   'Sri Lanka': '🇱🇰',
 }
+export const ORIGIN_FLAG = new Proxy(KNOWN_FLAGS, {
+  get: (target, key: string) => target[key] ?? '🌍',
+})
 
+// CATEGORIES used by the filter sidebar — all known categories in one list
 export const CATEGORIES: Category[] = [
-  'Spices',
+  'Rice & Atta',
   'Rice & Grains',
+  'Spices',
+  'Lentils & Pulses',
   'Frozen Foods',
-  'Tea & Drinks',
   'Sweets',
+  'Tea & Drinks',
+  'Condiments',
+  'Snacks',
+  'Other',
 ]
 
 export const DIETS: Diet[] = ['Halal', 'Vegetarian', 'Vegan']

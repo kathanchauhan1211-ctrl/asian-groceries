@@ -62,71 +62,30 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Generate simulated ticket number
-    const rand = Math.floor(1000 + Math.random() * 9000)
-    const tNum = `AS-VLN-${rand}`
-    setTicketNumber(tNum)
-
-    const payload = {
-      orderId: tNum,
-      customer: {
-        name,
-        phone: phone.trim(),
-        whatsappLinked: true,
-      },
-      transit: {
-        destinationHub: selectedTransit.label,
-        type: 'Via Autobusų Stotis Courier',
-        origin: 'Šaltinių g. 22, Vilnius',
-        price: deliveryPrice,
-        instructions: instructions || 'Please drop off at station ticket office counter.',
-      },
-      items: lines.map((l) => ({
-        productId: l.product.id,
-        name: l.product.name,
-        variant: l.variant.label,
-        price: l.variant.price,
-        quantity: l.quantity,
-        weightKg: l.variant.weightKg,
-      })),
-      metrics: {
-        totalWeightKg: totalWeight,
-        subtotalPrice: subtotal,
-        deliveryPrice: deliveryPrice,
-        grandTotalPrice: grandTotal,
-      },
-      status: 'Ordered',
-      createdAt: new Date().toISOString(),
-    }
-
-    setFirebasePayload(payload)
-
     try {
-      // Attempt to save in Firestore database
-      await addDoc(collection(clientDb, 'orders'), payload)
-    } catch (err) {
-      console.warn('Firebase document save omitted/failed (likely unconfigured credentials). Payload captured locally for UI:', payload)
-    }
-
-    // Save order preference to localStorage for user hub re-ordering
-    try {
-      const history = JSON.parse(localStorage.getItem('ag_order_history') || '[]')
-      history.unshift({
-        ticketNum: tNum,
-        date: new Date().toLocaleDateString(),
-        itemsCount: lines.reduce((s, l) => s + l.quantity, 0),
-        totalPrice: grandTotal,
-        items: lines.map(l => `${l.quantity}x ${l.product.name.split(' 5kg')[0]}`),
-        transitHub: selectedTransit.label,
+      // Call our API route to create a Stripe checkout session
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: lines,
+          customerEmail: '', // Could be taken from auth context if needed
+          orderNotes: instructions,
+        }),
       })
-      localStorage.setItem('ag_order_history', JSON.stringify(history.slice(0, 10)))
-      localStorage.setItem('ag_saved_terminal', selectedTransit.label)
-    } catch (e) {
-      console.error(e)
+      
+      const data = await res.json()
+      
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        console.error('Checkout failed:', data.error)
+        setIsSubmitting(false)
+      }
+    } catch (err) {
+      console.error('Network error during checkout:', err)
+      setIsSubmitting(false)
     }
-
-    setIsSubmitting(false)
-    setOrderCreated(true)
   }
 
   if (orderCreated) {

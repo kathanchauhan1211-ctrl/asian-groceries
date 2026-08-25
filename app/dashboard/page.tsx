@@ -1,8 +1,10 @@
 'use client'
 
 import { CustomerDashboard } from '@/components/customer-dashboard'
+import { PageHero } from '@/components/page-hero'
 import { useRouter } from 'next/navigation'
 import type { Tab } from '@/components/site-header'
+import { User } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -13,6 +15,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <CustomerDashboard onSelectTab={handleSelectTab} />
+    <div>
+      <PageHero
+        badge={
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+            <User className="size-3" /> Account Hub
+          </span>
+        }
+        title={<>Manage your <span className="text-accent">Orders & Settings</span></>}
+        subtitle="Manage tickets, saved transit terminal preferences, and loyalty program progress"
+      />
+      <div className="py-6">
+        <CustomerDashboard onSelectTab={handleSelectTab} />
+      </div>
+    </div>
   )
 }

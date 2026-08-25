@@ -41,7 +41,7 @@ function getFirebaseAdmin() {
     app = getApps()[0]
   }
 
-  db = getFirestore(app)
+  db = getFirestore(app, 'indianmarket')
   auth = getAuth(app)
 
   return { app, db, auth }

@@ -16,7 +16,7 @@ const fraunces = Fraunces({
 })
 
 export const metadata: Metadata = {
-  title: 'Asian Groceries — Authentic Indian & South Asian Store in Vilnius',
+  title: 'IndianMarket — Authentic Indian & South Asian Store in Vilnius',
   description:
     'Vilnius-based Indian & South Asian grocery store. Basmati, halal meat, paneer, spices and more, hand-delivered to your city bus station via Autobusų Stotis courier.',
   generator: 'v0.app',

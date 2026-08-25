@@ -3,15 +3,13 @@
 import { useMemo, useState } from 'react'
 import { SlidersHorizontal, X } from 'lucide-react'
 import {
-  CATEGORIES,
   DIETS,
-  PRODUCTS,
   STOCKS,
-  type Category,
   type Diet,
   type Origin,
   type Stock,
 } from '@/lib/products'
+import { useProducts } from '@/lib/use-products'
 import { ProductCard } from '@/components/product-card'
 
 function FilterCheckbox({
@@ -57,32 +55,43 @@ export function ProductCatalog({
   origin: Origin | 'All'
   activeCategory: string | null
 }) {
-  const [categories, setCategories] = useState<Category[]>([])
+  const { products: liveProducts, loading, loadingMore, hasMore, loadMore, errorMessage } = useProducts()
+
+  // ── All hooks declared before any early returns (React Rules of Hooks) ─────
+  const [categories, setCategories] = useState<string[]>([])
   const [stocks, setStocks] = useState<Stock[]>([])
   const [diets, setDiets] = useState<Diet[]>([])
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
-  function toggle<T>(list: T[], value: T, setter: (v: T[]) => void) {
-    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value])
-  }
+  // Dynamic category list from live Firestore products
+  const dynamicCategories = useMemo(() => {
+    const seen = new Set<string>()
+    liveProducts.forEach(p => p.category && seen.add(p.category))
+    return Array.from(seen).sort()
+  }, [liveProducts])
 
+  // Filtered list
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return PRODUCTS.filter((p) => {
+    return liveProducts.filter((p) => {
       if (origin !== 'All' && p.origin !== origin) return false
       if (activeCategory && p.category !== activeCategory) return false
       if (categories.length && !categories.includes(p.category)) return false
       if (stocks.length && !stocks.includes(p.stock)) return false
-      if (diets.length && !diets.every((d) => p.diet.includes(d))) return false
+      if (diets.length && !diets.every((d) => (p.diet ?? []).includes(d))) return false
       if (q) {
         const haystack = `${p.name} ${p.tagline} ${p.category} ${p.origin}`.toLowerCase()
         if (!haystack.includes(q)) return false
       }
       return true
     })
-  }, [query, origin, activeCategory, categories, stocks, diets])
+  }, [query, origin, activeCategory, categories, stocks, diets, liveProducts])
 
   const activeCount = categories.length + stocks.length + diets.length
+
+  function toggle<T>(list: T[], value: T, setter: (v: T[]) => void) {
+    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value])
+  }
 
   function clearAll() {
     setCategories([])
@@ -90,13 +99,53 @@ export function ProductCatalog({
     setDiets([])
   }
 
+  // ── Early returns AFTER all hooks ─────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <section id="shop" className="mx-auto max-w-7xl scroll-mt-40 px-4 py-10 md:px-6">
+        <div className="mb-8">
+          <div className="h-8 w-40 rounded-xl bg-slate-100 animate-pulse mb-2" />
+          <div className="h-4 w-24 rounded-lg bg-slate-100 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-slate-200 bg-white overflow-hidden animate-pulse">
+              <div className="aspect-square bg-slate-100" />
+              <div className="p-4 space-y-2">
+                <div className="h-3 w-16 bg-slate-100 rounded" />
+                <div className="h-4 w-full bg-slate-100 rounded" />
+                <div className="h-4 w-3/4 bg-slate-100 rounded" />
+                <div className="h-8 w-full bg-slate-100 rounded-lg mt-3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  if (errorMessage) {
+    return (
+      <section id="shop" className="mx-auto max-w-7xl scroll-mt-40 px-4 py-10 md:px-6">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-red-200 bg-red-50 py-16 text-center px-6">
+          <span className="mb-4 text-4xl">⚠️</span>
+          <p className="font-serif text-xl font-semibold text-red-700 mb-2">Cannot load products</p>
+          <p className="max-w-lg text-sm text-red-600">{errorMessage}</p>
+          <p className="mt-4 text-xs text-red-400">Open browser DevTools → Console for the full error detail</p>
+        </div>
+      </section>
+    )
+  }
+
+  // ── Filter sidebar panel (shared between desktop sidebar + mobile drawer) ──
   const filterPanel = (
     <div className="flex flex-col gap-6">
       <div>
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground">Category</h3>
         </div>
-        {CATEGORIES.map((c) => (
+        {dynamicCategories.map((c) => (
           <FilterCheckbox
             key={c}
             label={c}
@@ -179,7 +228,7 @@ export function ProductCatalog({
           </div>
         </aside>
 
-        {/* Grid */}
+        {/* Product Grid */}
         <div className="flex-1">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 py-20 text-center">
@@ -194,6 +243,26 @@ export function ProductCatalog({
               {filtered.map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} />
               ))}
+            </div>
+          )}
+
+          {/* Load More */}
+          {hasMore && !loading && filtered.length > 0 && (
+            <div className="mt-10 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="flex items-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-sm font-semibold text-foreground shadow-sm hover:shadow-md hover:bg-muted transition-all duration-200 disabled:opacity-60"
+              >
+                {loadingMore ? (
+                  <>
+                    <span className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    Loading…
+                  </>
+                ) : (
+                  'Load more products'
+                )}
+              </button>
             </div>
           )}
         </div>
