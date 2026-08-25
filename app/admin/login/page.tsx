@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const { user, signUp, signIn, loading: authLoading } = useAuth()
+  const { user, signUp, signIn, signOut, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -16,10 +16,16 @@ export default function AdminLoginPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!authLoading && user?.email === 'indianmarket@test.com') {
-      router.replace('/admin')
+    if (!authLoading) {
+      if (user?.email === 'indianmarket@test.com') {
+        // Already signed in as admin — go straight to portal
+        router.replace('/admin')
+      } else if (user && user.email !== 'indianmarket@test.com') {
+        // Wrong account — sign out silently so admin can log in
+        signOut()
+      }
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router, signOut])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

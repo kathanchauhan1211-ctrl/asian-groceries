@@ -34,12 +34,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!loading) {
-      if (!user) router.push('/admin/login')
-      else if (user.email !== 'indianmarket@test.com') router.push('/')
+      if (!user) {
+        router.push('/admin/login')
+      } else if (user.email !== 'indianmarket@test.com') {
+        // Wrong account open — sign it out silently then go to admin login
+        signOut().finally(() => router.push('/admin/login'))
+      }
     }
-  }, [user, loading, router])
+  }, [user, loading, router, signOut])
 
-  if (loading) {
+  // Show spinner while auth loads OR while redirecting a wrong-account user
+  if (loading || (!loading && user && user.email !== 'indianmarket@test.com')) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#080C14' }}>
         <div className="flex flex-col items-center gap-4">
@@ -47,7 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="absolute inset-0 rounded-full border-2 border-orange-500/20" />
             <div className="absolute inset-0 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
           </div>
-          <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Loading workspace…</p>
+          <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Redirecting…</p>
         </div>
       </div>
     )
