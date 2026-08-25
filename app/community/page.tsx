@@ -18,11 +18,11 @@ export default function CommunityPage() {
       <PageHero
         badge={
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-            <MessageSquare className="size-3" /> WhatsApp Community
+            <MessageSquare className="size-3" /> WhatsApp Group
           </span>
         }
         title={<>Vilnius Stock & <span className="text-accent">Restock alerts</span></>}
-        subtitle="Join our community chat for real-time stock alerts and direct community support"
+        subtitle="Join our group chat for real-time stock alerts and direct support"
       />
       <div className="py-6">
         <WhatsAppSection onQuickBuy={handleQuickBuy} />
