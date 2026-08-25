@@ -1,6 +1,6 @@
 'use client'
 
-import { Search, ShoppingBag, Flame, User, LogOut, ChevronDown, X } from 'lucide-react'
+import { Search, ShoppingBag, User, LogOut, ChevronDown, X } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/cart-context'
@@ -13,13 +13,6 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 export type Tab = 'shop' | 'checkout' | 'track' | 'dashboard' | 'community'
 
 const ORIGINS: (Origin | 'All')[] = ['All', 'India', 'Pakistan', 'Sri Lanka']
-
-const QUICK_FILTERS = [
-  { label: 'Basmati Rice 5kg', query: 'basmati' },
-  { label: 'Ashirvad Atta', query: 'atta' },
-  { label: 'Everest Spices', query: 'everest' },
-  { label: 'Chana Dal', query: 'chana' },
-]
 
 const CATEGORY_PILLS = [
   { label: '🌶️ Spices', query: 'Spices' },
@@ -238,26 +231,6 @@ export function SiteHeader() {
 
         {/* ── Filter pill rows ── */}
         <div className="flex flex-col gap-1.5 pb-2.5">
-
-          {/* Hot quick filters */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-            <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white/40">
-              <Flame className="size-3 text-orange-400" /> Hot:
-            </span>
-            {QUICK_FILTERS.map((filter) => (
-              <button
-                key={filter.label}
-                onClick={() => updateFilters({ q: filter.query })}
-                className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold transition-all duration-200 ${
-                  query === filter.query
-                    ? 'border-orange-400 bg-orange-500 text-white shadow-sm shadow-orange-500/30'
-                    : 'border-white/20 bg-white/8 text-white/70 hover:border-orange-400/60 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
 
           {/* Category pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
