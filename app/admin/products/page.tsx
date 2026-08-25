@@ -3,8 +3,9 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import {
   collection, onSnapshot, query, orderBy,
-  doc, writeBatch, addDoc, updateDoc, deleteDoc, getDocs
+  doc, addDoc, updateDoc
 } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
 import { clientDb } from '@/lib/firebase-client'
 import { type Stock } from '@/lib/products'
 import {
@@ -67,6 +68,24 @@ function parseCSV(text: string): { data: ParsedRow[]; errors: string[] } {
     data.push(row)
   })
   return { data, errors }
+}
+
+// ─── Server-side delete via Admin SDK API route ───────────────────────────────
+// Bypasses Firestore Security Rules completely — works on live hosting.
+async function serverDeleteProducts(ids: string[]): Promise<void> {
+  const auth = getAuth()
+  const user = auth.currentUser
+  if (!user) throw new Error('Not authenticated')
+  const token = await user.getIdToken(/* forceRefresh */ true)
+  const res = await fetch('/api/admin/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action: 'delete', ids }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error ?? `Server error ${res.status}`)
+  }
 }
 
 function buildProductDoc(data: Record<string, any>) {
@@ -178,9 +197,9 @@ function EditableRow({
     setDeleting(true)
     onDelete()          // optimistic: remove from list immediately
     try {
-      await deleteDoc(doc(clientDb, 'products', product.id))
-    } catch (err) {
-      console.error('Delete failed:', err)
+      await serverDeleteProducts([product.id])
+    } catch (err: any) {
+      console.error('Delete failed:', err.message)
     }
   }
 
@@ -499,7 +518,7 @@ export default function AdminProductsPage() {
     setCollapsed(s => { const n = new Set(s); n.has(cat) ? n.delete(cat) : n.add(cat); return n })
   }
 
-  // Bulk delete — optimistic first, Firestore second
+  // Bulk delete via server API — optimistic first
   async function handleDeleteSelected() {
     const ids = [...selected]
     if (!confirm(`Permanently delete ${ids.length} product${ids.length > 1 ? 's' : ''}?`)) return
@@ -507,36 +526,26 @@ export default function AdminProductsPage() {
     removeLocally(ids)          // instant UI removal
     setSelected(new Set())
     try {
-      const BATCH = 450
-      for (let i = 0; i < ids.length; i += BATCH) {
-        const batch = writeBatch(clientDb)
-        ids.slice(i, i + BATCH).forEach(id => batch.delete(doc(clientDb, 'products', id)))
-        await batch.commit()
-      }
+      await serverDeleteProducts(ids)
       showToast(`${ids.length} product${ids.length > 1 ? 's' : ''} deleted.`)
-    } catch (err) {
-      showToast('Delete failed. Refresh to see current state.', 'error')
+    } catch (err: any) {
+      showToast(`Delete failed: ${err.message}`, 'error')
     } finally {
       setBulkDeleting(false)
     }
   }
 
-  // Delete entire category — optimistic
+  // Delete entire category via server API
   async function handleDeleteCategory(cat: string) {
     const ids = (grouped.get(cat) || []).map(p => p.id)
     if (!ids.length) return
     if (!confirm(`Delete all ${ids.length} products in "${cat}"?`)) return
-    removeLocally(ids)           // instant UI removal
+    removeLocally(ids)
     try {
-      const BATCH = 450
-      for (let i = 0; i < ids.length; i += BATCH) {
-        const batch = writeBatch(clientDb)
-        ids.slice(i, i + BATCH).forEach(id => batch.delete(doc(clientDb, 'products', id)))
-        await batch.commit()
-      }
+      await serverDeleteProducts(ids)
       showToast(`All "${cat}" products deleted.`)
-    } catch (err) {
-      showToast('Delete failed. Refresh to see current state.', 'error')
+    } catch (err: any) {
+      showToast(`Delete failed: ${err.message}`, 'error')
     }
   }
 
