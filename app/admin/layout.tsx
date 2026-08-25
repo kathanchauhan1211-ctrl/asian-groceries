@@ -46,6 +46,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const redirected = useRef(false)
 
+  // ── Login page is INSIDE this layout in Next.js App Router,
+  //    so we MUST pass it through without any auth check —
+  //    otherwise the layout redirects to /admin/login which loops forever.
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
   useEffect(() => {
     if (loading) return
     if (redirected.current) return
