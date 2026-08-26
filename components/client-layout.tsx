@@ -58,12 +58,13 @@ function SpicePatternTile() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-0 opacity-100 dark:opacity-80"
+      className="pointer-events-none fixed inset-0 z-0"
       style={{
         backgroundImage: `url("/spice-decor.jpg")`,
-        backgroundSize: '600px auto',
+        backgroundSize: '1600px auto',
         backgroundRepeat: 'repeat',
         mixBlendMode: 'multiply',
+        opacity: 0.22,
       }}
     />
   )

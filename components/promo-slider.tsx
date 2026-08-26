@@ -133,15 +133,15 @@ export function PromoSlider() {
 
       {/* ── Slider shell — banner aspect ratio ── */}
       <div
-        className="relative w-full overflow-hidden bg-[#080C14]"
+        className="relative w-full overflow-hidden"
         style={{ borderBottom: '1px solid var(--border)' }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* Aspect ratio: 16:9 on mobile, 21:9 on desktop for a true banner ad look */}
-        <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[24/9] xl:aspect-[32/9]">
+      {/* Aspect ratio: 16:9 on mobile, 21:9 on desktop for a true banner ad look */}
+        <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[24/9] xl:aspect-[32/9]" style={{ background: '#080C14' }}>
 
           {loading ? (
             <div className="absolute inset-0 bg-slate-200 animate-pulse" style={{ background: 'var(--muted)' }} />
@@ -162,6 +162,7 @@ export function PromoSlider() {
                 aria-hidden={!isCurrent}
                 className="absolute inset-0"
                 style={{
+                  background: '#080C14',
                   zIndex: getZIndex(i),
                   transform: getTransform(i),
                   transition: active ? `transform ${TRANS_MS}ms cubic-bezier(0.25,0.46,0.45,0.94)` : 'none',
@@ -173,6 +174,7 @@ export function PromoSlider() {
                   alt={slide.brand}
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{
+                    objectPosition: 'center center',
                     filter: 'brightness(1.12) saturate(1.08)',
                     animation: isCurrent && !animating
                       ? `${i % 2 === 0 ? 'kb-in' : 'kb-out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
