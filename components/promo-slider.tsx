@@ -10,6 +10,43 @@ import { type Slide } from '@/app/admin/slides/page'
 const AUTO_MS = 3500
 const TRANS_MS = 420
 
+const FALLBACK_SLIDES: Slide[] = [
+  {
+    img: 'https://i.ytimg.com/vi/EjBcaWm2_4w/maxresdefault.jpg',
+    brand: 'Aashirvaad',
+    label: 'Atta & Flour',
+    headline: "India's Most Loved Flour",
+    sub: 'Soft rotis every time — authentic stone-ground atta',
+    cta: 'Shop Flour',
+    href: '/?category=Rice+%26+Grains',
+    order: 0,
+    enabled: true,
+  },
+  {
+    img: 'https://www.southasiancentral.ca/wp-content/uploads/Brand-page-top-banner-1.webp',
+    brand: 'MDH',
+    label: 'Spices & Masalas',
+    headline: 'Real Taste, Real Spice',
+    sub: 'MDH — trusted by generations across South Asia',
+    cta: 'Shop Spices',
+    href: '/?category=Spices',
+    order: 1,
+    enabled: true,
+  },
+  {
+    img: 'https://vibrantfoods.com/wp-content/uploads/2022/08/TRS_OUR-BRAND_-BANNERS2.jpg',
+    brand: 'TRS',
+    label: 'Lentils & Pulses',
+    headline: 'Premium Quality Pulses',
+    sub: "TRS — the UK's #1 South Asian ingredient brand",
+    cta: 'Shop Lentils',
+    href: '/?category=Lentils+%26+Pulses',
+    order: 2,
+    enabled: true,
+  }
+].map((s, i) => ({ id: `fallback-${i}`, ...s }))
+
+
 export function PromoSlider() {
   const [slides, setSlides]       = useState<Slide[]>([])
   const [loading, setLoading]     = useState(true)
@@ -27,9 +64,14 @@ export function PromoSlider() {
       try {
         const q = query(collection(clientDb, 'slides'), where('enabled', '==', true), orderBy('order', 'asc'))
         const snap = await getDocs(q)
-        setSlides(snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide)))
+        if (snap.empty) {
+          setSlides(FALLBACK_SLIDES)
+        } else {
+          setSlides(snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide)))
+        }
       } catch (err) {
-        console.error('Failed to load slides:', err)
+        console.error('Failed to load slides, using fallback:', err)
+        setSlides(FALLBACK_SLIDES)
       }
       setLoading(false)
     }

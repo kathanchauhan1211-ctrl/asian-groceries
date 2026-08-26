@@ -391,7 +391,7 @@ export function ProductCatalog({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 sm:gap-5">
             {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
           </div>
         )}
