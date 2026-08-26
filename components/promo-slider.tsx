@@ -113,7 +113,7 @@ export function PromoSlider() {
         : 'translateX(0%)'
     }
     if (isPrev) {
-      return direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)'
+      return 'translateX(0%)' // Keep previous slide in place while the new one slides over it
     }
     return 'translateX(100%)'
   }
@@ -133,15 +133,15 @@ export function PromoSlider() {
 
       {/* ── Slider shell — responsive height via aspect-ratio ── */}
       <div
-        className="relative w-full overflow-hidden"
+        className="relative w-full overflow-hidden bg-[#080C14]"
         style={{ borderBottom: '1px solid var(--border)' }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* Responsive height: taller on desktop, 9:16-ish on mobile portrait */}
-        <div className="relative w-full" style={{ paddingBottom: 'clamp(260px, 42vw, 480px)', height: 0 }}>
+        {/* Responsive height: taller on desktop to avoid aggressive image cropping on ultra-wide screens */}
+        <div className="relative w-full" style={{ paddingBottom: 'clamp(260px, 35vw, 720px)', height: 0 }}>
 
           {loading ? (
             <div className="absolute inset-0 bg-slate-200 animate-pulse" style={{ background: 'var(--muted)' }} />
@@ -296,6 +296,9 @@ export function PromoSlider() {
 
         </div>
       </div>
+      
+      {/* Ornate Indian trim divider on the bottom to frame the slider */}
+      <div className="desi-trim" aria-hidden />
     </>
   )
 }
