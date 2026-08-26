@@ -3,72 +3,41 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-const SLIDES = [
-  {
-    id: 1,
-    img: 'https://i.ytimg.com/vi/EjBcaWm2_4w/maxresdefault.jpg',
-    brand: 'Aashirvaad',
-    label: 'Atta & Flour',
-    headline: "India's Most Loved Flour",
-    sub: 'Soft rotis every time — authentic stone-ground atta',
-    cta: 'Shop Flour',
-    href: '/?category=Rice+%26+Grains',
-  },
-  {
-    id: 2,
-    img: 'https://www.southasiancentral.ca/wp-content/uploads/Brand-page-top-banner-1.webp',
-    brand: 'MDH',
-    label: 'Spices & Masalas',
-    headline: 'Real Taste, Real Spice',
-    sub: 'MDH — trusted by generations across South Asia',
-    cta: 'Shop Spices',
-    href: '/?category=Spices',
-  },
-  {
-    id: 3,
-    img: 'https://vibrantfoods.com/wp-content/uploads/2022/08/TRS_OUR-BRAND_-BANNERS2.jpg',
-    brand: 'TRS',
-    label: 'Lentils & Pulses',
-    headline: 'Premium Quality Pulses',
-    sub: "TRS — the UK's #1 South Asian ingredient brand",
-    cta: 'Shop Lentils',
-    href: '/?category=Lentils+%26+Pulses',
-  },
-  {
-    id: 4,
-    img: 'https://i.ytimg.com/vi/KBJbUNJ8-Dk/maxresdefault.jpg',
-    brand: "Haldiram's",
-    label: 'Snacks & Sweets',
-    headline: 'Taste the Tradition',
-    sub: "Haldiram's — premium namkeen, mithai & more",
-    cta: 'Shop Snacks',
-    href: '/?category=Snacks',
-  },
-  {
-    id: 5,
-    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4NgeaYtyZ9LP2HuffUVY1p_cqEppZjKzdtS3Z4hgJo0hG0he-Ji-ZNQ0&s=10',
-    brand: 'PRAN',
-    label: 'Ready Meals & Drinks',
-    headline: 'Flavours of Bangladesh',
-    sub: 'PRAN — quality food & beverages from the subcontinent',
-    cta: 'Shop PRAN',
-    href: '/?category=Ready+Meals',
-  },
-]
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { clientDb } from '@/lib/firebase-client'
+import { type Slide } from '@/app/admin/slides/page'
 
 const AUTO_MS = 3500
 const TRANS_MS = 420
 
 export function PromoSlider() {
+  const [slides, setSlides]       = useState<Slide[]>([])
+  const [loading, setLoading]     = useState(true)
+  
   const [current, setCurrent]     = useState(0)
   const [prev, setPrev]           = useState<number | null>(null)
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [animating, setAnimating] = useState(false)
   const [paused, setPaused]       = useState(false)
-  const total = SLIDES.length
+  
+  const total = slides.length
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const q = query(collection(clientDb, 'slides'), where('enabled', '==', true), orderBy('order', 'asc'))
+        const snap = await getDocs(q)
+        setSlides(snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide)))
+      } catch (err) {
+        console.error('Failed to load slides:', err)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [])
 
   const goTo = useCallback((idx: number, dir: 'next' | 'prev' = 'next') => {
-    if (animating) return
+    if (animating || total === 0) return
     const next = ((idx % total) + total) % total
     setDirection(dir)
     setPrev(current)
@@ -132,7 +101,15 @@ export function PromoSlider() {
         {/* Responsive height: taller on desktop, 9:16-ish on mobile portrait */}
         <div className="relative w-full" style={{ paddingBottom: 'clamp(260px, 42vw, 480px)', height: 0 }}>
 
-          {SLIDES.map((slide, i) => {
+          {loading ? (
+            <div className="absolute inset-0 bg-slate-200 animate-pulse" style={{ background: 'var(--muted)' }} />
+          ) : total === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-400" style={{ background: 'var(--secondary)' }}>
+              No slides available
+            </div>
+          ) : (
+            <>
+              {slides.map((slide, i) => {
             const isCurrent = i === current
             const isPrev    = i === prev
             const active    = isCurrent || isPrev
@@ -253,7 +230,7 @@ export function PromoSlider() {
 
           {/* ── Dots ── */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
-            {SLIDES.map((_, i) => (
+            {slides.map((_, i) => (
               <button
                 key={i}
                 aria-label={`Slide ${i + 1}`}
@@ -272,6 +249,8 @@ export function PromoSlider() {
           <div className="absolute right-14 bottom-3 z-20 text-[10px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.5)' }}>
             {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
           </div>
+            </>
+          )}
 
         </div>
       </div>
