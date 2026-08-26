@@ -131,7 +131,7 @@ export function PromoSlider() {
         @keyframes kb-out { from { transform: scale(1.07); } to { transform: scale(1.0); } }
       `}</style>
 
-      {/* ── Slider shell — responsive height via aspect-ratio ── */}
+      {/* ── Slider shell — banner aspect ratio ── */}
       <div
         className="relative w-full overflow-hidden bg-[#080C14]"
         style={{ borderBottom: '1px solid var(--border)' }}
@@ -140,8 +140,8 @@ export function PromoSlider() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* Responsive height: taller on desktop to avoid aggressive image cropping on ultra-wide screens */}
-        <div className="relative w-full" style={{ paddingBottom: 'clamp(260px, 35vw, 720px)', height: 0 }}>
+        {/* Aspect ratio: 16:9 on mobile, 21:9 on desktop for a true banner ad look */}
+        <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[24/9] xl:aspect-[32/9]">
 
           {loading ? (
             <div className="absolute inset-0 bg-slate-200 animate-pulse" style={{ background: 'var(--muted)' }} />
@@ -180,69 +180,48 @@ export function PromoSlider() {
                   }}
                 />
 
-                {/* Gradient overlay — left-heavy for text legibility */}
+                {/* Gradient overlay just at the very bottom for the text bar */}
                 <div
-                  className="absolute inset-0"
-                  style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.32) 55%, rgba(0,0,0,0.06) 100%)' }}
+                  className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
+                  style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 40%, transparent 100%)' }}
                 />
 
-                {/* ── Text content — fully responsive typography ── */}
-                <div className="absolute inset-0 flex flex-col justify-center px-4 sm:px-10 md:px-14 max-w-2xl">
+                {/* ── Text content — bottom single-line bar ── */}
+                <div 
+                  className="absolute inset-x-0 bottom-0 flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 md:px-10 py-3 sm:py-4 gap-2 sm:gap-4"
+                  style={{
+                    opacity: isCurrent && !animating ? 1 : 0,
+                    transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(10px)',
+                    transition: `opacity ${TRANS_MS + 50}ms ease-out 50ms, transform ${TRANS_MS + 50}ms ease-out 50ms`,
+                  }}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 min-w-0">
+                    {/* Brand pill */}
+                    <span
+                      className="inline-flex shrink-0 items-center rounded-sm px-2 py-0.5 font-bold uppercase tracking-widest text-[10px]"
+                      style={{ background: '#F97316', color: '#fff' }}
+                    >
+                      {slide.label}
+                    </span>
 
-                  {/* Brand pill */}
-                  <span
-                    className="mb-1.5 sm:mb-2 inline-flex w-fit items-center rounded-full px-2.5 py-0.5 font-bold uppercase tracking-widest"
-                    style={{
-                      fontSize: 'clamp(9px, 1.4vw, 13px)',
-                      background: 'rgba(249,115,22,0.90)',
-                      color: '#fff',
-                      opacity: isCurrent && !animating ? 1 : 0,
-                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(14px)',
-                      transition: `opacity ${TRANS_MS + 60}ms ease-out 60ms, transform ${TRANS_MS + 60}ms ease-out 60ms`,
-                    }}
-                  >
-                    {slide.label}
-                  </span>
-
-                  {/* Headline — clamps smoothly from mobile to 4K */}
-                  <h2
-                    className="font-serif font-bold leading-tight text-white"
-                    style={{
-                      fontSize: 'clamp(16px, 4vw, 52px)',
-                      textShadow: '0 2px 12px rgba(0,0,0,0.4)',
-                      opacity: isCurrent && !animating ? 1 : 0,
-                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(18px)',
-                      transition: `opacity ${TRANS_MS + 80}ms ease-out 120ms, transform ${TRANS_MS + 80}ms ease-out 120ms`,
-                    }}
-                  >
-                    {slide.headline}
-                  </h2>
-
-                  {/* Subtitle — hidden on very small screens, visible sm+ */}
-                  <p
-                    className="mt-1 sm:mt-2 font-medium text-white/80 hidden xs:block"
-                    style={{
-                      fontSize: 'clamp(11px, 1.8vw, 17px)',
-                      opacity: isCurrent && !animating ? 1 : 0,
-                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(16px)',
-                      transition: `opacity ${TRANS_MS + 80}ms ease-out 180ms, transform ${TRANS_MS + 80}ms ease-out 180ms`,
-                    }}
-                  >
-                    {slide.sub}
-                  </p>
+                    {/* Headline & Sub */}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h2 className="font-bold text-white text-[13px] sm:text-[15px] truncate">
+                        {slide.headline}
+                      </h2>
+                      {slide.sub && (
+                        <span className="hidden md:inline font-medium text-white/70 text-[13px] truncate border-l border-white/20 pl-2">
+                          {slide.sub}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
                   {/* CTA */}
                   <a
                     href={slide.href}
-                    className="mt-3 sm:mt-5 inline-flex w-fit items-center gap-1.5 rounded-full font-bold text-slate-900 transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                    style={{
-                      fontSize: 'clamp(11px, 1.6vw, 15px)',
-                      padding: 'clamp(6px,1vw,10px) clamp(14px,2vw,22px)',
-                      background: '#fff',
-                      opacity: isCurrent && !animating ? 1 : 0,
-                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(14px)',
-                      transition: `opacity ${TRANS_MS + 80}ms ease-out 240ms, transform ${TRANS_MS + 80}ms ease-out 240ms`,
-                    }}
+                    className="shrink-0 inline-flex items-center justify-center rounded-full font-bold text-slate-900 transition-all duration-200 hover:scale-105 hover:bg-orange-50 text-[11px] sm:text-[13px] px-3 py-1 sm:px-5 sm:py-1.5"
+                    style={{ background: '#fff' }}
                     onClick={e => e.stopPropagation()}
                   >
                     {slide.cta} →
@@ -270,8 +249,8 @@ export function PromoSlider() {
             <ChevronRight style={{ width: 'clamp(14px,2vw,22px)', height: 'clamp(14px,2vw,22px)' }} />
           </button>
 
-          {/* ── Dots ── */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+          {/* ── Dots (Moved up or hidden as we have the bottom bar) ── */}
+          <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-black/40 px-2.5 py-1.5 rounded-full backdrop-blur-sm">
             {slides.map((_, i) => (
               <button
                 key={i}
@@ -287,8 +266,8 @@ export function PromoSlider() {
             ))}
           </div>
 
-          {/* Counter */}
-          <div className="absolute right-14 bottom-3 z-20 text-[10px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          {/* Counter (Moved slightly up to avoid overlapping the bottom bar) */}
+          <div className="absolute right-4 top-4 z-20 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-semibold tabular-nums backdrop-blur-sm" style={{ color: '#fff' }}>
             {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
           </div>
             </>

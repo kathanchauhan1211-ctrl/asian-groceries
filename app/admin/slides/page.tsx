@@ -64,12 +64,19 @@ function SlideForm({
         {form.img ? (
           <>
             <img src={form.img} alt="preview" className="w-full h-full object-cover" />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,rgba(0,0,0,0.65) 0%,rgba(0,0,0,0.2) 60%,transparent 100%)' }} />
-            <div className="absolute inset-0 flex flex-col justify-center px-5">
-              {form.label && <span className="mb-1 w-fit rounded-full bg-orange-500 px-2.5 py-0.5 text-[11px] font-bold text-white uppercase">{form.label}</span>}
-              {form.headline && <p className="text-lg font-bold text-white leading-tight">{form.headline}</p>}
-              {form.sub && <p className="text-xs text-white/75 mt-0.5">{form.sub}</p>}
-              {form.cta && <span className="mt-2 w-fit rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-900">{form.cta} →</span>}
+            <div
+              className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
+              style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 40%, transparent 100%)' }}
+            />
+            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-4 py-2">
+              <div className="flex flex-col min-w-0">
+                {form.label && <span className="mb-0.5 w-fit rounded-sm bg-[#F97316] px-1.5 py-0.5 text-[8px] font-bold text-white uppercase">{form.label}</span>}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  {form.headline && <p className="text-[11px] font-bold text-white truncate">{form.headline}</p>}
+                  {form.sub && <span className="text-[10px] text-white/70 truncate border-l border-white/20 pl-1.5">{form.sub}</span>}
+                </div>
+              </div>
+              {form.cta && <span className="ml-2 shrink-0 rounded-full bg-white px-2 py-1 text-[9px] font-bold text-slate-900">{form.cta} →</span>}
             </div>
           </>
         ) : (
