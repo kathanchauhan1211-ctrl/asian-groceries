@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react'
 import {
-  X, ChevronDown, Check, ArrowUpDown, Loader2, ChevronRight, ChevronLeft,
+  X, ChevronDown, Check, ArrowUpDown, Loader2, ChevronRight,
   SlidersHorizontal, Search,
 } from 'lucide-react'
 import {
@@ -23,13 +23,6 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'name',       label: 'Name A–Z' },
 ]
 
-// ─── Navigation sections (Dookan-style top nav) ───────────────────────────────
-const TOP_NAV = [
-  { label: 'Top Picks',       id: 'top-picks',    icon: '🔥' },
-  { label: 'Just Arrived',    id: 'just-arrived', icon: '✨' },
-  { label: 'Monthly Offers',  id: 'monthly-offers', icon: '🏷️' },
-  { label: 'Bundles',         id: 'bundles',      icon: '📦' },
-]
 
 // ─── Full category list (Dookan-inspired, adjusted for our inventory) ─────────
 const CATEGORIES = [
@@ -201,94 +194,6 @@ function PriceRange({ min, max, value, onChange }: {
   )
 }
 
-// ─── Horizontal product row section ─────────────────────────────────────────
-function ProductRow({
-  id, title, badge, emoji, products, viewAllLabel,
-}: {
-  id: string; title: string; badge?: { label: string; color: string; bg: string }
-  emoji?: string; products: Product[]; viewAllLabel?: string
-}) {
-  const rowRef = useRef<HTMLDivElement>(null)
-  const scroll = (dir: 'left' | 'right') => {
-    rowRef.current?.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' })
-  }
-  if (products.length === 0) return null
-  return (
-    <div id={id} className="mb-10 scroll-mt-24">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          {emoji && <span className="text-2xl">{emoji}</span>}
-          <h2 className="font-serif text-xl font-bold text-slate-900 sm:text-2xl">{title}</h2>
-          {badge && (
-            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
-              style={{ background: badge.bg, color: badge.color }}>
-              {badge.label}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Scroll arrows — desktop */}
-          <button onClick={() => scroll('left')}
-            className="hidden md:flex size-7 items-center justify-center rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all">
-            <ChevronLeft className="size-4 text-gray-500" />
-          </button>
-          <button onClick={() => scroll('right')}
-            className="hidden md:flex size-7 items-center justify-center rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all">
-            <ChevronRight className="size-4 text-gray-500" />
-          </button>
-          {viewAllLabel && (
-            <a href="#shop-grid"
-              className="flex items-center gap-1 text-[13px] font-semibold text-orange-500 hover:text-orange-600 transition-colors ml-1">
-              {viewAllLabel} <ChevronRight className="size-3.5" />
-            </a>
-          )}
-        </div>
-      </div>
-      <div ref={rowRef} className="flex gap-3 overflow-x-auto pb-3 scrollbar-none sm:gap-4">
-        {products.map((p, i) => (
-          <div key={p.id} className="w-[155px] shrink-0 sm:w-[180px]">
-            <ProductCard product={p} index={i} />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Category grid (Dookan "Shop by Category") ────────────────────────────────
-function CategoryGrid({ onSelect, selected }: {
-  onSelect: (cat: string | null) => void; selected: string | null
-}) {
-  return (
-    <div className="mb-10">
-      <h2 className="mb-4 font-serif text-xl font-bold text-slate-900 sm:text-2xl">🛒 Shop by Category</h2>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-5">
-        {CATEGORIES.map((cat) => {
-          const isActive = cat.match.some(m => m === selected)
-          return (
-            <button
-              key={cat.label}
-              onClick={() => onSelect(isActive ? null : cat.match[0])}
-              className="flex flex-col items-center gap-2 rounded-2xl border p-3 text-center transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-              style={{
-                background:   isActive ? '#0F2044' : '#fff',
-                borderColor:  isActive ? '#0F2044' : '#E5E7EB',
-                boxShadow:    isActive ? '0 4px 16px rgba(15,32,68,0.2)' : '0 1px 3px rgba(0,0,0,0.06)',
-              }}
-            >
-              <span className="text-2xl sm:text-3xl">{cat.icon}</span>
-              <span className="text-[11px] font-semibold leading-tight"
-                style={{ color: isActive ? '#fff' : '#374151' }}>
-                {cat.label}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 // ─── Main ProductCatalog ──────────────────────────────────────────────────────
 export function ProductCatalog({
   query: queryProp, origin: originProp, activeCategory,
@@ -338,13 +243,6 @@ export function ProductCatalog({
     return result
   }, [query, selectedOrigin, selectedCat, stocks, diets, sort, priceRange, allProducts])
 
-  // ── Homepage rows ──────────────────────────────────────────────────────────
-  const topPicks    = useMemo(() => allProducts.filter(p => p.bestseller).slice(0, 10), [allProducts])
-  const justArrived = useMemo(() => [...allProducts].reverse().slice(0, 10), [allProducts])
-  const monthlyOffers = useMemo(() => allProducts.filter(p => p.stock === 'Low Stock').slice(0, 10), [allProducts])
-
-  const showSections = !query && !selectedCat && selectedOrigin === 'All' && stocks.length === 0 && diets.length === 0
-
   const activeFilterCount = stocks.length + diets.length + (selectedCat ? 1 : 0) + (selectedOrigin !== 'All' ? 1 : 0)
   const priceFiltered = priceRange[0] !== pMin || priceRange[1] !== pMax
 
@@ -392,24 +290,6 @@ export function ProductCatalog({
 
   return (
     <section id="shop" className="scroll-mt-24">
-
-      {/* ══ Dookan-style Top Nav Bar (Bestsellers / New Arrivals / Offers / etc.) ══ */}
-      <div style={{ background: '#1a1a2e', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="mx-auto flex max-w-7xl items-center gap-0 overflow-x-auto scrollbar-none px-4 md:px-6">
-          {TOP_NAV.map((nav) => (
-            <a key={nav.id} href={`#${nav.id}`}
-              className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-4 py-3 text-[13px] font-semibold text-white/70 hover:text-white hover:border-orange-400 transition-all duration-200 whitespace-nowrap">
-              <span>{nav.icon}</span> {nav.label}
-            </a>
-          ))}
-          <div className="flex-1" />
-          <a href="#shop-grid"
-            className="flex shrink-0 items-center gap-1 px-4 py-3 text-[13px] font-semibold text-orange-400 hover:text-orange-300 transition-colors whitespace-nowrap">
-            All Products <ChevronRight className="size-3.5" />
-          </a>
-        </div>
-      </div>
-
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
 
         {/* ══ Filter Bar — ALWAYS at the top of shop section ══ */}
