@@ -140,20 +140,10 @@ export function PromoSlider() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-      {/* ── Billboard frame ── */}
-        <div
-          style={{
-            padding: '6px',
-            background: 'linear-gradient(135deg, #F97316 0%, #FBBF24 30%, #F97316 50%, #FBBF24 70%, #F97316 100%)',
-            borderRadius: '10px',
-            boxShadow: '0 4px 24px rgba(249,115,22,0.35), 0 1px 6px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
-            margin: '0 0 0 0',
-          }}
-        >
-        {/* Actual slide container inside the frame */}
+      {/* Height: natural 16:9 on mobile, capped at 420px on desktop */}
         <div
           className="relative w-full overflow-hidden"
-          style={{ borderRadius: '6px', aspectRatio: '16/6', background: '#080C14', minHeight: '200px' }}
+          style={{ height: 'min(56vw, 420px)', background: '#080C14', borderBottom: '1px solid var(--border)' }}
         >
 
           {loading ? (
@@ -185,10 +175,11 @@ export function PromoSlider() {
                 <img
                   src={slide.img}
                   alt={slide.brand}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full"
                   style={{
-                    objectPosition: 'center 30%',
-                    filter: 'brightness(1.08) saturate(1.1)',
+                    objectFit: 'contain',
+                    objectPosition: 'center center',
+                    filter: 'brightness(1.05) saturate(1.05)',
                     animation: isCurrent && !animating
                       ? `${i % 2 === 0 ? 'kb-in' : 'kb-out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
                       : 'none',
@@ -288,7 +279,6 @@ export function PromoSlider() {
             </>
           )}
 
-        </div>
         </div>
       </div>
       
