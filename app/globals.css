@@ -80,35 +80,35 @@
 }
 
 .dark {
-  color-scheme: light;
-  --background: #FFFFFF;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #F97316;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F8FAFC;
-  --secondary-foreground: #0F172A;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --accent: #F97316;
-  --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #F97316;
+  color-scheme: dark;
+  --background: #0F1117;        /* Very dark almost-black */
+  --foreground: #F1F5F9;        /* Slate 100 — near white */
+  --card: #1C2030;              /* Dark card surface */
+  --card-foreground: #F1F5F9;
+  --popover: #1C2030;
+  --popover-foreground: #F1F5F9;
+  --primary: #FB923C;           /* Orange 400 — brighter on dark bg */
+  --primary-foreground: #0F1117;
+  --secondary: #1E2538;         /* Slightly lighter dark */
+  --secondary-foreground: #CBD5E1;
+  --muted: #1E2538;
+  --muted-foreground: #94A3B8;  /* Slate 400 */
+  --accent: #FB923C;
+  --accent-foreground: #0F1117;
+  --destructive: #F87171;       /* Red 400 */
+  --destructive-foreground: #0F1117;
+  --border: #2A3347;            /* Dark slate border */
+  --input: #2A3347;
+  --ring: #FB923C;
   --radius: 0.5rem;
 
-  /* ── IndianMarket Brand Palette ── */
-  --im-navy:       #1A365D;
-  --im-navy-mid:   #1E3A8A;
-  --im-navy-light: #2563EB;
-  --im-orange:     #F97316;
-  --im-orange-lt:  #FB923C;
-  --im-gold:       #FBBF24;
+  /* ── IndianMarket Brand Palette (Dark Mode) ── */
+  --im-navy:       #0F2044;     /* Deeper navy for dark header contrast */
+  --im-navy-mid:   #162A58;
+  --im-navy-light: #3B82F6;
+  --im-orange:     #FB923C;     /* Slightly brighter orange for dark bg */
+  --im-orange-lt:  #FDBA74;
+  --im-gold:       #FCD34D;
 }
 
 @layer base {

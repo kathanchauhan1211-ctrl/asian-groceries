@@ -26,12 +26,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  colorScheme: 'light',
+  colorScheme: 'light dark',
   themeColor: '#D4621A',
 }
 
 import { ClientLayout } from '@/components/client-layout'
 import { TranslationProvider } from '@/lib/translation-context'
+import { ThemeProvider } from '@/lib/theme-context'
 
 export default function RootLayout({
   children,
@@ -42,9 +43,11 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${fraunces.variable} bg-background`}>
       <body className="font-sans antialiased overflow-x-hidden">
         <TranslationProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
+          <ThemeProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </ThemeProvider>
         </TranslationProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

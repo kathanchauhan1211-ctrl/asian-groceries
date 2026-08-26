@@ -1,13 +1,15 @@
 'use client'
 
-import { Search, ShoppingBag, User, LogOut, ChevronDown, X } from 'lucide-react'
+import { Search, ShoppingBag, User, LogOut, ChevronDown, X, Sun, Moon } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useCart } from '@/lib/cart-context'
 import { useAuth } from '@/lib/auth-context'
 import { useTranslation } from '@/lib/translation-context'
+import { useTheme } from '@/lib/theme-context'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { LogoSVG } from '@/components/logo-svg'
+import { Switch } from '@/components/ui/switch-button'
 
 export type Tab = 'shop' | 'checkout' | 'track' | 'dashboard' | 'community'
 
@@ -23,6 +25,7 @@ export function SiteHeader() {
   const { count, setOpen } = useCart()
   const { user, signOut } = useAuth()
   const { lang: activeLang, setLang: setActiveLang, t } = useTranslation()
+  const { theme, toggleTheme } = useTheme()
   const router = useRouter()
   const [profileOpen, setProfileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
@@ -97,6 +100,14 @@ export function SiteHeader() {
 
           {/* Actions */}
           <div className="flex items-center gap-1.5">
+
+            {/* Dark mode toggle */}
+            <Switch
+              value={theme === 'dark'}
+              onToggle={toggleTheme}
+              iconOn={<Moon className="size-3.5 text-orange-300" />}
+              iconOff={<Sun className="size-3.5 text-orange-400" />}
+            />
 
             {/* Language selector */}
             <div className="relative hidden md:block" ref={langRef}>

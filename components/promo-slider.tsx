@@ -107,7 +107,7 @@ export function PromoSlider() {
       className="relative w-full overflow-hidden"
       style={{
         borderBottom: '1px solid #E5E7EB',
-        height: 'clamp(220px, 38vw, 420px)',
+        height: 'clamp(240px, 45vw, 500px)',
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -157,7 +157,7 @@ export function PromoSlider() {
                 : 'none',
             }}
           >
-            {/* Background image — cover + subtle Ken Burns zoom */}
+            {/* Background image — full cover on ALL sizes */}
             <div
               className="absolute inset-0"
               style={{
@@ -165,18 +165,19 @@ export function PromoSlider() {
                 backgroundSize: 'cover',
                 backgroundPosition: slide.pos,
                 backgroundRepeat: 'no-repeat',
+                filter: 'brightness(1.15) saturate(1.1)',
                 animation: isCurrent && !animating
                   ? `kenburns-${i % 2 === 0 ? 'in' : 'out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
                   : 'none',
               }}
             />
 
-            {/* Dark gradient overlay for text legibility */}
+            {/* Gradient overlay — lighter so images show through brightly */}
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(90deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.12) 100%)',
+                  'linear-gradient(90deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.30) 55%, rgba(0,0,0,0.08) 100%)',
               }}
             />
 
