@@ -45,15 +45,15 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
       onClick={onClose}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-      {/* Sheet — slides up from bottom on mobile, centered on desktop */}
+      {/* Modal — centered on all devices */}
       <div
-        className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: 'var(--card)', maxHeight: '92dvh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >

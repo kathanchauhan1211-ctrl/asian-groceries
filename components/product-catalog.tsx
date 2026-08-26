@@ -342,8 +342,8 @@ export function ProductCatalog({
           </div>
 
           {/* Row 3: Advanced filters + sort */}
-          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 border-t border-gray-100 bg-white">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none px-3 py-2.5 border-t border-gray-100 bg-white" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex shrink-0 items-center gap-2">
               <SlidersHorizontal className="size-4 text-gray-400 hidden sm:block" />
 
               <Dropdown label="Availability" options={STOCKS}

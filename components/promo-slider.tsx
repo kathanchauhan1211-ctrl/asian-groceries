@@ -104,26 +104,6 @@ export function PromoSlider() {
     if (Math.abs(d) > 40) d < 0 ? goNext() : goPrev()
   }
 
-  function getTransform(i: number) {
-    const isCurrent = i === current
-    const isPrev    = i === prev
-    if (isCurrent) {
-      return animating
-        ? (direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)')
-        : 'translateX(0%)'
-    }
-    if (isPrev) {
-      return 'translateX(0%)' // Keep previous slide in place while the new one slides over it
-    }
-    return 'translateX(100%)'
-  }
-
-  function getZIndex(i: number) {
-    if (i === current) return 2
-    if (i === prev) return 1
-    return 0
-  }
-
   return (
     <>
       <style>{`
@@ -134,17 +114,17 @@ export function PromoSlider() {
       {/* ── Slider shell — Boxed Billboard Layout ── */}
       <div className="w-full bg-background px-4 md:px-8 py-6 md:py-10 flex justify-center border-b border-border">
         {/* The Billboard Frame with Ribbons */}
-        <div className="relative w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col bg-[#080C14] overflow-hidden ring-1 ring-orange-500/20">
+        <div className="relative w-full max-w-5xl flex flex-col gap-3">
           
-          {/* Top Ribbon */}
-          <div className="desi-trim w-full" style={{ height: '10px' }} aria-hidden />
+          {/* Top Ribbon (Different Decor) */}
+          <div className="desi-border w-full" aria-hidden />
 
-          {/* Actual Slide Container */}
+          {/* Actual Slide Container (with 4-sided frame) */}
           <div
-            className="relative w-full overflow-hidden"
+            className="relative w-full overflow-hidden rounded-2xl shadow-2xl bg-[#080C14] border-[8px] border-[#F97316] ring-1 ring-black/50"
             style={{ aspectRatio: '21/9', minHeight: '200px' }}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
+            onPointerEnter={(e) => e.pointerType === 'mouse' && setPaused(true)}
+            onPointerLeave={(e) => e.pointerType === 'mouse' && setPaused(false)}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
           >
@@ -168,9 +148,9 @@ export function PromoSlider() {
                       className="absolute inset-0"
                       style={{
                         background: '#080C14',
-                        zIndex: getZIndex(i),
-                        transform: getTransform(i),
-                        transition: active ? `transform ${TRANS_MS}ms cubic-bezier(0.25,0.46,0.45,0.94)` : 'none',
+                        zIndex: isCurrent ? 2 : 0,
+                        opacity: isCurrent ? 1 : 0,
+                        transition: 'opacity 600ms ease-in-out',
                       }}
                     >
                       <img
@@ -280,8 +260,8 @@ export function PromoSlider() {
             )}
           </div>
 
-          {/* Bottom Ribbon */}
-          <div className="desi-trim w-full" style={{ height: '10px' }} aria-hidden />
+          {/* Bottom Ribbon (Different Decor) */}
+          <div className="desi-border w-full" aria-hidden />
 
         </div>
       </div>
