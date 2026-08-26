@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2, ShoppingBag, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { LogoSVG } from '@/components/logo-svg'
 
 // ─── Google Icon SVG ─────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -125,8 +126,8 @@ export default function AuthPageContent() {
         <div className="h-[4px] bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500" />
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-3 group">
-            <span className="flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden group-hover:border-orange-400 transition-colors">
-              <img src="/logo-icon.png" alt="IndianMarket" className="w-full h-full object-contain p-1" onError={(e) => { (e.target as HTMLElement).style.display = 'none' }} />
+            <span className="flex items-center justify-center group-hover:scale-110 transition-all duration-200">
+              <LogoSVG size={38} />
             </span>
             <span className="font-serif text-lg font-bold text-slate-900 group-hover:text-orange-500 transition-colors">IndianMarket</span>
           </Link>

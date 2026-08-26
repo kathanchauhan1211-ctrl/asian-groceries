@@ -1,6 +1,7 @@
 'use client'
 
 import { MapPin } from 'lucide-react'
+import { LogoSVG } from '@/components/logo-svg'
 
 // Approximate relative positions on the map illustration (percent)
 const VILNIUS = { x: 72, y: 68 }
@@ -66,8 +67,8 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
                       <span className="block w-3 h-3 rounded-full bg-accent/80 shadow-sm" />
                       <span className="block w-5 h-0.5 rounded-full bg-primary-foreground/40" />
                     </div>
-                    <span className="flex size-11 items-center justify-center rounded-full bg-card shadow-md ring-2 ring-primary-foreground/20">
-                      <img src="/logo-icon.png" alt="" className="size-9 object-contain" aria-hidden />
+                    <span className="flex size-11 items-center justify-center rounded-full shadow-md ring-2 ring-primary-foreground/20" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                      <LogoSVG size={32} />
                     </span>
                     <span className="mt-auto block w-2.5 h-2.5 rotate-45 bg-accent/70 rounded-sm" />
                   </div>

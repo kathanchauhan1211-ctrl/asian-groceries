@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { LogoSVG } from '@/components/logo-svg'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -94,10 +95,10 @@ export default function AdminLoginPage() {
         {/* Brand mark */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div
-            className="flex size-14 items-center justify-center rounded-2xl overflow-hidden"
+            className="flex size-14 items-center justify-center rounded-2xl"
             style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 8px 24px rgba(249,115,22,0.3)' }}
           >
-            <img src="/logo-icon.png" alt="IndianMarket" className="size-12 object-contain p-1" />
+            <LogoSVG size={38} />
           </div>
           <div className="text-center">
             <h1 className="text-xl font-bold text-white tracking-tight">IndianMarket</h1>

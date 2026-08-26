@@ -1,4 +1,5 @@
 import { Bus, Mail, MapPin, Phone } from 'lucide-react'
+import { LogoSVG } from '@/components/logo-svg'
 
 export function SiteFooter() {
   return (
@@ -10,8 +11,8 @@ export function SiteFooter() {
           {/* Brand block */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2.5">
-              <span className="flex size-10 items-center justify-center rounded-full bg-white shadow-md">
-                <img src="/logo-icon.png" alt="IndianMarket logo" className="size-8 object-contain" />
+              <span className="flex items-center justify-center">
+                <LogoSVG size={36} />
               </span>
               <span className="leading-none">
                 <span className="block font-serif text-base font-bold text-white">IndianMarket</span>

@@ -1,50 +1,51 @@
 'use client'
 
-import { useMemo, useState, useRef } from 'react'
-import { SlidersHorizontal, X, ChevronDown, Check, ArrowUpDown, Loader2, ChevronRight } from 'lucide-react'
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react'
 import {
-  DIETS,
-  STOCKS,
-  ORIGIN_FLAG,
-  type Diet,
-  type Origin,
-  type Stock,
-  type Product,
+  X, ChevronDown, Check, ArrowUpDown, Loader2, ChevronRight, ChevronLeft,
+  SlidersHorizontal, Search,
+} from 'lucide-react'
+import {
+  DIETS, STOCKS, ORIGIN_FLAG,
+  type Diet, type Origin, type Stock, type Product,
 } from '@/lib/products'
 import { useProducts } from '@/lib/use-products'
 import { ProductCard } from '@/components/product-card'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-type SortKey = 'default' | 'price-asc' | 'price-desc' | 'name'
+type SortKey = 'default' | 'price-asc' | 'price-desc' | 'name' | 'bestseller'
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'default',    label: 'Featured' },
+  { key: 'bestseller', label: 'Best Selling' },
   { key: 'price-asc',  label: 'Price: Low to High' },
   { key: 'price-desc', label: 'Price: High to Low' },
   { key: 'name',       label: 'Name A–Z' },
 ]
 
-const DIETARY_LABELS: Record<string, string> = {
-  Halal:    '🥩 Halal',
-  Vegan:    '🌱 Vegan',
-  Vegetarian: '🥗 Vegetarian',
-  'Gluten-Free': '🌾 Gluten-Free',
-}
-
-// Category tabs — ordered, with emoji icons
-const CATEGORY_TABS = [
-  { label: 'Spices',           icon: '🌶️' },
-  { label: 'Rice & Grains',    icon: '🌾' },
-  { label: 'Frozen Foods',     icon: '❄️' },
-  { label: 'Tea & Drinks',     icon: '🫖' },
-  { label: 'Sweets',           icon: '🍬' },
-  { label: 'Lentils & Pulses', icon: '🫘' },
-  { label: 'Snacks',           icon: '🍿' },
-  { label: 'Ready Meals',      icon: '🍛' },
-  { label: 'Condiments',       icon: '🫙' },
+// ─── Navigation sections (Dookan-style top nav) ───────────────────────────────
+const TOP_NAV = [
+  { label: 'Top Picks',       id: 'top-picks',    icon: '🔥' },
+  { label: 'Just Arrived',    id: 'just-arrived', icon: '✨' },
+  { label: 'Monthly Offers',  id: 'monthly-offers', icon: '🏷️' },
+  { label: 'Bundles',         id: 'bundles',      icon: '📦' },
 ]
 
-// Origin filter options
+// ─── Full category list (Dookan-inspired, adjusted for our inventory) ─────────
+const CATEGORIES = [
+  { label: 'Wheat & Chapati Flour',        icon: '🫓', match: ['Rice & Atta'] },
+  { label: 'Basmati Rice',                 icon: '🌾', match: ['Rice & Grains'] },
+  { label: 'Grains, Flours & Flour Mixes', icon: '🫘', match: ['Lentils & Pulses', 'Rice & Grains'] },
+  { label: 'Spices & Condiments',          icon: '🌶️', match: ['Spices', 'Condiments'] },
+  { label: 'Instant Food & Ready to Eat',  icon: '🍛', match: ['Ready Meals'] },
+  { label: 'Sweets',                       icon: '🍬', match: ['Sweets'] },
+  { label: 'Savoury Snacks',               icon: '🍿', match: ['Snacks'] },
+  { label: 'Pickles & Sauces',             icon: '🫙', match: ['Condiments'] },
+  { label: 'Beverages',                    icon: '🫖', match: ['Tea & Drinks'] },
+  { label: 'Frozen Foods',                 icon: '❄️', match: ['Frozen Foods'] },
+]
+
+// ─── Origin options ───────────────────────────────────────────────────────────
 const ORIGINS = [
   { label: 'All',       flag: '🌏' },
   { label: 'India',     flag: '🇮🇳' },
@@ -52,123 +53,70 @@ const ORIGINS = [
   { label: 'Sri Lanka', flag: '🇱🇰' },
 ]
 
-// ─── Pill button (shared) ─────────────────────────────────────────────────────
-function Pill({
-  active, onClick, children, count,
-}: {
-  active?: boolean; onClick: () => void; children: React.ReactNode; count?: number
+// ─── Small helpers ────────────────────────────────────────────────────────────
+function Pill({ active, onClick, children }: {
+  active?: boolean; onClick: () => void; children: React.ReactNode
 }) {
   return (
     <button
       onClick={onClick}
       className="flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 whitespace-nowrap"
       style={{
-        background:   active ? '#0F2044'           : '#fff',
-        color:        active ? '#fff'              : '#374151',
-        borderColor:  active ? '#0F2044'           : '#E5E7EB',
-        boxShadow:    active ? '0 2px 8px rgba(15,32,68,0.18)' : '0 1px 3px rgba(0,0,0,0.07)',
+        background:  active ? '#0F2044' : '#fff',
+        color:       active ? '#fff'    : '#374151',
+        borderColor: active ? '#0F2044' : '#E5E7EB',
+        boxShadow:   active ? '0 2px 8px rgba(15,32,68,0.18)' : '0 1px 3px rgba(0,0,0,0.07)',
       }}
     >
-      {active && <Check className="size-3.5 shrink-0" />}
       {children}
-      {count !== undefined && count > 0 && (
-        <span
-          className="flex size-4 items-center justify-center rounded-full text-[10px] font-bold"
-          style={{ background: active ? 'rgba(255,255,255,0.25)' : '#F97316', color: '#fff' }}
-        >
-          {count}
-        </span>
-      )}
     </button>
   )
 }
 
-// ─── Dropdown filter ──────────────────────────────────────────────────────────
-function DropdownFilter({
-  label, options, selected, onToggle, onClear
-}: {
-  label: string
-  options: string[]
-  selected: string[]
-  onToggle: (v: string) => void
-  onClear: () => void
+// ─── Dropdown ────────────────────────────────────────────────────────────────
+function Dropdown({ label, options, selected, onToggle, onClear }: {
+  label: string; options: string[]; selected: string[]
+  onToggle: (v: string) => void; onClear: () => void
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const hasActive = selected.length > 0
-
-  useMemo(() => {
-    if (typeof document === 'undefined') return
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+  const has = selected.length > 0
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    if (open) document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
   }, [open])
-
   return (
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 whitespace-nowrap"
+        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium transition-all whitespace-nowrap"
         style={{
-          background:  hasActive ? '#0F2044'           : '#fff',
-          color:       hasActive ? '#fff'              : '#374151',
-          borderColor: hasActive ? '#0F2044'           : '#E5E7EB',
-          boxShadow:   hasActive ? '0 2px 8px rgba(15,32,68,0.18)' : '0 1px 3px rgba(0,0,0,0.07)',
+          background:  has ? '#0F2044' : '#fff',
+          color:       has ? '#fff'    : '#374151',
+          borderColor: has ? '#0F2044' : '#D1D5DB',
+          boxShadow:   '0 1px 2px rgba(0,0,0,0.06)',
         }}
       >
-        {label}
-        {hasActive && (
-          <span
-            className="flex size-4 items-center justify-center rounded-full text-[10px] font-bold"
-            style={{ background: 'rgba(255,255,255,0.25)', color: '#fff' }}
-          >
-            {selected.length}
-          </span>
-        )}
-        <ChevronDown
-          className="size-3.5 transition-transform duration-150"
-          style={{ transform: open ? 'rotate(180deg)' : 'none' }}
-        />
+        {label} {has && <span className="rounded-full bg-white/25 px-1.5 text-[11px] font-bold">{selected.length}</span>}
+        <ChevronDown className="size-3.5" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '0.15s' }} />
       </button>
-
       {open && (
-        <div
-          className="absolute left-0 top-full z-30 mt-2 overflow-hidden rounded-xl py-1.5"
-          style={{
-            background: '#fff',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-            minWidth: '180px',
-          }}
-        >
+        <div className="absolute left-0 top-full z-30 mt-1.5 rounded-xl py-1.5 shadow-xl" style={{ background: '#fff', border: '1px solid #E5E7EB', minWidth: 190 }}>
           {options.map(opt => (
-            <button
-              key={opt}
-              onClick={() => onToggle(opt)}
-              className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] transition-colors"
-              style={{
-                color: '#111827',
-                background: selected.includes(opt) ? '#FFF7ED' : 'transparent',
-                fontWeight: selected.includes(opt) ? 600 : 400,
-              }}
+            <button key={opt} onClick={() => onToggle(opt)}
+              className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] hover:bg-gray-50 transition-colors"
+              style={{ fontWeight: selected.includes(opt) ? 600 : 400, color: '#111827', background: selected.includes(opt) ? '#FFF7ED' : 'transparent' }}
             >
-              {DIETARY_LABELS[opt] ?? opt}
-              {selected.includes(opt) && <Check className="size-3.5 text-orange-500" />}
+              {opt} {selected.includes(opt) && <Check className="size-3.5 text-orange-500" />}
             </button>
           ))}
-          {hasActive && (
-            <>
-              <div className="mx-3 my-1.5 h-px bg-gray-100" />
-              <button
-                onClick={() => { onClear(); setOpen(false) }}
-                className="flex w-full items-center gap-1.5 px-4 py-2 text-[12px] text-red-500 font-medium"
-              >
-                <X className="size-3.5" /> Clear
-              </button>
-            </>
-          )}
+          {has && <>
+            <div className="mx-3 my-1 h-px bg-gray-100" />
+            <button onClick={() => { onClear(); setOpen(false) }} className="flex w-full items-center gap-1.5 px-4 py-2 text-[12px] text-red-500 font-medium">
+              <X className="size-3.5" /> Clear
+            </button>
+          </>}
         </div>
       )}
     </div>
@@ -179,59 +127,29 @@ function DropdownFilter({
 function SortDropdown({ value, onChange }: { value: SortKey; onChange: (v: SortKey) => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const current = SORT_OPTIONS.find(o => o.key === value)!
-
-  useMemo(() => {
-    if (typeof document === 'undefined') return
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    if (open) document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
   }, [open])
-
+  const cur = SORT_OPTIONS.find(o => o.key === value)!
   return (
     <div ref={ref} className="relative shrink-0">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 whitespace-nowrap"
-        style={{
-          background: value !== 'default' ? '#0F2044' : '#fff',
-          color:      value !== 'default' ? '#fff'    : '#374151',
-          borderColor: value !== 'default' ? '#0F2044' : '#E5E7EB',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
-        }}
+      <button onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium transition-all whitespace-nowrap"
+        style={{ background: value !== 'default' ? '#0F2044' : '#fff', color: value !== 'default' ? '#fff' : '#374151', borderColor: value !== 'default' ? '#0F2044' : '#D1D5DB' }}
       >
-        <ArrowUpDown className="size-3.5" />
-        {current.label}
-        <ChevronDown
-          className="size-3.5 transition-transform duration-150"
-          style={{ transform: open ? 'rotate(180deg)' : 'none' }}
-        />
+        <ArrowUpDown className="size-3.5" /> {cur.label}
+        <ChevronDown className="size-3.5" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '0.15s' }} />
       </button>
       {open && (
-        <div
-          className="absolute right-0 top-full z-30 mt-2 overflow-hidden rounded-xl py-1.5"
-          style={{
-            background: '#fff',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-            minWidth: '200px',
-          }}
-        >
+        <div className="absolute right-0 top-full z-30 mt-1.5 rounded-xl py-1.5 shadow-xl" style={{ background: '#fff', border: '1px solid #E5E7EB', minWidth: 200 }}>
           {SORT_OPTIONS.map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => { onChange(opt.key); setOpen(false) }}
-              className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] transition-colors"
-              style={{
-                color: '#111827',
-                background: value === opt.key ? '#FFF7ED' : 'transparent',
-                fontWeight: value === opt.key ? 600 : 400,
-              }}
+            <button key={opt.key} onClick={() => { onChange(opt.key); setOpen(false) }}
+              className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] hover:bg-gray-50 transition-colors"
+              style={{ fontWeight: value === opt.key ? 600 : 400, color: '#111827', background: value === opt.key ? '#FFF7ED' : 'transparent' }}
             >
-              {opt.label}
-              {value === opt.key && <Check className="size-3.5 text-orange-500" />}
+              {opt.label} {value === opt.key && <Check className="size-3.5 text-orange-500" />}
             </button>
           ))}
         </div>
@@ -240,45 +158,95 @@ function SortDropdown({ value, onChange }: { value: SortKey; onChange: (v: SortK
   )
 }
 
-// ─── Horizontal product row (for homepage sections) ───────────────────────────
-function ProductRow({
-  title, badge, products, viewAllHref,
-}: {
-  title: string
-  badge?: { label: string; color: string; bg: string }
-  products: Product[]
-  viewAllHref?: string
+// ─── Price range slider ───────────────────────────────────────────────────────
+function PriceRange({ min, max, value, onChange }: {
+  min: number; max: number; value: [number, number]
+  onChange: (v: [number, number]) => void
 }) {
+  const pct = (v: number) => ((v - min) / (max - min)) * 100
+  return (
+    <div className="px-1">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-[13px] font-semibold text-slate-700">
+          <span className="text-gray-400 text-xs">€</span>
+          <input
+            type="number" min={min} max={value[1]} value={value[0]}
+            onChange={e => onChange([Math.min(Number(e.target.value), value[1]), value[1]])}
+            className="w-14 bg-transparent outline-none"
+          />
+        </div>
+        <div className="h-px flex-1 bg-gray-200" />
+        <div className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-[13px] font-semibold text-slate-700">
+          <span className="text-gray-400 text-xs">€</span>
+          <input
+            type="number" min={value[0]} max={max} value={value[1]}
+            onChange={e => onChange([value[0], Math.max(Number(e.target.value), value[0])])}
+            className="w-14 bg-transparent outline-none"
+          />
+        </div>
+      </div>
+      <div className="relative h-1.5 rounded-full bg-gray-200">
+        <div
+          className="absolute h-full rounded-full bg-orange-500"
+          style={{ left: `${pct(value[0])}%`, right: `${100 - pct(value[1])}%` }}
+        />
+        <input type="range" min={min} max={max} value={value[0]}
+          onChange={e => onChange([Math.min(Number(e.target.value), value[1]), value[1]])}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer h-full" />
+        <input type="range" min={min} max={max} value={value[1]}
+          onChange={e => onChange([value[0], Math.max(Number(e.target.value), value[0])])}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer h-full" />
+      </div>
+    </div>
+  )
+}
+
+// ─── Horizontal product row section ─────────────────────────────────────────
+function ProductRow({
+  id, title, badge, emoji, products, viewAllLabel,
+}: {
+  id: string; title: string; badge?: { label: string; color: string; bg: string }
+  emoji?: string; products: Product[]; viewAllLabel?: string
+}) {
+  const rowRef = useRef<HTMLDivElement>(null)
+  const scroll = (dir: 'left' | 'right') => {
+    rowRef.current?.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' })
+  }
   if (products.length === 0) return null
   return (
-    <div className="mb-10">
-      {/* Section header */}
+    <div id={id} className="mb-10 scroll-mt-24">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
+          {emoji && <span className="text-2xl">{emoji}</span>}
           <h2 className="font-serif text-xl font-bold text-slate-900 sm:text-2xl">{title}</h2>
           {badge && (
-            <span
-              className="rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
-              style={{ background: badge.bg, color: badge.color }}
-            >
+            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
+              style={{ background: badge.bg, color: badge.color }}>
               {badge.label}
             </span>
           )}
         </div>
-        {viewAllHref && (
-          <a
-            href={viewAllHref}
-            className="flex items-center gap-1 text-[13px] font-semibold text-orange-500 hover:text-orange-600 transition-colors"
-          >
-            View all <ChevronRight className="size-3.5" />
-          </a>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Scroll arrows — desktop */}
+          <button onClick={() => scroll('left')}
+            className="hidden md:flex size-7 items-center justify-center rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+            <ChevronLeft className="size-4 text-gray-500" />
+          </button>
+          <button onClick={() => scroll('right')}
+            className="hidden md:flex size-7 items-center justify-center rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+            <ChevronRight className="size-4 text-gray-500" />
+          </button>
+          {viewAllLabel && (
+            <a href="#shop-grid"
+              className="flex items-center gap-1 text-[13px] font-semibold text-orange-500 hover:text-orange-600 transition-colors ml-1">
+              {viewAllLabel} <ChevronRight className="size-3.5" />
+            </a>
+          )}
+        </div>
       </div>
-
-      {/* Horizontal scroll row */}
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none sm:gap-4">
-        {products.slice(0, 8).map((p, i) => (
-          <div key={p.id} className="w-[160px] shrink-0 sm:w-[185px]">
+      <div ref={rowRef} className="flex gap-3 overflow-x-auto pb-3 scrollbar-none sm:gap-4">
+        {products.map((p, i) => (
+          <div key={p.id} className="w-[155px] shrink-0 sm:w-[180px]">
             <ProductCard product={p} index={i} />
           </div>
         ))}
@@ -287,89 +255,111 @@ function ProductRow({
   )
 }
 
+// ─── Category grid (Dookan "Shop by Category") ────────────────────────────────
+function CategoryGrid({ onSelect, selected }: {
+  onSelect: (cat: string | null) => void; selected: string | null
+}) {
+  return (
+    <div className="mb-10">
+      <h2 className="mb-4 font-serif text-xl font-bold text-slate-900 sm:text-2xl">🛒 Shop by Category</h2>
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-5">
+        {CATEGORIES.map((cat) => {
+          const isActive = cat.match.some(m => m === selected)
+          return (
+            <button
+              key={cat.label}
+              onClick={() => onSelect(isActive ? null : cat.match[0])}
+              className="flex flex-col items-center gap-2 rounded-2xl border p-3 text-center transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              style={{
+                background:   isActive ? '#0F2044' : '#fff',
+                borderColor:  isActive ? '#0F2044' : '#E5E7EB',
+                boxShadow:    isActive ? '0 4px 16px rgba(15,32,68,0.2)' : '0 1px 3px rgba(0,0,0,0.06)',
+              }}
+            >
+              <span className="text-2xl sm:text-3xl">{cat.icon}</span>
+              <span className="text-[11px] font-semibold leading-tight"
+                style={{ color: isActive ? '#fff' : '#374151' }}>
+                {cat.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main ProductCatalog ──────────────────────────────────────────────────────
 export function ProductCatalog({
-  query, origin: originProp, activeCategory,
+  query: queryProp, origin: originProp, activeCategory,
 }: {
-  query: string
-  origin: Origin | 'All'
-  activeCategory: string | null
+  query: string; origin: Origin | 'All'; activeCategory: string | null
 }) {
-  const { products: liveProducts, loading, loadingMore, hasMore, loadMore, errorMessage } = useProducts()
+  const { products: allProducts, loading, loadingMore, hasMore, loadMore, errorMessage } = useProducts()
 
   const [stocks, setStocks]           = useState<Stock[]>([])
   const [diets, setDiets]             = useState<Diet[]>([])
   const [sort, setSort]               = useState<SortKey>('default')
   const [selectedCat, setSelectedCat] = useState<string | null>(activeCategory)
-  const [selectedOrigin, setSelectedOrigin] = useState<string>(originProp ?? 'All')
+  const [selectedOrigin, setSelectedOrigin] = useState<string>('All')
+  const [priceRange, setPriceRange]   = useState<[number, number]>([0, 100])
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+  const [query, setQuery]             = useState(queryProp)
 
-  // Dynamic categories from Firestore (supplemented by static list)
-  const dynamicCategories = useMemo(() => {
-    const seen = new Set<string>()
-    liveProducts.forEach(p => p.category && seen.add(p.category))
-    // Merge with static preferred order
-    CATEGORY_TABS.forEach(c => seen.add(c.label))
-    return Array.from(seen)
-  }, [liveProducts])
+  // Compute price bounds from products
+  const [pMin, pMax] = useMemo(() => {
+    const prices = allProducts.flatMap(p => p.variants?.map(v => v.price) ?? (p.price ? [p.price] : []))
+    if (!prices.length) return [0, 100]
+    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))]
+  }, [allProducts])
 
-  // All products filtered by origin + category + dietary + search
+  useEffect(() => { setPriceRange([pMin, pMax]) }, [pMin, pMax])
+
+  // ── Filtered products ──────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    let result = liveProducts.filter((p) => {
+    let result = allProducts.filter((p) => {
       if (selectedOrigin !== 'All' && p.origin !== selectedOrigin) return false
       if (selectedCat && p.category !== selectedCat) return false
       if (stocks.length && !stocks.includes(p.stock)) return false
-      if (diets.length && !diets.every((d) => (p.diet ?? []).includes(d))) return false
+      if (diets.length && !diets.every(d => (p.diet ?? []).includes(d))) return false
+      const price = p.price ?? p.variants?.[0]?.price ?? 0
+      if (price < priceRange[0] || price > priceRange[1]) return false
       if (q) {
-        const haystack = `${p.name} ${p.tagline} ${p.category} ${p.origin} ${p.brand ?? ''}`.toLowerCase()
-        if (!haystack.includes(q)) return false
+        const hay = `${p.name} ${p.tagline} ${p.category} ${p.origin} ${p.brand ?? ''}`.toLowerCase()
+        if (!hay.includes(q)) return false
       }
       return true
     })
-
     if (sort === 'price-asc')  result = [...result].sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
     if (sort === 'price-desc') result = [...result].sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
     if (sort === 'name')       result = [...result].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+    if (sort === 'bestseller') result = [...result].sort((a, b) => (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0))
     return result
-  }, [query, selectedOrigin, selectedCat, stocks, diets, sort, liveProducts])
+  }, [query, selectedOrigin, selectedCat, stocks, diets, sort, priceRange, allProducts])
 
-  // ── Homepage section derivations (no filters, no search — show all) ─────────
-  const allProducts = liveProducts
+  // ── Homepage rows ──────────────────────────────────────────────────────────
+  const topPicks    = useMemo(() => allProducts.filter(p => p.bestseller).slice(0, 10), [allProducts])
+  const justArrived = useMemo(() => [...allProducts].reverse().slice(0, 10), [allProducts])
+  const monthlyOffers = useMemo(() => allProducts.filter(p => p.stock === 'Low Stock').slice(0, 10), [allProducts])
 
-  const topPicks = useMemo(
-    () => allProducts.filter(p => p.bestseller).slice(0, 8),
-    [allProducts]
-  )
-  const justArrived = useMemo(
-    () => [...allProducts].reverse().slice(0, 8),
-    [allProducts]
-  )
-  const priceDrops = useMemo(
-    () => allProducts.filter(p => p.stock === 'Low Stock').slice(0, 8),
-    [allProducts]
-  )
-  const pantryStaples = useMemo(
-    () => allProducts.filter(p =>
-      ['Rice & Grains', 'Lentils & Pulses', 'Rice & Atta'].includes(p.category)
-    ).slice(0, 8),
-    [allProducts]
-  )
-
-  const showHomeSections = !query && !selectedCat && selectedOrigin === 'All' && stocks.length === 0 && diets.length === 0
+  const showSections = !query && !selectedCat && selectedOrigin === 'All' && stocks.length === 0 && diets.length === 0
 
   const activeFilterCount = stocks.length + diets.length + (selectedCat ? 1 : 0) + (selectedOrigin !== 'All' ? 1 : 0)
+  const priceFiltered = priceRange[0] !== pMin || priceRange[1] !== pMax
 
-  function toggleStock(v: Stock)  { setStocks(s => s.includes(v) ? s.filter(x => x !== v) : [...s, v]) }
-  function toggleDiet(v: Diet)    { setDiets(s  => s.includes(v) ? s.filter(x => x !== v) : [...s, v]) }
-  function clearAll()             { setStocks([]); setDiets([]); setSelectedCat(null); setSort('default'); setSelectedOrigin('All') }
+  function clearAll() {
+    setStocks([]); setDiets([]); setSelectedCat(null); setSort('default')
+    setSelectedOrigin('All'); setPriceRange([pMin, pMax]); setQuery('')
+  }
 
-  // ── Loading skeleton ─────────────────────────────────────────────────────
+  // ── Loading skeleton ───────────────────────────────────────────────────────
   if (loading) {
     return (
-      <section id="shop" className="mx-auto max-w-7xl scroll-mt-40 px-4 py-10 md:px-6">
+      <section id="shop" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-10 md:px-6">
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="h-8 w-24 shrink-0 rounded-full bg-gray-100 animate-pulse" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-8 w-28 shrink-0 rounded-full bg-gray-100 animate-pulse" />
           ))}
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
@@ -390,7 +380,7 @@ export function ProductCatalog({
 
   if (errorMessage) {
     return (
-      <section id="shop" className="mx-auto max-w-7xl scroll-mt-40 px-4 py-10 md:px-6">
+      <section id="shop" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-10 md:px-6">
         <div className="flex flex-col items-center justify-center rounded-2xl border border-red-200 bg-red-50 py-16 text-center px-6">
           <span className="mb-4 text-4xl">⚠️</span>
           <p className="font-serif text-xl font-semibold text-red-700 mb-2">Cannot load products</p>
@@ -401,211 +391,207 @@ export function ProductCatalog({
   }
 
   return (
-    <section id="shop" className="mx-auto max-w-7xl scroll-mt-40 px-4 py-8 md:px-6">
+    <section id="shop" className="scroll-mt-24">
 
-      {/* ── Dookan-style Filter Bar ──────────────────────────────────────────── */}
-      <div
-        className="mb-6 rounded-2xl overflow-hidden"
-        style={{ border: '1px solid #E5E7EB' }}
-      >
-        {/* Row 1: Category tabs — Dookan style (dark navy bg) */}
-        <div
-          className="flex items-center gap-1 overflow-x-auto scrollbar-none px-3 py-2.5"
-          style={{ background: '#0F2044' }}
-        >
-          <button
-            onClick={() => setSelectedCat(null)}
-            className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-150 whitespace-nowrap"
-            style={{
-              background: !selectedCat ? '#F97316' : 'rgba(255,255,255,0.08)',
-              color: !selectedCat ? '#fff' : 'rgba(255,255,255,0.7)',
-            }}
-          >
-            All
-          </button>
-          {CATEGORY_TABS.map(cat => {
-            const inDb = dynamicCategories.includes(cat.label)
-            const active = selectedCat === cat.label
-            return (
-              <button
-                key={cat.label}
-                onClick={() => inDb ? setSelectedCat(active ? null : cat.label) : undefined}
-                className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 whitespace-nowrap"
-                style={{
-                  background: active ? '#F97316' : 'rgba(255,255,255,0.08)',
-                  color: active ? '#fff' : inDb ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)',
-                  cursor: inDb ? 'pointer' : 'not-allowed',
-                }}
-              >
-                <span>{cat.icon}</span>
-                {cat.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Row 2: Origin filter — Dookan style pills */}
-        <div
-          className="flex items-center gap-1.5 overflow-x-auto scrollbar-none px-3 py-2.5 border-t"
-          style={{ background: '#F9FAFB', borderColor: '#E5E7EB' }}
-        >
-          <span className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-gray-400 pr-1.5">
-            Origin:
-          </span>
-          {ORIGINS.map(o => {
-            const active = selectedOrigin === o.label
-            return (
-              <button
-                key={o.label}
-                onClick={() => setSelectedOrigin(o.label)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-semibold transition-all duration-150 whitespace-nowrap"
-                style={{
-                  background:  active ? '#F97316' : '#fff',
-                  color:       active ? '#fff'    : '#374151',
-                  borderColor: active ? '#F97316' : '#E5E7EB',
-                  boxShadow:   active ? '0 2px 8px rgba(249,115,22,0.25)' : '0 1px 2px rgba(0,0,0,0.05)',
-                }}
-              >
-                {o.flag} {o.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Row 3: Advanced filters + sort */}
-        <div
-          className="flex items-center justify-between gap-2 flex-wrap px-3 py-2.5 border-t"
-          style={{ background: '#fff', borderColor: '#E5E7EB' }}
-        >
-          <div className="flex items-center gap-2 flex-wrap">
-            <DropdownFilter
-              label="Availability"
-              options={STOCKS}
-              selected={stocks}
-              onToggle={v => toggleStock(v as Stock)}
-              onClear={() => setStocks([])}
-            />
-            <DropdownFilter
-              label="Dietary"
-              options={DIETS}
-              selected={diets}
-              onToggle={v => toggleDiet(v as Diet)}
-              onClear={() => setDiets([])}
-            />
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearAll}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all"
-                style={{ background: '#FEF2F2', color: '#EF4444', border: '1px solid #FCA5A5' }}
-              >
-                <X className="size-3.5" />
-                Clear {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''}
-              </button>
-            )}
-          </div>
-          <SortDropdown value={sort} onChange={setSort} />
+      {/* ══ Dookan-style Top Nav Bar (Bestsellers / New Arrivals / Offers / etc.) ══ */}
+      <div style={{ background: '#1a1a2e', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="mx-auto flex max-w-7xl items-center gap-0 overflow-x-auto scrollbar-none px-4 md:px-6">
+          {TOP_NAV.map((nav) => (
+            <a key={nav.id} href={`#${nav.id}`}
+              className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-4 py-3 text-[13px] font-semibold text-white/70 hover:text-white hover:border-orange-400 transition-all duration-200 whitespace-nowrap">
+              <span>{nav.icon}</span> {nav.label}
+            </a>
+          ))}
+          <div className="flex-1" />
+          <a href="#shop-grid"
+            className="flex shrink-0 items-center gap-1 px-4 py-3 text-[13px] font-semibold text-orange-400 hover:text-orange-300 transition-colors whitespace-nowrap">
+            All Products <ChevronRight className="size-3.5" />
+          </a>
         </div>
       </div>
 
-      {/* ── Homepage sections (shown when no filter/search active) ───────────── */}
-      {showHomeSections && (
-        <>
-          <ProductRow
-            title="Top Picks"
-            badge={{ label: 'Community Favourites', bg: '#FFF7ED', color: '#C2410C' }}
-            products={topPicks}
-            viewAllHref="/?sort=bestseller"
-          />
-          <ProductRow
-            title="Just Arrived"
-            badge={{ label: 'New', bg: '#EFF6FF', color: '#1D4ED8' }}
-            products={justArrived}
-            viewAllHref="/?sort=new"
-          />
-          {priceDrops.length > 0 && (
-            <ProductRow
-              title="Limited Stock Deals"
-              badge={{ label: 'Low Stock', bg: '#FFF1F2', color: '#BE123C' }}
-              products={priceDrops}
-              viewAllHref="/?availability=Low+Stock"
-            />
-          )}
-          {pantryStaples.length > 0 && (
-            <ProductRow
-              title="Pantry Staples"
-              badge={{ label: 'Everyday Essentials', bg: '#F0FDF4', color: '#166534' }}
-              products={pantryStaples}
-              viewAllHref="/?category=Rice+%26+Grains"
-            />
-          )}
+      <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
 
-          {/* Divider before full catalog */}
-          <div className="mb-8 flex items-center gap-4">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-[12px] font-bold uppercase tracking-widest text-gray-400">
-              Browse All Products
-            </span>
-            <div className="flex-1 h-px bg-gray-200" />
+        {/* ══ Homepage Sections ══ */}
+        {showSections && (
+          <>
+            <ProductRow
+              id="top-picks" title="Top Picks" emoji="🔥"
+              badge={{ label: 'Community Favourites', bg: '#FFF7ED', color: '#C2410C' }}
+              products={topPicks} viewAllLabel="View all"
+            />
+            <ProductRow
+              id="just-arrived" title="Just Arrived" emoji="✨"
+              badge={{ label: 'New', bg: '#EFF6FF', color: '#1D4ED8' }}
+              products={justArrived} viewAllLabel="View all"
+            />
+            {monthlyOffers.length > 0 && (
+              <ProductRow
+                id="monthly-offers" title="Monthly Offers" emoji="🏷️"
+                badge={{ label: 'Limited Stock', bg: '#FFF1F2', color: '#BE123C' }}
+                products={monthlyOffers} viewAllLabel="View all"
+              />
+            )}
+
+            {/* Shop by Category grid */}
+            <CategoryGrid onSelect={setSelectedCat} selected={selectedCat} />
+          </>
+        )}
+
+        {/* ══ Filter Bar ══ */}
+        <div id="shop-grid" className="scroll-mt-24 mb-6 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+
+          {/* Row 1: Category pills (dark navy) */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none px-3 py-2.5"
+            style={{ background: '#0F2044' }}>
+            <button
+              onClick={() => setSelectedCat(null)}
+              className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all whitespace-nowrap"
+              style={{ background: !selectedCat ? '#F97316' : 'rgba(255,255,255,0.1)', color: '#fff' }}
+            >
+              All
+            </button>
+            {CATEGORIES.map(cat => {
+              const active = cat.match.includes(selectedCat ?? '')
+              return (
+                <button key={cat.label}
+                  onClick={() => setSelectedCat(active ? null : cat.match[0])}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all whitespace-nowrap"
+                  style={{ background: active ? '#F97316' : 'rgba(255,255,255,0.08)', color: active ? '#fff' : 'rgba(255,255,255,0.75)' }}
+                >
+                  <span>{cat.icon}</span> {cat.label}
+                </button>
+              )
+            })}
           </div>
-        </>
-      )}
 
-      {/* ── Results header ──────────────────────────────────────────────────── */}
-      <div className="mb-5 flex items-center justify-between">
-        <div>
+          {/* Row 2: Origin filter */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none px-3 py-2.5 border-t border-gray-100"
+            style={{ background: '#F9FAFB' }}>
+            <span className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-gray-400 pr-1.5">Origin:</span>
+            {ORIGINS.map(o => {
+              const active = selectedOrigin === o.label
+              return (
+                <button key={o.label} onClick={() => setSelectedOrigin(o.label)}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-semibold transition-all whitespace-nowrap"
+                  style={{
+                    background:  active ? '#F97316' : '#fff',
+                    color:       active ? '#fff'    : '#374151',
+                    borderColor: active ? '#F97316' : '#E5E7EB',
+                    boxShadow:   active ? '0 2px 8px rgba(249,115,22,0.25)' : '0 1px 2px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  {o.flag} {o.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Row 3: Advanced filters + sort */}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 border-t border-gray-100 bg-white">
+            <div className="flex flex-wrap items-center gap-2">
+              <SlidersHorizontal className="size-4 text-gray-400 hidden sm:block" />
+
+              <Dropdown label="Availability" options={STOCKS}
+                selected={stocks} onToggle={v => setStocks(s => s.includes(v as Stock) ? s.filter(x => x !== v) : [...s, v as Stock])}
+                onClear={() => setStocks([])}
+              />
+              <Dropdown label="Dietary" options={DIETS}
+                selected={diets} onToggle={v => setDiets(s => s.includes(v) ? s.filter(x => x !== v) : [...s, v])}
+                onClear={() => setDiets([])}
+              />
+
+              {/* Price range dropdown */}
+              <PriceRangeDropdown min={pMin} max={pMax} value={priceRange} onChange={setPriceRange} />
+
+              {(activeFilterCount > 0 || priceFiltered) && (
+                <button onClick={clearAll}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all"
+                  style={{ background: '#FEF2F2', color: '#EF4444', border: '1px solid #FCA5A5' }}>
+                  <X className="size-3.5" />
+                  Clear {activeFilterCount + (priceFiltered ? 1 : 0)} filter{(activeFilterCount + (priceFiltered ? 1 : 0)) > 1 ? 's' : ''}
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-gray-400">{filtered.length} products</span>
+              <SortDropdown value={sort} onChange={setSort} />
+            </div>
+          </div>
+        </div>
+
+        {/* ══ Results header ══ */}
+        <div className="mb-5">
           <h2 className="heading-ornament font-serif text-2xl font-semibold text-foreground md:text-3xl">
-            {selectedCat ?? (selectedOrigin !== 'All' ? `${ORIGIN_FLAG[selectedOrigin]} ${selectedOrigin}` : 'The Pantry')}
+            {selectedCat ?? (selectedOrigin !== 'All' ? `${ORIGIN_FLAG[selectedOrigin]} ${selectedOrigin}` : 'All Products')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? 'product' : 'products'}
-            {selectedOrigin !== 'All' && selectedCat && ` · ${selectedOrigin}`}
             {query && ` matching "${query}"`}
           </p>
         </div>
-      </div>
 
-      {/* ── Product grid ────────────────────────────────────────────────────── */}
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
-          <span className="mb-4 text-4xl">🪷</span>
-          <p className="font-serif text-xl font-semibold text-gray-900">No products found</p>
-          <p className="mt-1 max-w-sm text-sm text-gray-500">
-            Try adjusting your search or filters.
-          </p>
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearAll}
-              className="mt-4 rounded-full px-5 py-2 text-sm font-semibold text-white"
-              style={{ background: '#F97316' }}
-            >
-              Clear all filters
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
-          {filtered.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
-          ))}
-        </div>
-      )}
-
-      {/* ── Load more ───────────────────────────────────────────────────────── */}
-      {hasMore && !loading && filtered.length > 0 && (
-        <div className="mt-10 flex justify-center">
-          <button
-            onClick={loadMore}
-            disabled={loadingMore}
-            className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-8 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-60"
-          >
-            {loadingMore ? (
-              <><Loader2 className="size-4 animate-spin text-orange-500" /> Loading…</>
-            ) : (
-              'Load more products'
+        {/* ══ Product grid ══ */}
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
+            <span className="mb-4 text-4xl">🪷</span>
+            <p className="font-serif text-xl font-semibold text-gray-900">No products found</p>
+            <p className="mt-1 max-w-sm text-sm text-gray-500">Try adjusting your search or filters.</p>
+            {(activeFilterCount > 0 || priceFiltered) && (
+              <button onClick={clearAll} className="mt-4 rounded-full px-5 py-2 text-sm font-semibold text-white" style={{ background: '#F97316' }}>
+                Clear all filters
+              </button>
             )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+            {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+          </div>
+        )}
+
+        {/* ── Load more ── */}
+        {hasMore && !loading && filtered.length > 0 && (
+          <div className="mt-10 flex justify-center">
+            <button onClick={loadMore} disabled={loadingMore}
+              className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-8 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-all disabled:opacity-60">
+              {loadingMore ? <><Loader2 className="size-4 animate-spin text-orange-500" /> Loading…</> : 'Load more products'}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ─── Price range as a dropdown ────────────────────────────────────────────────
+function PriceRangeDropdown({ min, max, value, onChange }: {
+  min: number; max: number; value: [number, number]; onChange: (v: [number, number]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    if (open) document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [open])
+  const active = value[0] !== min || value[1] !== max
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium transition-all whitespace-nowrap"
+        style={{ background: active ? '#0F2044' : '#fff', color: active ? '#fff' : '#374151', borderColor: active ? '#0F2044' : '#D1D5DB' }}>
+        Price {active && <span className="rounded-full bg-white/25 px-1.5 text-[11px] font-bold">€{value[0]}–€{value[1]}</span>}
+        <ChevronDown className="size-3.5" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '0.15s' }} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-30 mt-1.5 rounded-xl p-4 shadow-xl" style={{ background: '#fff', border: '1px solid #E5E7EB', minWidth: 260 }}>
+          <p className="mb-3 text-[12px] font-bold uppercase tracking-wider text-gray-400">Price Range</p>
+          <PriceRange min={min} max={max} value={value} onChange={onChange} />
+          <button onClick={() => setOpen(false)} className="mt-3 w-full rounded-lg py-2 text-[13px] font-semibold text-white transition-all" style={{ background: '#F97316' }}>
+            Apply
           </button>
         </div>
       )}
-    </section>
+    </div>
   )
 }

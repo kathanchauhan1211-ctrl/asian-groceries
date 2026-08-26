@@ -8,6 +8,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Settings,
   LogOut, ExternalLink, BarChart3, ChevronRight, Menu, X
 } from 'lucide-react'
+import { LogoSVG } from '@/components/logo-svg'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -100,10 +101,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="flex items-center gap-3">
             <div
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg overflow-hidden"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg"
               style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 0 12px rgba(249,115,22,0.3)' }}
             >
-              <img src="/logo-icon.png" alt="IndianMarket" className="size-7 object-contain p-0.5" />
+              <LogoSVG size={22} />
             </div>
             <div className="min-w-0">
               <p className="text-[13px] font-bold leading-tight text-white tracking-tight">IndianMarket</p>

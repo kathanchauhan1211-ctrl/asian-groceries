@@ -99,8 +99,9 @@ export function PromoSlider() {
   const slide = SLIDES[active]
 
   return (
-    <div
-      className="relative w-full overflow-hidden select-none"
+    <div className="w-full overflow-hidden" style={{ borderBottom: '1px solid #E5E7EB' }}>
+      <div
+        className="relative w-full select-none"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onPointerDown={onPointerDown}
@@ -197,6 +198,7 @@ export function PromoSlider() {
       >
         <ChevronRight className="size-5" />
       </button>
+      </div>
     </div>
   )
 }
