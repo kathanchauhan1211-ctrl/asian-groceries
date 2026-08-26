@@ -133,151 +133,158 @@ export function PromoSlider() {
 
       {/* ── Slider shell — Boxed Billboard Layout ── */}
       <div className="w-full bg-background px-4 md:px-8 py-6 md:py-10 flex justify-center border-b border-border">
-        <div
-          className="relative w-full max-w-5xl overflow-hidden rounded-2xl shadow-2xl ring-1 ring-border/50"
-          style={{ aspectRatio: '21/9', minHeight: '200px', background: '#080C14' }}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
+        {/* The Billboard Frame with Ribbons */}
+        <div className="relative w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col bg-[#080C14] overflow-hidden ring-1 ring-orange-500/20">
+          
+          {/* Top Ribbon */}
+          <div className="desi-trim w-full" style={{ height: '10px' }} aria-hidden />
 
-          {loading ? (
-            <div className="absolute inset-0 bg-slate-200 animate-pulse" style={{ background: 'var(--muted)' }} />
-          ) : total === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-400" style={{ background: 'var(--secondary)' }}>
-              No slides available
-            </div>
-          ) : (
-            <>
-              {slides.map((slide, i) => {
-            const isCurrent = i === current
-            const isPrev    = i === prev
-            const active    = isCurrent || isPrev
-
-            return (
-              <div
-                key={slide.id}
-                aria-hidden={!isCurrent}
-                className="absolute inset-0"
-                style={{
-                  background: '#080C14',
-                  zIndex: getZIndex(i),
-                  transform: getTransform(i),
-                  transition: active ? `transform ${TRANS_MS}ms cubic-bezier(0.25,0.46,0.45,0.94)` : 'none',
-                }}
-              >
-                <img
-                  src={slide.img}
-                  alt={slide.brand}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{
-                    objectPosition: 'center center',
-                    filter: 'brightness(1.05) saturate(1.05)',
-                    animation: isCurrent && !animating
-                      ? `${i % 2 === 0 ? 'kb-in' : 'kb-out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
-                      : 'none',
-                  }}
-                />
-
-                {/* Gradient overlay just at the very bottom for the text bar */}
-                <div
-                  className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
-                  style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 40%, transparent 100%)' }}
-                />
-
-                {/* ── Text content — bottom single-line bar ── */}
-                <div 
-                  className="absolute inset-x-0 bottom-0 flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 md:px-10 py-3 sm:py-4 gap-2 sm:gap-4"
-                  style={{
-                    opacity: isCurrent && !animating ? 1 : 0,
-                    transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(10px)',
-                    transition: `opacity ${TRANS_MS + 50}ms ease-out 50ms, transform ${TRANS_MS + 50}ms ease-out 50ms`,
-                  }}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 min-w-0">
-                    {/* Brand pill */}
-                    <span
-                      className="inline-flex shrink-0 items-center rounded-sm px-2 py-0.5 font-bold uppercase tracking-widest text-[10px]"
-                      style={{ background: '#F97316', color: '#fff' }}
-                    >
-                      {slide.label}
-                    </span>
-
-                    {/* Headline & Sub */}
-                    <div className="flex items-center gap-2 min-w-0">
-                      <h2 className="font-bold text-white text-[13px] sm:text-[15px] truncate">
-                        {slide.headline}
-                      </h2>
-                      {slide.sub && (
-                        <span className="hidden md:inline font-medium text-white/70 text-[13px] truncate border-l border-white/20 pl-2">
-                          {slide.sub}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <a
-                    href={slide.href}
-                    className="shrink-0 inline-flex items-center justify-center rounded-full font-bold text-slate-900 transition-all duration-200 hover:scale-105 hover:bg-orange-50 text-[11px] sm:text-[13px] px-3 py-1 sm:px-5 sm:py-1.5"
-                    style={{ background: '#fff' }}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    {slide.cta} →
-                  </a>
-                </div>
+          {/* Actual Slide Container */}
+          <div
+            className="relative w-full overflow-hidden"
+            style={{ aspectRatio: '21/9', minHeight: '200px' }}
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
+            {loading ? (
+              <div className="absolute inset-0 bg-slate-200 animate-pulse" style={{ background: 'var(--muted)' }} />
+            ) : total === 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-400" style={{ background: 'var(--secondary)' }}>
+                No slides available
               </div>
-            )
-          })}
+            ) : (
+              <>
+                {slides.map((slide, i) => {
+                  const isCurrent = i === current
+                  const isPrev    = i === prev
+                  const active    = isCurrent || isPrev
 
-          {/* ── Arrows — always visible, all devices ── */}
-          <button
-            aria-label="Previous slide"
-            onClick={goPrev}
-            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-            style={{ width: 'clamp(32px,5vw,44px)', height: 'clamp(32px,5vw,44px)', background: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
-          >
-            <ChevronLeft style={{ width: 'clamp(14px,2vw,22px)', height: 'clamp(14px,2vw,22px)' }} />
-          </button>
-          <button
-            aria-label="Next slide"
-            onClick={goNext}
-            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-            style={{ width: 'clamp(32px,5vw,44px)', height: 'clamp(32px,5vw,44px)', background: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
-          >
-            <ChevronRight style={{ width: 'clamp(14px,2vw,22px)', height: 'clamp(14px,2vw,22px)' }} />
-          </button>
+                  return (
+                    <div
+                      key={slide.id}
+                      aria-hidden={!isCurrent}
+                      className="absolute inset-0"
+                      style={{
+                        background: '#080C14',
+                        zIndex: getZIndex(i),
+                        transform: getTransform(i),
+                        transition: active ? `transform ${TRANS_MS}ms cubic-bezier(0.25,0.46,0.45,0.94)` : 'none',
+                      }}
+                    >
+                      <img
+                        src={slide.img}
+                        alt={slide.brand}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{
+                          objectPosition: 'center center',
+                          filter: 'brightness(1.05) saturate(1.05)',
+                          animation: isCurrent && !animating
+                            ? `${i % 2 === 0 ? 'kb-in' : 'kb-out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
+                            : 'none',
+                        }}
+                      />
 
-          {/* ── Dots (Moved up or hidden as we have the bottom bar) ── */}
-          <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-black/40 px-2.5 py-1.5 rounded-full backdrop-blur-sm">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                aria-label={`Slide ${i + 1}`}
-                onClick={() => goTo(i, i > current ? 'next' : 'prev')}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: i === current ? 22 : 7,
-                  height: 7,
-                  background: i === current ? '#fff' : 'rgba(255,255,255,0.38)',
-                }}
-              />
-            ))}
+                      {/* Gradient overlay just at the very bottom for the text bar */}
+                      <div
+                        className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
+                        style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 40%, transparent 100%)' }}
+                      />
+
+                      {/* ── Text content — bottom single-line bar ── */}
+                      <div 
+                        className="absolute inset-x-0 bottom-0 flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 md:px-10 py-3 sm:py-4 gap-2 sm:gap-4"
+                        style={{
+                          opacity: isCurrent && !animating ? 1 : 0,
+                          transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(10px)',
+                          transition: `opacity ${TRANS_MS + 50}ms ease-out 50ms, transform ${TRANS_MS + 50}ms ease-out 50ms`,
+                        }}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 min-w-0">
+                          {/* Brand pill */}
+                          <span
+                            className="inline-flex shrink-0 items-center rounded-sm px-2 py-0.5 font-bold uppercase tracking-widest text-[10px]"
+                            style={{ background: '#F97316', color: '#fff' }}
+                          >
+                            {slide.label}
+                          </span>
+
+                          {/* Headline & Sub */}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <h2 className="font-bold text-white text-[13px] sm:text-[15px] truncate">
+                              {slide.headline}
+                            </h2>
+                            {slide.sub && (
+                              <span className="hidden md:inline font-medium text-white/70 text-[13px] truncate border-l border-white/20 pl-2">
+                                {slide.sub}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* CTA */}
+                        <a
+                          href={slide.href}
+                          className="shrink-0 inline-flex items-center justify-center rounded-full font-bold text-slate-900 transition-all duration-200 hover:scale-105 hover:bg-orange-50 text-[11px] sm:text-[13px] px-3 py-1 sm:px-5 sm:py-1.5"
+                          style={{ background: '#fff' }}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          {slide.cta} →
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* ── Arrows — always visible, all devices ── */}
+                <button
+                  aria-label="Previous slide"
+                  onClick={goPrev}
+                  className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+                  style={{ width: 'clamp(32px,5vw,44px)', height: 'clamp(32px,5vw,44px)', background: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                >
+                  <ChevronLeft style={{ width: 'clamp(14px,2vw,22px)', height: 'clamp(14px,2vw,22px)' }} />
+                </button>
+                <button
+                  aria-label="Next slide"
+                  onClick={goNext}
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+                  style={{ width: 'clamp(32px,5vw,44px)', height: 'clamp(32px,5vw,44px)', background: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                >
+                  <ChevronRight style={{ width: 'clamp(14px,2vw,22px)', height: 'clamp(14px,2vw,22px)' }} />
+                </button>
+
+                {/* ── Dots ── */}
+                <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-black/40 px-2.5 py-1.5 rounded-full backdrop-blur-sm">
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      aria-label={`Slide ${i + 1}`}
+                      onClick={() => goTo(i, i > current ? 'next' : 'prev')}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: i === current ? 22 : 7,
+                        height: 7,
+                        background: i === current ? '#fff' : 'rgba(255,255,255,0.38)',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Counter */}
+                <div className="absolute right-4 top-4 z-20 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-semibold tabular-nums backdrop-blur-sm" style={{ color: '#fff' }}>
+                  {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Counter (Moved slightly up to avoid overlapping the bottom bar) */}
-          <div className="absolute right-4 top-4 z-20 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-semibold tabular-nums backdrop-blur-sm" style={{ color: '#fff' }}>
-            {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-          </div>
-            </>
-          )}
+          {/* Bottom Ribbon */}
+          <div className="desi-trim w-full" style={{ height: '10px' }} aria-hidden />
 
         </div>
       </div>
-      
-      {/* Ornate Indian trim divider on the bottom to frame the slider */}
-      <div className="desi-trim" aria-hidden />
     </>
   )
 }
