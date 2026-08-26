@@ -109,16 +109,16 @@ export function SiteHeader() {
               iconOff={<Sun className="size-3.5 text-orange-400" />}
             />
 
-            {/* Language selector */}
-            <div className="relative hidden md:block" ref={langRef}>
+            {/* Language selector — visible on ALL devices */}
+            <div className="relative" ref={langRef}>
               <button
                 type="button"
                 onClick={() => setLangOpen(!langOpen)}
                 className="flex h-9 items-center gap-1 rounded-md border border-white/20 bg-white/10 px-2 text-xs font-semibold text-white hover:bg-white/20 hover:border-white/40 transition-all duration-200"
                 aria-label="Select Language"
               >
-                <span>{activeLangData.flag}</span>
-                <span className="hidden lg:inline">{activeLangData.code}</span>
+                <span className="text-base leading-none">{activeLangData.flag}</span>
+                <span className="hidden sm:inline">{activeLangData.code}</span>
                 <ChevronDown className={`size-3 text-white/50 transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`} />
               </button>
               {langOpen && (

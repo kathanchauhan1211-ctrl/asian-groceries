@@ -410,36 +410,10 @@ export function ProductCatalog({
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
 
-        {/* ══ Homepage Sections ══ */}
-        {showSections && (
-          <>
-            <ProductRow
-              id="top-picks" title="Top Picks" emoji="🔥"
-              badge={{ label: 'Community Favourites', bg: '#FFF7ED', color: '#C2410C' }}
-              products={topPicks} viewAllLabel="View all"
-            />
-            <ProductRow
-              id="just-arrived" title="Just Arrived" emoji="✨"
-              badge={{ label: 'New', bg: '#EFF6FF', color: '#1D4ED8' }}
-              products={justArrived} viewAllLabel="View all"
-            />
-            {monthlyOffers.length > 0 && (
-              <ProductRow
-                id="monthly-offers" title="Monthly Offers" emoji="🏷️"
-                badge={{ label: 'Limited Stock', bg: '#FFF1F2', color: '#BE123C' }}
-                products={monthlyOffers} viewAllLabel="View all"
-              />
-            )}
-
-            {/* Shop by Category grid */}
-            <CategoryGrid onSelect={setSelectedCat} selected={selectedCat} />
-          </>
-        )}
-
-        {/* ══ Filter Bar ══ */}
-        <div id="shop-grid" className="scroll-mt-24 mb-6 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+        {/* ══ Filter Bar — ALWAYS at the top of shop section ══ */}
+        <div id="shop-grid" className="scroll-mt-24 mb-6 rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: 'var(--border)' }}>
 
           {/* Row 1: Category pills (dark navy) */}
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none px-3 py-2.5"
@@ -520,18 +494,33 @@ export function ProductCatalog({
           </div>
         </div>
 
-        {/* ══ Results header ══ */}
-        <div className="mb-5">
-          <h2 className="heading-ornament font-serif text-2xl font-semibold text-foreground md:text-3xl">
-            {selectedCat ?? (selectedOrigin !== 'All' ? `${ORIGIN_FLAG[selectedOrigin]} ${selectedOrigin}` : 'All Products')}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {filtered.length} {filtered.length === 1 ? 'product' : 'products'}
-            {query && ` matching "${query}"`}
-          </p>
-        </div>
+        {/* Filter bar ends */}
 
-        {/* ══ Product grid ══ */}
+        {/* ══ Homepage Sections — shown when no filters active ══ */}
+        {showSections && (
+          <>
+            <ProductRow
+              id="top-picks" title="Top Picks" emoji="🔥"
+              badge={{ label: 'Community Favourites', bg: '#FFF7ED', color: '#C2410C' }}
+              products={topPicks} viewAllLabel="View all"
+            />
+            <ProductRow
+              id="just-arrived" title="Just Arrived" emoji="✨"
+              badge={{ label: 'New', bg: '#EFF6FF', color: '#1D4ED8' }}
+              products={justArrived} viewAllLabel="View all"
+            />
+            {monthlyOffers.length > 0 && (
+              <ProductRow
+                id="monthly-offers" title="Monthly Offers" emoji="🏷️"
+                badge={{ label: 'Limited Stock', bg: '#FFF1F2', color: '#BE123C' }}
+                products={monthlyOffers} viewAllLabel="View all"
+              />
+            )}
+            <CategoryGrid onSelect={setSelectedCat} selected={selectedCat} />
+          </>
+        )}
+
+        {/* ══ Product grid — appears below sections (or directly if filters active) ══ */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
             <span className="mb-4 text-4xl">🪷</span>

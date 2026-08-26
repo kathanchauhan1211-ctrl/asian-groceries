@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-// ─── Slide data — real brand ad images ───────────────────────────────────────
 const SLIDES = [
   {
     id: 1,
@@ -14,7 +13,6 @@ const SLIDES = [
     sub: 'Soft rotis every time — authentic stone-ground atta',
     cta: 'Shop Flour',
     href: '/?category=Rice+%26+Grains',
-    pos: 'center center',
   },
   {
     id: 2,
@@ -25,7 +23,6 @@ const SLIDES = [
     sub: 'MDH — trusted by generations across South Asia',
     cta: 'Shop Spices',
     href: '/?category=Spices',
-    pos: 'center center',
   },
   {
     id: 3,
@@ -36,18 +33,16 @@ const SLIDES = [
     sub: "TRS — the UK's #1 South Asian ingredient brand",
     cta: 'Shop Lentils',
     href: '/?category=Lentils+%26+Pulses',
-    pos: 'center 40%',
   },
   {
     id: 4,
     img: 'https://i.ytimg.com/vi/KBJbUNJ8-Dk/maxresdefault.jpg',
-    brand: 'Haldiram',
+    brand: "Haldiram's",
     label: 'Snacks & Sweets',
     headline: 'Taste the Tradition',
     sub: "Haldiram's — premium namkeen, mithai & more",
     cta: 'Shop Snacks',
     href: '/?category=Snacks',
-    pos: 'center center',
   },
   {
     id: 5,
@@ -58,7 +53,6 @@ const SLIDES = [
     sub: 'PRAN — quality food & beverages from the subcontinent',
     cta: 'Shop PRAN',
     href: '/?category=Ready+Meals',
-    pos: 'center center',
   },
 ]
 
@@ -66,12 +60,11 @@ const AUTO_MS = 3500
 const TRANS_MS = 420
 
 export function PromoSlider() {
-  const [current, setCurrent]   = useState(0)
-  const [prev, setPrev]         = useState<number | null>(null)
+  const [current, setCurrent]     = useState(0)
+  const [prev, setPrev]           = useState<number | null>(null)
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [animating, setAnimating] = useState(false)
-  const [paused, setPaused]     = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [paused, setPaused]       = useState(false)
   const total = SLIDES.length
 
   const goTo = useCallback((idx: number, dir: 'next' | 'prev' = 'next') => {
@@ -87,219 +80,201 @@ export function PromoSlider() {
   const goNext = useCallback(() => goTo(current + 1, 'next'), [current, goTo])
   const goPrev = useCallback(() => goTo(current - 1, 'prev'), [current, goTo])
 
-  // Auto-advance
   useEffect(() => {
     if (paused) return
-    timerRef.current = setTimeout(goNext, AUTO_MS)
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+    const t = setTimeout(goNext, AUTO_MS)
+    return () => clearTimeout(t)
   }, [current, paused, goNext])
 
-  // Touch / swipe
   const touchStart = useRef(0)
   const onTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX }
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const delta = e.changedTouches[0].clientX - touchStart.current
-    if (Math.abs(delta) > 40) delta < 0 ? goNext() : goPrev()
+  const onTouchEnd   = (e: React.TouchEvent) => {
+    const d = e.changedTouches[0].clientX - touchStart.current
+    if (Math.abs(d) > 40) d < 0 ? goNext() : goPrev()
+  }
+
+  function getTransform(i: number) {
+    const isCurrent = i === current
+    const isPrev    = i === prev
+    if (isCurrent) {
+      return animating
+        ? (direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)')
+        : 'translateX(0%)'
+    }
+    if (isPrev) {
+      return direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)'
+    }
+    return 'translateX(100%)'
+  }
+
+  function getZIndex(i: number) {
+    if (i === current) return 2
+    if (i === prev) return 1
+    return 0
   }
 
   return (
-    <div
-      className="relative w-full overflow-hidden"
-      style={{
-        borderBottom: '1px solid #E5E7EB',
-        height: 'clamp(240px, 45vw, 500px)',
-      }}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      {/* ── Slides ── */}
-      {SLIDES.map((slide, i) => {
-        const isCurrent = i === current
-        const isPrev    = i === prev
-
-        let transform = 'translateX(100%)'
-        let opacity   = 0
-        let zIndex    = 0
-
-        if (isCurrent) {
-          // Incoming: slide in from the direction
-          transform = animating
-            ? (direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)')
-            : 'translateX(0%)'
-          opacity = 1
-          zIndex  = 2
-        } else if (isPrev) {
-          // Outgoing: slide out to opposite direction
-          transform = direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)'
-          opacity   = 1
-          zIndex    = 1
-        }
-
-        return (
-          <div
-            key={slide.id}
-            aria-hidden={!isCurrent}
-            className="absolute inset-0"
-            style={{
-              zIndex,
-              opacity,
-              transform: isCurrent
-                ? (animating
-                    ? (direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)')
-                    : 'translateX(0%)')
-                : (isPrev
-                    ? (direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)')
-                    : 'translateX(100%)'),
-              transition: (isCurrent || isPrev)
-                ? `transform ${TRANS_MS}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity ${TRANS_MS}ms ease-out`
-                : 'none',
-            }}
-          >
-            {/* Background image — full cover on ALL sizes */}
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `url('${slide.img}')`,
-                backgroundSize: 'cover',
-                backgroundPosition: slide.pos,
-                backgroundRepeat: 'no-repeat',
-                filter: 'brightness(1.15) saturate(1.1)',
-                animation: isCurrent && !animating
-                  ? `kenburns-${i % 2 === 0 ? 'in' : 'out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
-                  : 'none',
-              }}
-            />
-
-            {/* Gradient overlay — lighter so images show through brightly */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  'linear-gradient(90deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.30) 55%, rgba(0,0,0,0.08) 100%)',
-              }}
-            />
-
-            {/* Text content — slides in from below with stagger */}
-            <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 md:px-14 max-w-2xl">
-              {/* Brand pill */}
-              <span
-                className="mb-2 inline-flex w-fit items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest"
-                style={{
-                  background: 'rgba(249,115,22,0.90)',
-                  color: '#fff',
-                  opacity: isCurrent && !animating ? 1 : 0,
-                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(16px)',
-                  transition: `opacity ${TRANS_MS + 80}ms ease-out, transform ${TRANS_MS + 80}ms ease-out`,
-                  transitionDelay: '60ms',
-                }}
-              >
-                {slide.label}
-              </span>
-
-              {/* Headline */}
-              <h2
-                className="font-serif text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl"
-                style={{
-                  opacity: isCurrent && !animating ? 1 : 0,
-                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(20px)',
-                  transition: `opacity ${TRANS_MS + 100}ms ease-out, transform ${TRANS_MS + 100}ms ease-out`,
-                  transitionDelay: '120ms',
-                  textShadow: '0 2px 12px rgba(0,0,0,0.4)',
-                }}
-              >
-                {slide.headline}
-              </h2>
-
-              {/* Subtitle */}
-              <p
-                className="mt-2 text-sm font-medium text-white/80 sm:text-base"
-                style={{
-                  opacity: isCurrent && !animating ? 1 : 0,
-                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(20px)',
-                  transition: `opacity ${TRANS_MS + 100}ms ease-out, transform ${TRANS_MS + 100}ms ease-out`,
-                  transitionDelay: '180ms',
-                }}
-              >
-                {slide.sub}
-              </p>
-
-              {/* CTA button */}
-              <a
-                href={slide.href}
-                className="mt-5 inline-flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-slate-900 transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                style={{
-                  background: '#fff',
-                  opacity: isCurrent && !animating ? 1 : 0,
-                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(20px)',
-                  transition: `opacity ${TRANS_MS + 100}ms ease-out, transform ${TRANS_MS + 100}ms ease-out, box-shadow 200ms, scale 200ms`,
-                  transitionDelay: '240ms',
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {slide.cta} →
-              </a>
-            </div>
-          </div>
-        )
-      })}
-
-      {/* ── Arrows — visible on ALL devices ── */}
-      <button
-        aria-label="Previous slide"
-        onClick={goPrev}
-        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex size-9 sm:size-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-        style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
-      >
-        <ChevronLeft className="size-5" />
-      </button>
-      <button
-        aria-label="Next slide"
-        onClick={goNext}
-        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex size-9 sm:size-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-        style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
-      >
-        <ChevronRight className="size-5" />
-      </button>
-
-      {/* ── Dot indicators ── */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
-        {SLIDES.map((_, i) => (
-          <button
-            key={i}
-            aria-label={`Go to slide ${i + 1}`}
-            onClick={() => goTo(i, i > current ? 'next' : 'prev')}
-            className="rounded-full transition-all duration-300"
-            style={{
-              width: i === current ? 24 : 7,
-              height: 7,
-              background: i === current ? '#fff' : 'rgba(255,255,255,0.40)',
-              boxShadow: i === current ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
-            }}
-          />
-        ))}
-      </div>
-
-      {/* ── Slide counter ── */}
-      <div
-        className="absolute right-14 bottom-3 z-20 text-[11px] font-semibold tabular-nums"
-        style={{ color: 'rgba(255,255,255,0.55)' }}
-      >
-        {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-      </div>
-
-      {/* ── Ken Burns keyframes injected via style tag ── */}
+    <>
       <style>{`
-        @keyframes kenburns-in {
-          from { transform: scale(1.0); }
-          to   { transform: scale(1.06); }
-        }
-        @keyframes kenburns-out {
-          from { transform: scale(1.06); }
-          to   { transform: scale(1.0); }
-        }
+        @keyframes kb-in  { from { transform: scale(1.0); } to { transform: scale(1.07); } }
+        @keyframes kb-out { from { transform: scale(1.07); } to { transform: scale(1.0); } }
       `}</style>
-    </div>
+
+      {/* ── Slider shell — responsive height via aspect-ratio ── */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ borderBottom: '1px solid var(--border)' }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Responsive height: taller on desktop, 9:16-ish on mobile portrait */}
+        <div className="relative w-full" style={{ paddingBottom: 'clamp(260px, 42vw, 480px)', height: 0 }}>
+
+          {SLIDES.map((slide, i) => {
+            const isCurrent = i === current
+            const isPrev    = i === prev
+            const active    = isCurrent || isPrev
+
+            return (
+              <div
+                key={slide.id}
+                aria-hidden={!isCurrent}
+                className="absolute inset-0"
+                style={{
+                  zIndex: getZIndex(i),
+                  transform: getTransform(i),
+                  transition: active ? `transform ${TRANS_MS}ms cubic-bezier(0.25,0.46,0.45,0.94)` : 'none',
+                }}
+              >
+                {/* Full-cover image using <img> + object-fit — identical on every screen size */}
+                <img
+                  src={slide.img}
+                  alt={slide.brand}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{
+                    filter: 'brightness(1.12) saturate(1.08)',
+                    animation: isCurrent && !animating
+                      ? `${i % 2 === 0 ? 'kb-in' : 'kb-out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
+                      : 'none',
+                  }}
+                />
+
+                {/* Gradient overlay — left-heavy for text legibility */}
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.32) 55%, rgba(0,0,0,0.06) 100%)' }}
+                />
+
+                {/* ── Text content — fully responsive typography ── */}
+                <div className="absolute inset-0 flex flex-col justify-center px-4 sm:px-10 md:px-14 max-w-2xl">
+
+                  {/* Brand pill */}
+                  <span
+                    className="mb-1.5 sm:mb-2 inline-flex w-fit items-center rounded-full px-2.5 py-0.5 font-bold uppercase tracking-widest"
+                    style={{
+                      fontSize: 'clamp(9px, 1.4vw, 13px)',
+                      background: 'rgba(249,115,22,0.90)',
+                      color: '#fff',
+                      opacity: isCurrent && !animating ? 1 : 0,
+                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(14px)',
+                      transition: `opacity ${TRANS_MS + 60}ms ease-out 60ms, transform ${TRANS_MS + 60}ms ease-out 60ms`,
+                    }}
+                  >
+                    {slide.label}
+                  </span>
+
+                  {/* Headline — clamps smoothly from mobile to 4K */}
+                  <h2
+                    className="font-serif font-bold leading-tight text-white"
+                    style={{
+                      fontSize: 'clamp(16px, 4vw, 52px)',
+                      textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+                      opacity: isCurrent && !animating ? 1 : 0,
+                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(18px)',
+                      transition: `opacity ${TRANS_MS + 80}ms ease-out 120ms, transform ${TRANS_MS + 80}ms ease-out 120ms`,
+                    }}
+                  >
+                    {slide.headline}
+                  </h2>
+
+                  {/* Subtitle — hidden on very small screens, visible sm+ */}
+                  <p
+                    className="mt-1 sm:mt-2 font-medium text-white/80 hidden xs:block"
+                    style={{
+                      fontSize: 'clamp(11px, 1.8vw, 17px)',
+                      opacity: isCurrent && !animating ? 1 : 0,
+                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(16px)',
+                      transition: `opacity ${TRANS_MS + 80}ms ease-out 180ms, transform ${TRANS_MS + 80}ms ease-out 180ms`,
+                    }}
+                  >
+                    {slide.sub}
+                  </p>
+
+                  {/* CTA */}
+                  <a
+                    href={slide.href}
+                    className="mt-3 sm:mt-5 inline-flex w-fit items-center gap-1.5 rounded-full font-bold text-slate-900 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                    style={{
+                      fontSize: 'clamp(11px, 1.6vw, 15px)',
+                      padding: 'clamp(6px,1vw,10px) clamp(14px,2vw,22px)',
+                      background: '#fff',
+                      opacity: isCurrent && !animating ? 1 : 0,
+                      transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(14px)',
+                      transition: `opacity ${TRANS_MS + 80}ms ease-out 240ms, transform ${TRANS_MS + 80}ms ease-out 240ms`,
+                    }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {slide.cta} →
+                  </a>
+                </div>
+              </div>
+            )
+          })}
+
+          {/* ── Arrows — always visible, all devices ── */}
+          <button
+            aria-label="Previous slide"
+            onClick={goPrev}
+            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+            style={{ width: 'clamp(32px,5vw,44px)', height: 'clamp(32px,5vw,44px)', background: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
+          >
+            <ChevronLeft style={{ width: 'clamp(14px,2vw,22px)', height: 'clamp(14px,2vw,22px)' }} />
+          </button>
+          <button
+            aria-label="Next slide"
+            onClick={goNext}
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+            style={{ width: 'clamp(32px,5vw,44px)', height: 'clamp(32px,5vw,44px)', background: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
+          >
+            <ChevronRight style={{ width: 'clamp(14px,2vw,22px)', height: 'clamp(14px,2vw,22px)' }} />
+          </button>
+
+          {/* ── Dots ── */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+            {SLIDES.map((_, i) => (
+              <button
+                key={i}
+                aria-label={`Slide ${i + 1}`}
+                onClick={() => goTo(i, i > current ? 'next' : 'prev')}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === current ? 22 : 7,
+                  height: 7,
+                  background: i === current ? '#fff' : 'rgba(255,255,255,0.38)',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Counter */}
+          <div className="absolute right-14 bottom-3 z-20 text-[10px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+          </div>
+
+        </div>
+      </div>
+    </>
   )
 }
