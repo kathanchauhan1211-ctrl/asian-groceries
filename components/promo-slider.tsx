@@ -3,202 +3,302 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-// ─── Slide data ───────────────────────────────────────────────────────────────
-// Replace `bg` with a real image URL (e.g. `/banners/spices.jpg`) when ready.
-// The `img` field is optional — if provided it is used as a background image.
+// ─── Slide data — real brand ad images ───────────────────────────────────────
 const SLIDES = [
   {
     id: 1,
-    bg: 'linear-gradient(135deg, #7C2D12 0%, #C2410C 40%, #EA580C 70%, #F97316 100%)',
-    label: '🌶️ Spices & Masalas',
-    headline: 'Authentic Spice Blends',
-    sub: 'From India, Pakistan & Sri Lanka',
-    cta: 'Shop Spices',
-    href: '/?category=Spices',
-    accent: '#FED7AA',
+    img: 'https://i.ytimg.com/vi/EjBcaWm2_4w/maxresdefault.jpg',
+    brand: 'Aashirvaad',
+    label: 'Atta & Flour',
+    headline: "India's Most Loved Flour",
+    sub: 'Soft rotis every time — authentic stone-ground atta',
+    cta: 'Shop Flour',
+    href: '/?category=Rice+%26+Grains',
+    pos: 'center center',
   },
   {
     id: 2,
-    bg: 'linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 40%, #2563EB 70%, #3B82F6 100%)',
-    label: '🌾 Rice & Grains',
-    headline: 'Premium Basmati Rice',
-    sub: 'Long-grain aged varieties',
-    cta: 'Shop Rice',
-    href: '/?category=Rice+%26+Grains',
-    accent: '#BFDBFE',
+    img: 'https://www.southasiancentral.ca/wp-content/uploads/Brand-page-top-banner-1.webp',
+    brand: 'MDH',
+    label: 'Spices & Masalas',
+    headline: 'Real Taste, Real Spice',
+    sub: 'MDH — trusted by generations across South Asia',
+    cta: 'Shop Spices',
+    href: '/?category=Spices',
+    pos: 'center center',
   },
   {
     id: 3,
-    bg: 'linear-gradient(135deg, #4A044E 0%, #7E22CE 40%, #A855F7 70%, #C084FC 100%)',
-    label: '🍬 Sweets & Mithai',
-    headline: 'Festival Sweets',
-    sub: 'Ladoo, Barfi, Gulab Jamun & more',
-    cta: 'Shop Sweets',
-    href: '/?category=Sweets',
-    accent: '#F3E8FF',
+    img: 'https://vibrantfoods.com/wp-content/uploads/2022/08/TRS_OUR-BRAND_-BANNERS2.jpg',
+    brand: 'TRS',
+    label: 'Lentils & Pulses',
+    headline: 'Premium Quality Pulses',
+    sub: "TRS — the UK's #1 South Asian ingredient brand",
+    cta: 'Shop Lentils',
+    href: '/?category=Lentils+%26+Pulses',
+    pos: 'center 40%',
   },
   {
     id: 4,
-    bg: 'linear-gradient(135deg, #064E3B 0%, #065F46 40%, #059669 70%, #10B981 100%)',
-    label: '🫖 Tea & Drinks',
-    headline: 'Masala Chai & More',
-    sub: 'Premium teas from the subcontinent',
-    cta: 'Shop Teas',
-    href: '/?category=Tea+%26+Drinks',
-    accent: '#A7F3D0',
+    img: 'https://i.ytimg.com/vi/KBJbUNJ8-Dk/maxresdefault.jpg',
+    brand: 'Haldiram',
+    label: 'Snacks & Sweets',
+    headline: 'Taste the Tradition',
+    sub: "Haldiram's — premium namkeen, mithai & more",
+    cta: 'Shop Snacks',
+    href: '/?category=Snacks',
+    pos: 'center center',
   },
   {
     id: 5,
-    bg: 'linear-gradient(135deg, #78350F 0%, #92400E 40%, #B45309 70%, #D97706 100%)',
-    label: '🥘 Ready Meals',
-    headline: 'Quick & Authentic',
-    sub: 'Ready-to-eat South Asian meals',
-    cta: 'Shop Ready Meals',
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4NgeaYtyZ9LP2HuffUVY1p_cqEppZjKzdtS3Z4hgJo0hG0he-Ji-ZNQ0&s=10',
+    brand: 'PRAN',
+    label: 'Ready Meals & Drinks',
+    headline: 'Flavours of Bangladesh',
+    sub: 'PRAN — quality food & beverages from the subcontinent',
+    cta: 'Shop PRAN',
     href: '/?category=Ready+Meals',
-    accent: '#FEF3C7',
+    pos: 'center center',
   },
 ]
 
-const AUTO_INTERVAL = 4500
+const AUTO_MS = 3500
+const TRANS_MS = 420
 
 export function PromoSlider() {
-  const [active, setActive] = useState(0)
-  const [dragging, setDragging] = useState(false)
-  const [dragStart, setDragStart] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
+  const [current, setCurrent]   = useState(0)
+  const [prev, setPrev]         = useState<number | null>(null)
+  const [direction, setDirection] = useState<'next' | 'prev'>('next')
+  const [animating, setAnimating] = useState(false)
+  const [paused, setPaused]     = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const total = SLIDES.length
 
-  const goTo = useCallback((idx: number) => {
-    setActive(((idx % total) + total) % total)
-  }, [total])
+  const goTo = useCallback((idx: number, dir: 'next' | 'prev' = 'next') => {
+    if (animating) return
+    const next = ((idx % total) + total) % total
+    setDirection(dir)
+    setPrev(current)
+    setCurrent(next)
+    setAnimating(true)
+    setTimeout(() => { setPrev(null); setAnimating(false) }, TRANS_MS)
+  }, [animating, current, total])
 
-  const next = useCallback(() => goTo(active + 1), [active, goTo])
-  const prev = useCallback(() => goTo(active - 1), [active, goTo])
+  const goNext = useCallback(() => goTo(current + 1, 'next'), [current, goTo])
+  const goPrev = useCallback(() => goTo(current - 1, 'prev'), [current, goTo])
 
   // Auto-advance
   useEffect(() => {
-    if (paused) { timerRef.current && clearInterval(timerRef.current); return }
-    timerRef.current = setInterval(next, AUTO_INTERVAL)
-    return () => { timerRef.current && clearInterval(timerRef.current) }
-  }, [next, paused])
+    if (paused) return
+    timerRef.current = setTimeout(goNext, AUTO_MS)
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [current, paused, goNext])
 
-  // Touch / pointer drag
-  const onPointerDown = (e: React.PointerEvent) => {
-    setDragging(true)
-    setDragStart(e.clientX)
+  // Touch / swipe
+  const touchStart = useRef(0)
+  const onTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientX - touchStart.current
+    if (Math.abs(delta) > 40) delta < 0 ? goNext() : goPrev()
   }
-  const onPointerUp = (e: React.PointerEvent) => {
-    if (!dragging) return
-    const delta = e.clientX - dragStart
-    if (Math.abs(delta) > 40) delta < 0 ? next() : prev()
-    setDragging(false)
-  }
-
-  const slide = SLIDES[active]
 
   return (
-    <div className="w-full overflow-hidden" style={{ borderBottom: '1px solid #E5E7EB' }}>
-      <div
-        className="relative w-full select-none"
+    <div
+      className="relative w-full overflow-hidden"
+      style={{
+        borderBottom: '1px solid #E5E7EB',
+        height: 'clamp(220px, 38vw, 420px)',
+      }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-      onPointerLeave={() => setDragging(false)}
-      style={{ cursor: dragging ? 'grabbing' : 'grab' }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
-      {/* Slides */}
-      <div
-        className="relative h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px] w-full transition-all duration-700"
-        style={{ background: slide.bg }}
-      >
-        {/* Decorative circles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* ── Slides ── */}
+      {SLIDES.map((slide, i) => {
+        const isCurrent = i === current
+        const isPrev    = i === prev
+
+        let transform = 'translateX(100%)'
+        let opacity   = 0
+        let zIndex    = 0
+
+        if (isCurrent) {
+          // Incoming: slide in from the direction
+          transform = animating
+            ? (direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)')
+            : 'translateX(0%)'
+          opacity = 1
+          zIndex  = 2
+        } else if (isPrev) {
+          // Outgoing: slide out to opposite direction
+          transform = direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)'
+          opacity   = 1
+          zIndex    = 1
+        }
+
+        return (
           <div
-            className="absolute -right-20 -top-20 rounded-full opacity-10"
-            style={{ width: 400, height: 400, background: slide.accent }}
-          />
-          <div
-            className="absolute -left-10 -bottom-10 rounded-full opacity-8"
-            style={{ width: 280, height: 280, background: slide.accent }}
-          />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 flex h-full flex-col justify-center px-6 sm:px-10 md:px-14 max-w-3xl">
-          {/* Label pill */}
-          <span
-            className="mb-3 inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-            style={{ background: 'rgba(255,255,255,0.18)', color: slide.accent }}
-          >
-            {slide.label}
-          </span>
-
-          {/* Headline */}
-          <h2 className="font-serif text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
-            {slide.headline}
-          </h2>
-          <p className="mt-2 text-sm font-medium sm:text-base" style={{ color: slide.accent }}>
-            {slide.sub}
-          </p>
-
-          {/* CTA */}
-          <a
-            href={slide.href}
-            className="mt-5 inline-flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-200 hover:opacity-90 hover:scale-[1.03]"
-            style={{ background: slide.accent, color: '#1C1C1C' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {slide.cta} →
-          </a>
-        </div>
-
-        {/* Slide number */}
-        <div
-          className="absolute right-5 bottom-4 text-[11px] font-semibold tabular-nums"
-          style={{ color: 'rgba(255,255,255,0.4)' }}
-        >
-          {String(active + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-        </div>
-      </div>
-
-      {/* Dots */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
-        {SLIDES.map((_, i) => (
-          <button
-            key={i}
-            aria-label={`Go to slide ${i + 1}`}
-            onClick={() => goTo(i)}
-            className="rounded-full transition-all duration-300"
+            key={slide.id}
+            aria-hidden={!isCurrent}
+            className="absolute inset-0"
             style={{
-              width: i === active ? 22 : 7,
-              height: 7,
-              background: i === active ? '#fff' : 'rgba(255,255,255,0.35)',
+              zIndex,
+              opacity,
+              transform: isCurrent
+                ? (animating
+                    ? (direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)')
+                    : 'translateX(0%)')
+                : (isPrev
+                    ? (direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)')
+                    : 'translateX(100%)'),
+              transition: (isCurrent || isPrev)
+                ? `transform ${TRANS_MS}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity ${TRANS_MS}ms ease-out`
+                : 'none',
             }}
-          />
-        ))}
-      </div>
+          >
+            {/* Background image — cover + subtle Ken Burns zoom */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url('${slide.img}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: slide.pos,
+                backgroundRepeat: 'no-repeat',
+                animation: isCurrent && !animating
+                  ? `kenburns-${i % 2 === 0 ? 'in' : 'out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
+                  : 'none',
+              }}
+            />
 
-      {/* Arrow buttons — desktop only */}
+            {/* Dark gradient overlay for text legibility */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(90deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.12) 100%)',
+              }}
+            />
+
+            {/* Text content — slides in from below with stagger */}
+            <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 md:px-14 max-w-2xl">
+              {/* Brand pill */}
+              <span
+                className="mb-2 inline-flex w-fit items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest"
+                style={{
+                  background: 'rgba(249,115,22,0.90)',
+                  color: '#fff',
+                  opacity: isCurrent && !animating ? 1 : 0,
+                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(16px)',
+                  transition: `opacity ${TRANS_MS + 80}ms ease-out, transform ${TRANS_MS + 80}ms ease-out`,
+                  transitionDelay: '60ms',
+                }}
+              >
+                {slide.label}
+              </span>
+
+              {/* Headline */}
+              <h2
+                className="font-serif text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl"
+                style={{
+                  opacity: isCurrent && !animating ? 1 : 0,
+                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `opacity ${TRANS_MS + 100}ms ease-out, transform ${TRANS_MS + 100}ms ease-out`,
+                  transitionDelay: '120ms',
+                  textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+                }}
+              >
+                {slide.headline}
+              </h2>
+
+              {/* Subtitle */}
+              <p
+                className="mt-2 text-sm font-medium text-white/80 sm:text-base"
+                style={{
+                  opacity: isCurrent && !animating ? 1 : 0,
+                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `opacity ${TRANS_MS + 100}ms ease-out, transform ${TRANS_MS + 100}ms ease-out`,
+                  transitionDelay: '180ms',
+                }}
+              >
+                {slide.sub}
+              </p>
+
+              {/* CTA button */}
+              <a
+                href={slide.href}
+                className="mt-5 inline-flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-slate-900 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                style={{
+                  background: '#fff',
+                  opacity: isCurrent && !animating ? 1 : 0,
+                  transform: isCurrent && !animating ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `opacity ${TRANS_MS + 100}ms ease-out, transform ${TRANS_MS + 100}ms ease-out, box-shadow 200ms, scale 200ms`,
+                  transitionDelay: '240ms',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {slide.cta} →
+              </a>
+            </div>
+          </div>
+        )
+      })}
+
+      {/* ── Arrows — visible on ALL devices ── */}
       <button
         aria-label="Previous slide"
-        onClick={(e) => { e.stopPropagation(); prev() }}
-        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 hidden md:flex size-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-        style={{ background: 'rgba(0,0,0,0.25)', color: '#fff' }}
+        onClick={goPrev}
+        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex size-9 sm:size-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+        style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
       >
         <ChevronLeft className="size-5" />
       </button>
       <button
         aria-label="Next slide"
-        onClick={(e) => { e.stopPropagation(); next() }}
-        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 hidden md:flex size-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-        style={{ background: 'rgba(0,0,0,0.25)', color: '#fff' }}
+        onClick={goNext}
+        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex size-9 sm:size-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+        style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
       >
         <ChevronRight className="size-5" />
       </button>
+
+      {/* ── Dot indicators ── */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+        {SLIDES.map((_, i) => (
+          <button
+            key={i}
+            aria-label={`Go to slide ${i + 1}`}
+            onClick={() => goTo(i, i > current ? 'next' : 'prev')}
+            className="rounded-full transition-all duration-300"
+            style={{
+              width: i === current ? 24 : 7,
+              height: 7,
+              background: i === current ? '#fff' : 'rgba(255,255,255,0.40)',
+              boxShadow: i === current ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+            }}
+          />
+        ))}
       </div>
+
+      {/* ── Slide counter ── */}
+      <div
+        className="absolute right-14 bottom-3 z-20 text-[11px] font-semibold tabular-nums"
+        style={{ color: 'rgba(255,255,255,0.55)' }}
+      >
+        {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+      </div>
+
+      {/* ── Ken Burns keyframes injected via style tag ── */}
+      <style>{`
+        @keyframes kenburns-in {
+          from { transform: scale(1.0); }
+          to   { transform: scale(1.06); }
+        }
+        @keyframes kenburns-out {
+          from { transform: scale(1.06); }
+          to   { transform: scale(1.0); }
+        }
+      `}</style>
     </div>
   )
 }
