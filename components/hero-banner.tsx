@@ -15,7 +15,7 @@ const CITIES = [
 
 export function HeroBanner({ onTrack }: { onTrack: () => void }) {
   return (
-    <section className="relative overflow-hidden bg-white">
+    <section className="relative overflow-hidden bg-background dark:bg-[#0F1117]">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div className="flex flex-col items-center gap-6 py-8 md:flex-row md:items-center md:gap-10 md:py-10 lg:py-12">
 
@@ -38,11 +38,21 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
               Taste the Subcontinent
             </p>
 
-            {/* Subtle flag stripe */}
-            <div className="mt-5 flex gap-0 overflow-hidden rounded-full h-1.5 w-24 shadow-sm">
-              <div className="flex-1 bg-[#FF9933]" />
-              <div className="flex-1 bg-white border-y border-slate-200" />
-              <div className="flex-1 bg-[#138808]" />
+            {/* Indian flag stripe with Ashoka Chakra */}
+            <div className="mt-5 flex items-center gap-0 overflow-hidden rounded-md shadow-md" style={{ height: '28px', width: '140px', border: '1px solid rgba(0,0,0,0.08)' }}>
+              <div className="flex-1 h-full" style={{ background: '#FF9933' }} />
+              <div className="flex-1 h-full flex items-center justify-center" style={{ background: '#fff' }}>
+                {/* Ashoka Chakra */}
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <circle cx="12" cy="12" r="4" fill="none" stroke="#000080" strokeWidth="1.2"/>
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="#000080" strokeWidth="1.2"/>
+                  {Array.from({ length: 24 }, (_, i) => {
+                    const a = (i * Math.PI * 2) / 24
+                    return <line key={i} x1={12 + 4 * Math.cos(a)} y1={12 + 4 * Math.sin(a)} x2={12 + 9 * Math.cos(a)} y2={12 + 9 * Math.sin(a)} stroke="#000080" strokeWidth="0.6" />
+                  })}
+                </svg>
+              </div>
+              <div className="flex-1 h-full" style={{ background: '#138808' }} />
             </div>
           </div>
 
@@ -62,15 +72,19 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
                   <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary to-primary/90" />
                   <div className="flag-shimmer absolute inset-0 z-[1]" />
                   <div className="flag-ripple absolute inset-0 z-[2]" />
-                  <div className="relative z-10 flex h-full flex-col items-center py-5 gap-2">
-                    <div className="flex flex-col items-center gap-0.5 mb-1">
-                      <span className="block w-3 h-3 rounded-full bg-accent/80 shadow-sm" />
-                      <span className="block w-5 h-0.5 rounded-full bg-primary-foreground/40" />
-                    </div>
-                    <span className="flex size-11 items-center justify-center rounded-full shadow-md ring-2 ring-primary-foreground/20" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                      <LogoSVG size={32} />
-                    </span>
-                    <span className="mt-auto block w-2.5 h-2.5 rotate-45 bg-accent/70 rounded-sm" />
+                  <div className="relative z-10 flex h-full flex-col items-center justify-center py-3">
+                    {/* Ashoka Chakra centered on flag */}
+                    <svg viewBox="0 0 60 60" width="44" height="44" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>
+                      <circle cx="30" cy="30" r="12" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2.5"/>
+                      <circle cx="30" cy="30" r="27" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2.5"/>
+                      {Array.from({ length: 24 }, (_, i) => {
+                        const a = (i * Math.PI * 2) / 24
+                        return <line key={i} x1={30 + 12 * Math.cos(a)} y1={30 + 12 * Math.sin(a)} x2={30 + 27 * Math.cos(a)} y2={30 + 27 * Math.sin(a)} stroke="rgba(255,255,255,0.85)" strokeWidth="1.5" />
+                      })}
+                      <circle cx="30" cy="30" r="3.5" fill="rgba(255,255,255,0.9)"/>
+                    </svg>
+                    {/* Store name vertical */}
+                    <span className="mt-2 text-[7px] font-black tracking-[0.2em] text-white/70 uppercase rotate-0">IM</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-center">
