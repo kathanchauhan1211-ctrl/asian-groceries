@@ -160,45 +160,45 @@ type SpiceEl = {
 
 const SPICE_ELEMENTS: SpiceEl[] = [
   // ── Star anise (6) — largest, most iconic ──
-  { type: 'star',     x: 3,   y: 8,   scale: 1.1,  rotate: 18,  opacity: 0.17 },
-  { type: 'star',     x: 87,  y: 17,  scale: 0.90, rotate: -28, opacity: 0.15 },
-  { type: 'star',     x: 51,  y: 56,  scale: 1.0,  rotate: 42,  opacity: 0.13 },
-  { type: 'star',     x: 17,  y: 80,  scale: 0.85, rotate: -12, opacity: 0.15 },
-  { type: 'star',     x: 93,  y: 67,  scale: 1.0,  rotate: 65,  opacity: 0.14 },
-  { type: 'star',     x: 68,  y: 94,  scale: 0.85, rotate: 30,  opacity: 0.14 },
+  { type: 'star',     x: 3,   y: 8,   scale: 1.1,  rotate: 18,  opacity: 0.50 },
+  { type: 'star',     x: 87,  y: 17,  scale: 0.90, rotate: -28, opacity: 0.45 },
+  { type: 'star',     x: 51,  y: 56,  scale: 1.0,  rotate: 42,  opacity: 0.40 },
+  { type: 'star',     x: 17,  y: 80,  scale: 0.85, rotate: -12, opacity: 0.45 },
+  { type: 'star',     x: 93,  y: 67,  scale: 1.0,  rotate: 65,  opacity: 0.42 },
+  { type: 'star',     x: 68,  y: 94,  scale: 0.85, rotate: 30,  opacity: 0.43 },
 
   // ── Curry leaves (7) ──
-  { type: 'leaf',     x: 24,  y: 23,  scale: 1.0,  rotate: 35,  opacity: 0.17 },
-  { type: 'leaf',     x: 71,  y: 5,   scale: 0.85, rotate: -50, opacity: 0.15 },
-  { type: 'leaf',     x: 7,   y: 50,  scale: 0.90, rotate: 65,  opacity: 0.16 },
-  { type: 'leaf',     x: 82,  y: 42,  scale: 1.1,  rotate: -22, opacity: 0.16 },
-  { type: 'leaf',     x: 37,  y: 87,  scale: 0.95, rotate: 20,  opacity: 0.15 },
-  { type: 'leaf',     x: 58,  y: 30,  scale: 0.8,  rotate: -75, opacity: 0.14 },
-  { type: 'leaf',     x: 96,  y: 36,  scale: 1.0,  rotate: 40,  opacity: 0.15 },
+  { type: 'leaf',     x: 24,  y: 23,  scale: 1.0,  rotate: 35,  opacity: 0.48 },
+  { type: 'leaf',     x: 71,  y: 5,   scale: 0.85, rotate: -50, opacity: 0.44 },
+  { type: 'leaf',     x: 7,   y: 50,  scale: 0.90, rotate: 65,  opacity: 0.46 },
+  { type: 'leaf',     x: 82,  y: 42,  scale: 1.1,  rotate: -22, opacity: 0.46 },
+  { type: 'leaf',     x: 37,  y: 87,  scale: 0.95, rotate: 20,  opacity: 0.44 },
+  { type: 'leaf',     x: 58,  y: 30,  scale: 0.8,  rotate: -75, opacity: 0.42 },
+  { type: 'leaf',     x: 96,  y: 36,  scale: 1.0,  rotate: 40,  opacity: 0.44 },
 
   // ── Chili peppers (4) ──
-  { type: 'chili',    x: 46,  y: 12,  scale: 0.90, rotate: -40, opacity: 0.16 },
-  { type: 'chili',    x: 29,  y: 63,  scale: 1.0,  rotate: 55,  opacity: 0.14 },
-  { type: 'chili',    x: 80,  y: 77,  scale: 0.85, rotate: -25, opacity: 0.14 },
-  { type: 'chili',    x: 62,  y: 46,  scale: 0.80, rotate: 72,  opacity: 0.13 },
+  { type: 'chili',    x: 46,  y: 12,  scale: 0.90, rotate: -40, opacity: 0.46 },
+  { type: 'chili',    x: 29,  y: 63,  scale: 1.0,  rotate: 55,  opacity: 0.44 },
+  { type: 'chili',    x: 80,  y: 77,  scale: 0.85, rotate: -25, opacity: 0.44 },
+  { type: 'chili',    x: 62,  y: 46,  scale: 0.80, rotate: 72,  opacity: 0.42 },
 
   // ── Cardamom pods (4) ──
-  { type: 'cardamom', x: 35,  y: 33,  scale: 0.90, rotate: 22,  opacity: 0.15 },
-  { type: 'cardamom', x: 75,  y: 57,  scale: 1.0,  rotate: -35, opacity: 0.15 },
-  { type: 'cardamom', x: 14,  y: 93,  scale: 0.85, rotate: 50,  opacity: 0.14 },
-  { type: 'cardamom', x: 90,  y: 10,  scale: 0.80, rotate: -15, opacity: 0.15 },
+  { type: 'cardamom', x: 35,  y: 33,  scale: 0.90, rotate: 22,  opacity: 0.45 },
+  { type: 'cardamom', x: 75,  y: 57,  scale: 1.0,  rotate: -35, opacity: 0.45 },
+  { type: 'cardamom', x: 14,  y: 93,  scale: 0.85, rotate: 50,  opacity: 0.43 },
+  { type: 'cardamom', x: 90,  y: 10,  scale: 0.80, rotate: -15, opacity: 0.44 },
 
   // ── Cloves (3) ──
-  { type: 'clove',    x: 55,  y: 71,  scale: 1.0,  rotate: 0,   opacity: 0.16 },
-  { type: 'clove',    x: 20,  y: 40,  scale: 0.90, rotate: 45,  opacity: 0.15 },
-  { type: 'clove',    x: 85,  y: 60,  scale: 1.1,  rotate: -30, opacity: 0.15 },
+  { type: 'clove',    x: 55,  y: 71,  scale: 1.0,  rotate: 0,   opacity: 0.46 },
+  { type: 'clove',    x: 20,  y: 40,  scale: 0.90, rotate: 45,  opacity: 0.45 },
+  { type: 'clove',    x: 85,  y: 60,  scale: 1.1,  rotate: -30, opacity: 0.45 },
 
   // ── Small seeds (5) — scattered fills ──
-  { type: 'seed',     x: 43,  y: 48,  scale: 1.0,  rotate: 25,  opacity: 0.20 },
-  { type: 'seed',     x: 65,  y: 18,  scale: 0.90, rotate: -55, opacity: 0.19 },
-  { type: 'seed',     x: 10,  y: 72,  scale: 1.1,  rotate: 40,  opacity: 0.20 },
-  { type: 'seed',     x: 78,  y: 88,  scale: 0.90, rotate: 10,  opacity: 0.18 },
-  { type: 'seed',     x: 30,  y: 12,  scale: 1.0,  rotate: -30, opacity: 0.19 },
+  { type: 'seed',     x: 43,  y: 48,  scale: 1.0,  rotate: 25,  opacity: 0.52 },
+  { type: 'seed',     x: 65,  y: 18,  scale: 0.90, rotate: -55, opacity: 0.50 },
+  { type: 'seed',     x: 10,  y: 72,  scale: 1.1,  rotate: 40,  opacity: 0.52 },
+  { type: 'seed',     x: 78,  y: 88,  scale: 0.90, rotate: 10,  opacity: 0.48 },
+  { type: 'seed',     x: 30,  y: 12,  scale: 1.0,  rotate: -30, opacity: 0.50 },
 ]
 
 function renderSpice(type: SpiceEl['type']) {
@@ -239,8 +239,8 @@ function SpiceDecorBackground() {
           }}
         >
           <svg
-            width={32}
-            height={32}
+            width={96}
+            height={96}
             viewBox="-16 -16 32 32"
             xmlns="http://www.w3.org/2000/svg"
             overflow="visible"

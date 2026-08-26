@@ -140,8 +140,8 @@ export function PromoSlider() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-      {/* Aspect ratio: 16:9 on mobile, 21:9 on desktop for a true banner ad look */}
-        <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[24/9] xl:aspect-[32/9]" style={{ background: '#080C14' }}>
+      {/* Aspect ratio: 16:9 on mobile, 21:9 ultrawide on desktop */}
+        <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[21/9] xl:aspect-[21/9]" style={{ background: '#080C14' }}>
 
           {loading ? (
             <div className="absolute inset-0 bg-slate-200 animate-pulse" style={{ background: 'var(--muted)' }} />
@@ -174,7 +174,7 @@ export function PromoSlider() {
                   alt={slide.brand}
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{
-                    objectPosition: 'center center',
+                    objectPosition: '55% 45%',
                     filter: 'brightness(1.12) saturate(1.08)',
                     animation: isCurrent && !animating
                       ? `${i % 2 === 0 ? 'kb-in' : 'kb-out'} ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
