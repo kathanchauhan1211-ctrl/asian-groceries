@@ -131,19 +131,15 @@ export function PromoSlider() {
         @keyframes kb-out { from { transform: scale(1.07); } to { transform: scale(1.0); } }
       `}</style>
 
-      {/* ── Slider shell — banner aspect ratio ── */}
-      <div
-        className="relative w-full overflow-hidden"
-        style={{ borderBottom: '1px solid var(--border)' }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-      {/* Height: natural 16:9 on mobile, capped at 420px on desktop */}
+      {/* ── Slider shell — Boxed Billboard Layout ── */}
+      <div className="w-full bg-background px-4 md:px-8 py-6 md:py-10 flex justify-center border-b border-border">
         <div
-          className="relative w-full overflow-hidden"
-          style={{ height: 'min(56vw, 420px)', background: '#080C14', borderBottom: '1px solid var(--border)' }}
+          className="relative w-full max-w-5xl overflow-hidden rounded-2xl shadow-2xl ring-1 ring-border/50"
+          style={{ aspectRatio: '21/9', minHeight: '200px', background: '#080C14' }}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
 
           {loading ? (
@@ -171,13 +167,11 @@ export function PromoSlider() {
                   transition: active ? `transform ${TRANS_MS}ms cubic-bezier(0.25,0.46,0.45,0.94)` : 'none',
                 }}
               >
-                {/* Full-cover image using <img> + object-fit — identical on every screen size */}
                 <img
                   src={slide.img}
                   alt={slide.brand}
-                  className="absolute inset-0 w-full h-full"
+                  className="absolute inset-0 w-full h-full object-cover"
                   style={{
-                    objectFit: 'contain',
                     objectPosition: 'center center',
                     filter: 'brightness(1.05) saturate(1.05)',
                     animation: isCurrent && !animating

@@ -28,20 +28,20 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
             </span>
 
             {/* Brand name */}
-            <h1 className="font-serif text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
               IndianMarket
               <span className="text-primary">.lt</span>
             </h1>
 
             {/* 3-word slogan */}
-            <p className="mt-2 text-base font-medium text-slate-500 tracking-wide sm:text-lg">
+            <p className="mt-2 text-base font-medium text-muted-foreground tracking-wide sm:text-lg">
               Taste the Subcontinent
             </p>
 
             {/* Subtle flag stripe */}
             <div className="mt-5 flex gap-0 overflow-hidden rounded-full h-1.5 w-24 shadow-sm">
               <div className="flex-1 bg-[#FF9933]" />
-              <div className="flex-1 bg-white border-y border-slate-200" />
+              <div className="flex-1 bg-white border-y border-slate-200 dark:border-none" />
               <div className="flex-1 bg-[#138808]" />
             </div>
           </div>
