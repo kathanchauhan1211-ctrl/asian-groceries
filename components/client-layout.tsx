@@ -63,7 +63,7 @@ function StorefrontLayout({ children }: { children: React.ReactNode }) {
 // ─── Individual spice SVG shapes (all centered at 0,0) ───────────────────────
 
 /** Star anise — 8-pointed star with seed dot in centre */
-function StarAnise({ color = '#B5651D' }: { color?: string }) {
+function StarAnise({ color = '#7A3B0A' }: { color?: string }) {
   // Pre-computed 16-point polygon: outer r=12, inner r=4.5, 8 petals
   const pts =
     '0,-12 1.72,-4.16 8.49,-8.49 4.16,-1.72 12,0 4.16,1.72 8.49,8.49 1.72,4.16 ' +
@@ -77,7 +77,7 @@ function StarAnise({ color = '#B5651D' }: { color?: string }) {
 }
 
 /** Curry / bay leaf — elongated oval with centre vein */
-function CurryLeaf({ color = '#3a7d44' }: { color?: string }) {
+function CurryLeaf({ color = '#1a5c2a' }: { color?: string }) {
   return (
     <g>
       <path
@@ -95,7 +95,7 @@ function CurryLeaf({ color = '#3a7d44' }: { color?: string }) {
 }
 
 /** Chili pepper — curved teardrop with thin stem */
-function Chili({ color = '#c0392b' }: { color?: string }) {
+function Chili({ color = '#8B0000' }: { color?: string }) {
   return (
     <g>
       <path
@@ -114,7 +114,7 @@ function Chili({ color = '#c0392b' }: { color?: string }) {
 }
 
 /** Cardamom pod — ribbed oval */
-function CardamomPod({ color = '#4e7a55' }: { color?: string }) {
+function CardamomPod({ color = '#2d5c35' }: { color?: string }) {
   return (
     <g>
       <ellipse rx={5} ry={10} fill={color} />
@@ -131,7 +131,7 @@ function CardamomPod({ color = '#4e7a55' }: { color?: string }) {
 }
 
 /** Clove — round head on thin stem */
-function Clove({ color = '#7C4A1E' }: { color?: string }) {
+function Clove({ color = '#3a1a06' }: { color?: string }) {
   return (
     <g fill={color}>
       <circle cy={-9} r={4} />
@@ -141,7 +141,7 @@ function Clove({ color = '#7C4A1E' }: { color?: string }) {
 }
 
 /** Small anise / cumin seed — tiny oval */
-function Seed({ color = '#E07B39' }: { color?: string }) {
+function Seed({ color = '#9B3A00' }: { color?: string }) {
   return <ellipse rx={3} ry={5.5} fill={color} />
 }
 
@@ -159,46 +159,46 @@ type SpiceEl = {
 }
 
 const SPICE_ELEMENTS: SpiceEl[] = [
-  // ── Star anise (6) — largest, most iconic ──
-  { type: 'star',     x: 3,   y: 8,   scale: 1.1,  rotate: 18,  opacity: 0.50 },
-  { type: 'star',     x: 87,  y: 17,  scale: 0.90, rotate: -28, opacity: 0.45 },
-  { type: 'star',     x: 51,  y: 56,  scale: 1.0,  rotate: 42,  opacity: 0.40 },
-  { type: 'star',     x: 17,  y: 80,  scale: 0.85, rotate: -12, opacity: 0.45 },
-  { type: 'star',     x: 93,  y: 67,  scale: 1.0,  rotate: 65,  opacity: 0.42 },
-  { type: 'star',     x: 68,  y: 94,  scale: 0.85, rotate: 30,  opacity: 0.43 },
+  // ── Star anise (6) ──
+  { type: 'star',     x: 3,   y: 8,   scale: 1.0,  rotate: 18,  opacity: 0.35 },
+  { type: 'star',     x: 87,  y: 17,  scale: 0.90, rotate: -28, opacity: 0.32 },
+  { type: 'star',     x: 51,  y: 56,  scale: 1.0,  rotate: 42,  opacity: 0.30 },
+  { type: 'star',     x: 17,  y: 80,  scale: 0.85, rotate: -12, opacity: 0.33 },
+  { type: 'star',     x: 93,  y: 67,  scale: 1.0,  rotate: 65,  opacity: 0.31 },
+  { type: 'star',     x: 68,  y: 94,  scale: 0.85, rotate: 30,  opacity: 0.32 },
 
   // ── Curry leaves (7) ──
-  { type: 'leaf',     x: 24,  y: 23,  scale: 1.0,  rotate: 35,  opacity: 0.48 },
-  { type: 'leaf',     x: 71,  y: 5,   scale: 0.85, rotate: -50, opacity: 0.44 },
-  { type: 'leaf',     x: 7,   y: 50,  scale: 0.90, rotate: 65,  opacity: 0.46 },
-  { type: 'leaf',     x: 82,  y: 42,  scale: 1.1,  rotate: -22, opacity: 0.46 },
-  { type: 'leaf',     x: 37,  y: 87,  scale: 0.95, rotate: 20,  opacity: 0.44 },
-  { type: 'leaf',     x: 58,  y: 30,  scale: 0.8,  rotate: -75, opacity: 0.42 },
-  { type: 'leaf',     x: 96,  y: 36,  scale: 1.0,  rotate: 40,  opacity: 0.44 },
+  { type: 'leaf',     x: 24,  y: 23,  scale: 1.0,  rotate: 35,  opacity: 0.36 },
+  { type: 'leaf',     x: 71,  y: 5,   scale: 0.85, rotate: -50, opacity: 0.33 },
+  { type: 'leaf',     x: 7,   y: 50,  scale: 0.90, rotate: 65,  opacity: 0.34 },
+  { type: 'leaf',     x: 82,  y: 42,  scale: 1.1,  rotate: -22, opacity: 0.34 },
+  { type: 'leaf',     x: 37,  y: 87,  scale: 0.95, rotate: 20,  opacity: 0.33 },
+  { type: 'leaf',     x: 58,  y: 30,  scale: 0.8,  rotate: -75, opacity: 0.31 },
+  { type: 'leaf',     x: 96,  y: 36,  scale: 1.0,  rotate: 40,  opacity: 0.33 },
 
   // ── Chili peppers (4) ──
-  { type: 'chili',    x: 46,  y: 12,  scale: 0.90, rotate: -40, opacity: 0.46 },
-  { type: 'chili',    x: 29,  y: 63,  scale: 1.0,  rotate: 55,  opacity: 0.44 },
-  { type: 'chili',    x: 80,  y: 77,  scale: 0.85, rotate: -25, opacity: 0.44 },
-  { type: 'chili',    x: 62,  y: 46,  scale: 0.80, rotate: 72,  opacity: 0.42 },
+  { type: 'chili',    x: 46,  y: 12,  scale: 0.90, rotate: -40, opacity: 0.34 },
+  { type: 'chili',    x: 29,  y: 63,  scale: 1.0,  rotate: 55,  opacity: 0.32 },
+  { type: 'chili',    x: 80,  y: 77,  scale: 0.85, rotate: -25, opacity: 0.33 },
+  { type: 'chili',    x: 62,  y: 46,  scale: 0.80, rotate: 72,  opacity: 0.30 },
 
   // ── Cardamom pods (4) ──
-  { type: 'cardamom', x: 35,  y: 33,  scale: 0.90, rotate: 22,  opacity: 0.45 },
-  { type: 'cardamom', x: 75,  y: 57,  scale: 1.0,  rotate: -35, opacity: 0.45 },
-  { type: 'cardamom', x: 14,  y: 93,  scale: 0.85, rotate: 50,  opacity: 0.43 },
-  { type: 'cardamom', x: 90,  y: 10,  scale: 0.80, rotate: -15, opacity: 0.44 },
+  { type: 'cardamom', x: 35,  y: 33,  scale: 0.90, rotate: 22,  opacity: 0.33 },
+  { type: 'cardamom', x: 75,  y: 57,  scale: 1.0,  rotate: -35, opacity: 0.33 },
+  { type: 'cardamom', x: 14,  y: 93,  scale: 0.85, rotate: 50,  opacity: 0.31 },
+  { type: 'cardamom', x: 90,  y: 10,  scale: 0.80, rotate: -15, opacity: 0.32 },
 
   // ── Cloves (3) ──
-  { type: 'clove',    x: 55,  y: 71,  scale: 1.0,  rotate: 0,   opacity: 0.46 },
-  { type: 'clove',    x: 20,  y: 40,  scale: 0.90, rotate: 45,  opacity: 0.45 },
-  { type: 'clove',    x: 85,  y: 60,  scale: 1.1,  rotate: -30, opacity: 0.45 },
+  { type: 'clove',    x: 55,  y: 71,  scale: 1.0,  rotate: 0,   opacity: 0.34 },
+  { type: 'clove',    x: 20,  y: 40,  scale: 0.90, rotate: 45,  opacity: 0.33 },
+  { type: 'clove',    x: 85,  y: 60,  scale: 1.1,  rotate: -30, opacity: 0.33 },
 
-  // ── Small seeds (5) — scattered fills ──
-  { type: 'seed',     x: 43,  y: 48,  scale: 1.0,  rotate: 25,  opacity: 0.52 },
-  { type: 'seed',     x: 65,  y: 18,  scale: 0.90, rotate: -55, opacity: 0.50 },
-  { type: 'seed',     x: 10,  y: 72,  scale: 1.1,  rotate: 40,  opacity: 0.52 },
-  { type: 'seed',     x: 78,  y: 88,  scale: 0.90, rotate: 10,  opacity: 0.48 },
-  { type: 'seed',     x: 30,  y: 12,  scale: 1.0,  rotate: -30, opacity: 0.50 },
+  // ── Small seeds (5) ──
+  { type: 'seed',     x: 43,  y: 48,  scale: 1.0,  rotate: 25,  opacity: 0.38 },
+  { type: 'seed',     x: 65,  y: 18,  scale: 0.90, rotate: -55, opacity: 0.36 },
+  { type: 'seed',     x: 10,  y: 72,  scale: 1.1,  rotate: 40,  opacity: 0.38 },
+  { type: 'seed',     x: 78,  y: 88,  scale: 0.90, rotate: 10,  opacity: 0.35 },
+  { type: 'seed',     x: 30,  y: 12,  scale: 1.0,  rotate: -30, opacity: 0.36 },
 ]
 
 function renderSpice(type: SpiceEl['type']) {
@@ -225,7 +225,7 @@ function SpiceDecorBackground() {
     <div
       aria-hidden="true"
       className="pointer-events-none fixed inset-0"
-      style={{ zIndex: 45 }}
+      style={{ zIndex: 0 }}
     >
       {SPICE_ELEMENTS.map((el, i) => (
         <div
@@ -239,8 +239,8 @@ function SpiceDecorBackground() {
           }}
         >
           <svg
-            width={96}
-            height={96}
+            width={44}
+            height={44}
             viewBox="-16 -16 32 32"
             xmlns="http://www.w3.org/2000/svg"
             overflow="visible"
