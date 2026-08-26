@@ -1,13 +1,15 @@
 'use client'
 
 import { useMemo, useState, useRef } from 'react'
-import { SlidersHorizontal, X, ChevronDown, Check, ArrowUpDown, Loader2 } from 'lucide-react'
+import { SlidersHorizontal, X, ChevronDown, Check, ArrowUpDown, Loader2, ChevronRight } from 'lucide-react'
 import {
   DIETS,
   STOCKS,
+  ORIGIN_FLAG,
   type Diet,
   type Origin,
   type Stock,
+  type Product,
 } from '@/lib/products'
 import { useProducts } from '@/lib/use-products'
 import { ProductCard } from '@/components/product-card'
@@ -28,6 +30,27 @@ const DIETARY_LABELS: Record<string, string> = {
   Vegetarian: '🥗 Vegetarian',
   'Gluten-Free': '🌾 Gluten-Free',
 }
+
+// Category tabs — ordered, with emoji icons
+const CATEGORY_TABS = [
+  { label: 'Spices',           icon: '🌶️' },
+  { label: 'Rice & Grains',    icon: '🌾' },
+  { label: 'Frozen Foods',     icon: '❄️' },
+  { label: 'Tea & Drinks',     icon: '🫖' },
+  { label: 'Sweets',           icon: '🍬' },
+  { label: 'Lentils & Pulses', icon: '🫘' },
+  { label: 'Snacks',           icon: '🍿' },
+  { label: 'Ready Meals',      icon: '🍛' },
+  { label: 'Condiments',       icon: '🫙' },
+]
+
+// Origin filter options
+const ORIGINS = [
+  { label: 'All',       flag: '🌏' },
+  { label: 'India',     flag: '🇮🇳' },
+  { label: 'Pakistan',  flag: '🇵🇰' },
+  { label: 'Sri Lanka', flag: '🇱🇰' },
+]
 
 // ─── Pill button (shared) ─────────────────────────────────────────────────────
 function Pill({
@@ -74,7 +97,6 @@ function DropdownFilter({
   const ref = useRef<HTMLDivElement>(null)
   const hasActive = selected.length > 0
 
-  // Close on outside click
   useMemo(() => {
     if (typeof document === 'undefined') return
     function handler(e: MouseEvent) {
@@ -218,9 +240,56 @@ function SortDropdown({ value, onChange }: { value: SortKey; onChange: (v: SortK
   )
 }
 
+// ─── Horizontal product row (for homepage sections) ───────────────────────────
+function ProductRow({
+  title, badge, products, viewAllHref,
+}: {
+  title: string
+  badge?: { label: string; color: string; bg: string }
+  products: Product[]
+  viewAllHref?: string
+}) {
+  if (products.length === 0) return null
+  return (
+    <div className="mb-10">
+      {/* Section header */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <h2 className="font-serif text-xl font-bold text-slate-900 sm:text-2xl">{title}</h2>
+          {badge && (
+            <span
+              className="rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
+              style={{ background: badge.bg, color: badge.color }}
+            >
+              {badge.label}
+            </span>
+          )}
+        </div>
+        {viewAllHref && (
+          <a
+            href={viewAllHref}
+            className="flex items-center gap-1 text-[13px] font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+          >
+            View all <ChevronRight className="size-3.5" />
+          </a>
+        )}
+      </div>
+
+      {/* Horizontal scroll row */}
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none sm:gap-4">
+        {products.slice(0, 8).map((p, i) => (
+          <div key={p.id} className="w-[160px] shrink-0 sm:w-[185px]">
+            <ProductCard product={p} index={i} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main ProductCatalog ──────────────────────────────────────────────────────
 export function ProductCatalog({
-  query, origin, activeCategory,
+  query, origin: originProp, activeCategory,
 }: {
   query: string
   origin: Origin | 'All'
@@ -228,23 +297,26 @@ export function ProductCatalog({
 }) {
   const { products: liveProducts, loading, loadingMore, hasMore, loadMore, errorMessage } = useProducts()
 
-  const [stocks, setStocks]         = useState<Stock[]>([])
-  const [diets, setDiets]           = useState<Diet[]>([])
-  const [sort, setSort]             = useState<SortKey>('default')
+  const [stocks, setStocks]           = useState<Stock[]>([])
+  const [diets, setDiets]             = useState<Diet[]>([])
+  const [sort, setSort]               = useState<SortKey>('default')
   const [selectedCat, setSelectedCat] = useState<string | null>(activeCategory)
+  const [selectedOrigin, setSelectedOrigin] = useState<string>(originProp ?? 'All')
 
-  // Dynamic categories from Firestore
+  // Dynamic categories from Firestore (supplemented by static list)
   const dynamicCategories = useMemo(() => {
     const seen = new Set<string>()
     liveProducts.forEach(p => p.category && seen.add(p.category))
-    return Array.from(seen).sort()
+    // Merge with static preferred order
+    CATEGORY_TABS.forEach(c => seen.add(c.label))
+    return Array.from(seen)
   }, [liveProducts])
 
-  // Filtered + sorted products
+  // All products filtered by origin + category + dietary + search
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     let result = liveProducts.filter((p) => {
-      if (origin !== 'All' && p.origin !== origin) return false
+      if (selectedOrigin !== 'All' && p.origin !== selectedOrigin) return false
       if (selectedCat && p.category !== selectedCat) return false
       if (stocks.length && !stocks.includes(p.stock)) return false
       if (diets.length && !diets.every((d) => (p.diet ?? []).includes(d))) return false
@@ -259,13 +331,37 @@ export function ProductCatalog({
     if (sort === 'price-desc') result = [...result].sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
     if (sort === 'name')       result = [...result].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
     return result
-  }, [query, origin, selectedCat, stocks, diets, sort, liveProducts])
+  }, [query, selectedOrigin, selectedCat, stocks, diets, sort, liveProducts])
 
-  const activeFilterCount = stocks.length + diets.length + (selectedCat ? 1 : 0)
+  // ── Homepage section derivations (no filters, no search — show all) ─────────
+  const allProducts = liveProducts
+
+  const topPicks = useMemo(
+    () => allProducts.filter(p => p.bestseller).slice(0, 8),
+    [allProducts]
+  )
+  const justArrived = useMemo(
+    () => [...allProducts].reverse().slice(0, 8),
+    [allProducts]
+  )
+  const priceDrops = useMemo(
+    () => allProducts.filter(p => p.stock === 'Low Stock').slice(0, 8),
+    [allProducts]
+  )
+  const pantryStaples = useMemo(
+    () => allProducts.filter(p =>
+      ['Rice & Grains', 'Lentils & Pulses', 'Rice & Atta'].includes(p.category)
+    ).slice(0, 8),
+    [allProducts]
+  )
+
+  const showHomeSections = !query && !selectedCat && selectedOrigin === 'All' && stocks.length === 0 && diets.length === 0
+
+  const activeFilterCount = stocks.length + diets.length + (selectedCat ? 1 : 0) + (selectedOrigin !== 'All' ? 1 : 0)
 
   function toggleStock(v: Stock)  { setStocks(s => s.includes(v) ? s.filter(x => x !== v) : [...s, v]) }
   function toggleDiet(v: Diet)    { setDiets(s  => s.includes(v) ? s.filter(x => x !== v) : [...s, v]) }
-  function clearAll()             { setStocks([]); setDiets([]); setSelectedCat(null); setSort('default') }
+  function clearAll()             { setStocks([]); setDiets([]); setSelectedCat(null); setSort('default'); setSelectedOrigin('All') }
 
   // ── Loading skeleton ─────────────────────────────────────────────────────
   if (loading) {
@@ -307,35 +403,80 @@ export function ProductCatalog({
   return (
     <section id="shop" className="mx-auto max-w-7xl scroll-mt-40 px-4 py-8 md:px-6">
 
-      {/* ── Filter bar ─────────────────────────────────────────────────────── */}
+      {/* ── Dookan-style Filter Bar ──────────────────────────────────────────── */}
       <div
-        className="mb-6 rounded-2xl p-4"
-        style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}
+        className="mb-6 rounded-2xl overflow-hidden"
+        style={{ border: '1px solid #E5E7EB' }}
       >
-        {/* Row 1: Category pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
-          <span className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-gray-400 pr-1">
-            Category
-          </span>
-          <Pill active={!selectedCat} onClick={() => setSelectedCat(null)}>
+        {/* Row 1: Category tabs — Dookan style (dark navy bg) */}
+        <div
+          className="flex items-center gap-1 overflow-x-auto scrollbar-none px-3 py-2.5"
+          style={{ background: '#0F2044' }}
+        >
+          <button
+            onClick={() => setSelectedCat(null)}
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-150 whitespace-nowrap"
+            style={{
+              background: !selectedCat ? '#F97316' : 'rgba(255,255,255,0.08)',
+              color: !selectedCat ? '#fff' : 'rgba(255,255,255,0.7)',
+            }}
+          >
             All
-          </Pill>
-          {dynamicCategories.map(cat => (
-            <Pill
-              key={cat}
-              active={selectedCat === cat}
-              onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
-            >
-              {cat}
-            </Pill>
-          ))}
+          </button>
+          {CATEGORY_TABS.map(cat => {
+            const inDb = dynamicCategories.includes(cat.label)
+            const active = selectedCat === cat.label
+            return (
+              <button
+                key={cat.label}
+                onClick={() => inDb ? setSelectedCat(active ? null : cat.label) : undefined}
+                className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 whitespace-nowrap"
+                style={{
+                  background: active ? '#F97316' : 'rgba(255,255,255,0.08)',
+                  color: active ? '#fff' : inDb ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)',
+                  cursor: inDb ? 'pointer' : 'not-allowed',
+                }}
+              >
+                <span>{cat.icon}</span>
+                {cat.label}
+              </button>
+            )
+          })}
         </div>
 
-        {/* Divider */}
-        <div className="mb-3 h-px" style={{ background: '#E5E7EB' }} />
+        {/* Row 2: Origin filter — Dookan style pills */}
+        <div
+          className="flex items-center gap-1.5 overflow-x-auto scrollbar-none px-3 py-2.5 border-t"
+          style={{ background: '#F9FAFB', borderColor: '#E5E7EB' }}
+        >
+          <span className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-gray-400 pr-1.5">
+            Origin:
+          </span>
+          {ORIGINS.map(o => {
+            const active = selectedOrigin === o.label
+            return (
+              <button
+                key={o.label}
+                onClick={() => setSelectedOrigin(o.label)}
+                className="flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-semibold transition-all duration-150 whitespace-nowrap"
+                style={{
+                  background:  active ? '#F97316' : '#fff',
+                  color:       active ? '#fff'    : '#374151',
+                  borderColor: active ? '#F97316' : '#E5E7EB',
+                  boxShadow:   active ? '0 2px 8px rgba(249,115,22,0.25)' : '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              >
+                {o.flag} {o.label}
+              </button>
+            )
+          })}
+        </div>
 
-        {/* Row 2: Stock + Dietary dropdowns + Sort + Clear */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        {/* Row 3: Advanced filters + sort */}
+        <div
+          className="flex items-center justify-between gap-2 flex-wrap px-3 py-2.5 border-t"
+          style={{ background: '#fff', borderColor: '#E5E7EB' }}
+        >
           <div className="flex items-center gap-2 flex-wrap">
             <DropdownFilter
               label="Availability"
@@ -351,18 +492,6 @@ export function ProductCatalog({
               onToggle={v => toggleDiet(v as Diet)}
               onClear={() => setDiets([])}
             />
-
-            {/* Stock quick pills (always visible) */}
-            <div className="hidden sm:flex items-center gap-1.5 ml-1">
-              <div className="h-5 w-px bg-gray-200 mr-1" />
-              {STOCKS.map(s => (
-                <Pill key={s} active={stocks.includes(s)} onClick={() => toggleStock(s)}>
-                  {s === 'In Stock' ? '✅ In Stock' : s === 'Low Stock' ? '⚠️ Low Stock' : '❌ Sold Out'}
-                </Pill>
-              ))}
-            </div>
-
-            {/* Active filter count badge */}
             {activeFilterCount > 0 && (
               <button
                 onClick={clearAll}
@@ -374,21 +503,62 @@ export function ProductCatalog({
               </button>
             )}
           </div>
-
-          {/* Sort */}
           <SortDropdown value={sort} onChange={setSort} />
         </div>
       </div>
+
+      {/* ── Homepage sections (shown when no filter/search active) ───────────── */}
+      {showHomeSections && (
+        <>
+          <ProductRow
+            title="Top Picks"
+            badge={{ label: 'Community Favourites', bg: '#FFF7ED', color: '#C2410C' }}
+            products={topPicks}
+            viewAllHref="/?sort=bestseller"
+          />
+          <ProductRow
+            title="Just Arrived"
+            badge={{ label: 'New', bg: '#EFF6FF', color: '#1D4ED8' }}
+            products={justArrived}
+            viewAllHref="/?sort=new"
+          />
+          {priceDrops.length > 0 && (
+            <ProductRow
+              title="Limited Stock Deals"
+              badge={{ label: 'Low Stock', bg: '#FFF1F2', color: '#BE123C' }}
+              products={priceDrops}
+              viewAllHref="/?availability=Low+Stock"
+            />
+          )}
+          {pantryStaples.length > 0 && (
+            <ProductRow
+              title="Pantry Staples"
+              badge={{ label: 'Everyday Essentials', bg: '#F0FDF4', color: '#166534' }}
+              products={pantryStaples}
+              viewAllHref="/?category=Rice+%26+Grains"
+            />
+          )}
+
+          {/* Divider before full catalog */}
+          <div className="mb-8 flex items-center gap-4">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-[12px] font-bold uppercase tracking-widest text-gray-400">
+              Browse All Products
+            </span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+        </>
+      )}
 
       {/* ── Results header ──────────────────────────────────────────────────── */}
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="heading-ornament font-serif text-2xl font-semibold text-foreground md:text-3xl">
-            {selectedCat ?? 'The Pantry'}
+            {selectedCat ?? (selectedOrigin !== 'All' ? `${ORIGIN_FLAG[selectedOrigin]} ${selectedOrigin}` : 'The Pantry')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? 'product' : 'products'}
-            {origin !== 'All' && ` · ${origin}`}
+            {selectedOrigin !== 'All' && selectedCat && ` · ${selectedOrigin}`}
             {query && ` matching "${query}"`}
           </p>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { HeroBanner } from '@/components/hero-banner'
+import { PromoSlider } from '@/components/promo-slider'
 import { ProductCatalog } from '@/components/product-catalog'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Origin } from '@/lib/products'
@@ -17,6 +18,7 @@ export default function PageContent() {
   return (
     <>
       <HeroBanner onTrack={() => router.push('/track')} />
+      <PromoSlider />
       <ProductCatalog query={query} origin={origin} activeCategory={category} />
     </>
   )

@@ -46,14 +46,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const redirected = useRef(false)
 
-  // ── Login page is INSIDE this layout in Next.js App Router,
-  //    so we MUST pass it through without any auth check —
-  //    otherwise the layout redirects to /admin/login which loops forever.
-  if (pathname === '/admin/login') {
-    return <>{children}</>
-  }
+  // ── Login page passthrough — checked AFTER all hooks (Rules of Hooks)
+  const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
+    if (isLoginPage) return  // login page needs no auth check
     if (loading) return
     if (redirected.current) return
 
@@ -68,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       // Sign out the wrong account silently, then send to admin login
       signOut().then(() => router.replace('/admin/login')).catch(() => router.replace('/admin/login'))
     }
-  }, [user, loading]) // eslint-disable-line
+  }, [user, loading, isLoginPage]) // eslint-disable-line
 
   // Reset redirect flag when auth state changes (e.g. user logs in again)
   useEffect(() => {
@@ -76,6 +73,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       redirected.current = false
     }
   }, [user, loading])
+
+  // ── Login page: pass through with no chrome
+  if (isLoginPage) {
+    return <>{children}</>
+  }
 
   // While Firebase is resolving auth — show spinner (never blank)
   if (loading) return <Spinner msg="Loading workspace…" />
