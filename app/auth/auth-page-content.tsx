@@ -126,7 +126,7 @@ export default function AuthPageContent() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-3 group">
             <span className="flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden group-hover:border-orange-400 transition-colors">
-              <img src="/logo.png" alt="IndianMarket" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none' }} />
+              <img src="/logo-icon.png" alt="IndianMarket" className="w-full h-full object-contain p-1" onError={(e) => { (e.target as HTMLElement).style.display = 'none' }} />
             </span>
             <span className="font-serif text-lg font-bold text-slate-900 group-hover:text-orange-500 transition-colors">IndianMarket</span>
           </Link>
