@@ -134,7 +134,7 @@ export function HeroBanner({ onTrack }: { onTrack: () => void }) {
                     <span className="block w-5 h-0.5 rounded-full bg-primary-foreground/40" />
                   </div>
                   <span className="flex size-12 items-center justify-center rounded-full bg-card shadow-md ring-2 ring-primary-foreground/20">
-                    <img src="/logo.png" alt="" className="size-10 object-contain" aria-hidden />
+                    <img src="/logo-icon.png" alt="" className="size-10 object-contain" aria-hidden />
                   </span>
                   <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground" style={{ writingMode: 'vertical-rl' }}>
                     IndianMarket

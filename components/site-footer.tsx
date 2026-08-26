@@ -11,7 +11,7 @@ export function SiteFooter() {
           <div className="md:col-span-1">
             <div className="flex items-center gap-2.5">
               <span className="flex size-10 items-center justify-center rounded-full bg-white shadow-md">
-                <img src="/logo.png" alt="IndianMarket logo" className="size-8 object-contain" />
+                <img src="/logo-icon.png" alt="IndianMarket logo" className="size-8 object-contain" />
               </span>
               <span className="leading-none">
                 <span className="block font-serif text-base font-bold text-white">IndianMarket</span>

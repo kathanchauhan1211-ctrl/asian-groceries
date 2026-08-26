@@ -55,22 +55,31 @@ function StorefrontLayout({ children }: { children: React.ReactNode }) {
 }
 
 function WatermarkTile() {
-  // Build an SVG data-URI that embeds the logo as a <image> inside a repeating tile.
-  // The SVG tile is 320×220 px, the logo sits rotated −25° in the centre.
-  // We use CSS background-repeat to tile it edge-to-edge with no visible corners.
-  const tileW = 320
-  const tileH = 220
-  const imgW = 160
-  const imgH = 80
+  // Each SVG tile: logo centred, rotated −25°, wrapped in a radial gradient mask
+  // so the logo fades at its edges — no hard rectangular "image" look.
+  const tileW = 280
+  const tileH = 280
+  const imgW = 140
+  const imgH = 140
   const cx = tileW / 2 - imgW / 2
   const cy = tileH / 2 - imgH / 2
 
-  // SVG wrapper — the <image> href points to the logo served by Next.js.
-  // opacity + mix-blend-mode do the heavy lifting to make it feel embedded.
+  // Radial gradient mask: opaque in the centre, transparent at corners.
+  // Combined with the transparent-background PNG this gives zero visible bounding box.
   const svgContent = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${tileW}" height="${tileH}">
-      <g transform="rotate(-25 ${tileW / 2} ${tileH / 2})" opacity="0.07">
-        <image href="/logo.png" x="${cx}" y="${cy}" width="${imgW}" height="${imgH}"
+      <defs>
+        <radialGradient id="fade" cx="50%" cy="50%" r="45%">
+          <stop offset="0%"   stop-color="white" stop-opacity="1"/>
+          <stop offset="70%"  stop-color="white" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="white" stop-opacity="0"/>
+        </radialGradient>
+        <mask id="m">
+          <rect width="${tileW}" height="${tileH}" fill="url(#fade)"/>
+        </mask>
+      </defs>
+      <g transform="rotate(-25 ${tileW / 2} ${tileH / 2})" opacity="0.12" mask="url(#m)">
+        <image href="/logo-icon.png" x="${cx}" y="${cy}" width="${imgW}" height="${imgH}"
           preserveAspectRatio="xMidYMid meet"/>
       </g>
     </svg>`
@@ -85,6 +94,7 @@ function WatermarkTile() {
         backgroundImage: `url("${encoded}")`,
         backgroundSize: `${tileW}px ${tileH}px`,
         backgroundRepeat: 'repeat',
+        // multiply blends into the page, further suppressing any residual edge
         mixBlendMode: 'multiply',
       }}
     />

@@ -79,9 +79,9 @@ export function SiteHeader() {
           <Link href="/" className="flex shrink-0 items-center gap-2 group" aria-label="IndianMarket home">
             <span className="flex size-9 sm:size-10 items-center justify-center rounded-full bg-white border-2 border-white/20 shadow-md group-hover:border-orange-400/60 group-hover:shadow-orange-400/20 group-hover:shadow-lg transition-all duration-300 overflow-hidden shrink-0">
               <img
-                src="/logo.png"
+                src="/logo-icon.png"
                 alt="IndianMarket logo"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain p-1"
                 onError={(e) => { (e.target as HTMLElement).style.display = 'none' }}
               />
             </span>
