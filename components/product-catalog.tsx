@@ -376,29 +376,7 @@ export function ProductCatalog({
 
         {/* Filter bar ends */}
 
-        {/* ══ Homepage Sections — shown when no filters active ══ */}
-        {showSections && (
-          <>
-            <ProductRow
-              id="top-picks" title="Top Picks" emoji="🔥"
-              badge={{ label: 'Community Favourites', bg: '#FFF7ED', color: '#C2410C' }}
-              products={topPicks} viewAllLabel="View all"
-            />
-            <ProductRow
-              id="just-arrived" title="Just Arrived" emoji="✨"
-              badge={{ label: 'New', bg: '#EFF6FF', color: '#1D4ED8' }}
-              products={justArrived} viewAllLabel="View all"
-            />
-            {monthlyOffers.length > 0 && (
-              <ProductRow
-                id="monthly-offers" title="Monthly Offers" emoji="🏷️"
-                badge={{ label: 'Limited Stock', bg: '#FFF1F2', color: '#BE123C' }}
-                products={monthlyOffers} viewAllLabel="View all"
-              />
-            )}
-            <CategoryGrid onSelect={setSelectedCat} selected={selectedCat} />
-          </>
-        )}
+
 
         {/* ══ Product grid — appears below sections (or directly if filters active) ══ */}
         {filtered.length === 0 ? (

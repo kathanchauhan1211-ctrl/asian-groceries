@@ -42,6 +42,117 @@ function Spinner({ msg = 'Loading…' }: { msg?: string }) {
   )
 }
 
+function SidebarContent({
+  pathname,
+  setSidebarOpen,
+  user,
+  signOut
+}: {
+  pathname: string
+  setSidebarOpen: (v: boolean) => void
+  user: any
+  signOut: () => void
+}) {
+  const isActive = (item: typeof NAV_ITEMS[0]) =>
+    item.exact ? pathname === item.href : pathname.startsWith(item.href)
+
+  return (
+    <aside
+      className="w-[220px] shrink-0 flex flex-col h-full"
+      style={{ background: '#0D1117', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+    >
+      {/* Brand */}
+      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+            style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 0 12px rgba(249,115,22,0.3)' }}
+          >
+            <LogoSVG size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold leading-tight text-white tracking-tight">IndianMarket</p>
+            <span
+              className="mt-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+              style={{ background: 'rgba(249,115,22,0.1)', color: '#F97316', border: '1px solid rgba(249,115,22,0.2)' }}
+            >
+              Owner
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto px-3 py-3">
+        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#374151' }}>
+          Main
+        </p>
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon
+          const active = isActive(item)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setSidebarOpen(false)}
+              className="relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-100 mb-0.5"
+              style={{
+                color: active ? '#F97316' : '#6B7280',
+                background: active ? 'rgba(249,115,22,0.08)' : 'transparent',
+              }}
+            >
+              {active && (
+                <span
+                  className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full"
+                  style={{ background: '#F97316' }}
+                />
+              )}
+              <Icon className="size-[15px] shrink-0" />
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="px-3 pb-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div
+          className="mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-2"
+          style={{ background: 'rgba(255,255,255,0.03)' }}
+        >
+          <div
+            className="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+            style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)' }}
+          >
+            K
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[11px] font-semibold text-white leading-tight">Owner</p>
+            <p className="truncate text-[10px]" style={{ color: '#4B5563' }}>{user.email}</p>
+          </div>
+        </div>
+        <Link
+          href="/"
+          target="_blank"
+          className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium mb-0.5"
+          style={{ color: '#6B7280' }}
+        >
+          <ExternalLink className="size-[13px]" />
+          View Store
+        </Link>
+        <button
+          onClick={signOut}
+          className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium"
+          style={{ color: '#EF4444' }}
+        >
+          <LogOut className="size-[13px]" />
+          Sign Out
+        </button>
+      </div>
+    </aside>
+  )
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
@@ -86,110 +197,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading) return <Spinner msg="Loading workspace…" />
 
   // User is being signed out / redirected — show spinner instead of blank/storefront
+
+
   if (!user || user.email !== 'indianmarket@test.com') return <Spinner msg="Redirecting…" />
 
-  const isActive = (item: typeof NAV_ITEMS[0]) =>
-    item.exact ? pathname === item.href : pathname.startsWith(item.href)
-
   const currentLabel = PAGE_LABELS[pathname] ?? 'Portal'
-
-  function SidebarContent() {
-    return (
-      <aside
-        className="w-[220px] shrink-0 flex flex-col h-full"
-        style={{ background: '#0D1117', borderRight: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        {/* Brand */}
-        <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center gap-3">
-            <div
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg"
-              style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 0 12px rgba(249,115,22,0.3)' }}
-            >
-              <LogoSVG size={22} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[13px] font-bold leading-tight text-white tracking-tight">IndianMarket</p>
-              <span
-                className="mt-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
-                style={{ background: 'rgba(249,115,22,0.1)', color: '#F97316', border: '1px solid rgba(249,115,22,0.2)' }}
-              >
-                Owner
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3">
-          <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#374151' }}>
-            Main
-          </p>
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon
-            const active = isActive(item)
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className="relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-100 mb-0.5"
-                style={{
-                  color: active ? '#F97316' : '#6B7280',
-                  background: active ? 'rgba(249,115,22,0.08)' : 'transparent',
-                }}
-              >
-                {active && (
-                  <span
-                    className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full"
-                    style={{ background: '#F97316' }}
-                  />
-                )}
-                <Icon className="size-[15px] shrink-0" />
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div className="px-3 pb-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div
-            className="mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-2"
-            style={{ background: 'rgba(255,255,255,0.03)' }}
-          >
-            <div
-              className="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-              style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)' }}
-            >
-              K
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[11px] font-semibold text-white leading-tight">Owner</p>
-              <p className="truncate text-[10px]" style={{ color: '#4B5563' }}>{user.email}</p>
-            </div>
-          </div>
-          <Link
-            href="/"
-            target="_blank"
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium mb-0.5"
-            style={{ color: '#6B7280' }}
-          >
-            <ExternalLink className="size-[13px]" />
-            View Store
-          </Link>
-          <button
-            onClick={signOut}
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium"
-            style={{ color: '#EF4444' }}
-          >
-            <LogOut className="size-[13px]" />
-            Sign Out
-          </button>
-        </div>
-      </aside>
-    )
-  }
 
   return (
     <div
@@ -198,7 +210,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     >
       {/* Desktop sidebar */}
       <div className="hidden lg:flex h-full">
-        <SidebarContent />
+        <SidebarContent pathname={pathname} setSidebarOpen={setSidebarOpen} user={user} signOut={signOut} />
       </div>
 
       {/* Mobile sidebar */}
@@ -210,7 +222,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative h-full w-[220px]">
-            <SidebarContent />
+            <SidebarContent pathname={pathname} setSidebarOpen={setSidebarOpen} user={user} signOut={signOut} />
           </div>
         </div>
       )}
