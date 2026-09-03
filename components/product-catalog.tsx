@@ -675,8 +675,8 @@ export function ProductCatalog({
     <section id="shop" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
 
-        {/* ══ Filter Bar ══ */}
-        <div id="shop-grid" className="scroll-mt-24 mb-4 relative z-40">
+        {/* ══ Filter Bar — only shown when grid is visible ══ */}
+        {!hideGridWhenUnfiltered && <div id="shop-grid" className="scroll-mt-24 mb-4 relative z-40">
 
           {/* ── MOBILE: Filter & Sort button ── */}
           <div className="flex items-center gap-2 md:hidden mb-3">
@@ -787,7 +787,7 @@ export function ProductCatalog({
               )}
             </div>
           )}
-        </div>
+        </div>}
 
         {/* ── Mobile filter drawer ── */}
         <MobileFilterDrawer

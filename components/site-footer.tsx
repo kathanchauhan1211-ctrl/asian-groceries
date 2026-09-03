@@ -91,7 +91,7 @@ export function SiteFooter() {
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Contact</h3>
               <ul className="mt-2 space-y-1.5 text-xs text-white/80">
-                <li className="flex items-center gap-2"><MapPin className="size-3 text-orange-400 shrink-0" /> Gedimino pr. 1, Vilnius</li>
+                <li className="flex items-center gap-2"><MapPin className="size-3 text-orange-400 shrink-0" /> Šaltinių g. 22, Vilnius</li>
                 <li className="flex items-center gap-2">
                   <Phone className="size-3 text-orange-400 shrink-0" />
                   <a href="tel:+37061676111" className="hover:text-orange-400 transition-colors">+370 616 76111</a>
