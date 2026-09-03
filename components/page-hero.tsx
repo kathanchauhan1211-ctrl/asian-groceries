@@ -13,7 +13,7 @@ type PageHeroProps = {
  */
 export function PageHero({ badge, title, subtitle, className = '' }: PageHeroProps) {
   return (
-    <div className={`relative overflow-hidden border-b border-slate-200 bg-gradient-to-r from-primary/5 via-white to-accent/5 ${className}`}>
+    <div className={`relative overflow-hidden border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-primary/5 via-white dark:via-slate-950 to-accent/5 ${className}`}>
       {/* Decorative accent line (matches site header) */}
       <div className="h-[3px] bg-gradient-to-r from-primary via-accent to-primary" />
 
@@ -21,11 +21,11 @@ export function PageHero({ badge, title, subtitle, className = '' }: PageHeroPro
         {badge && (
           <div className="mb-2">{badge}</div>
         )}
-        <h1 className="font-serif text-2xl font-bold text-slate-900 md:text-3xl">
+        <h1 className="font-serif text-2xl font-bold text-slate-900 dark:text-white md:text-3xl">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-1.5 text-sm text-slate-500">{subtitle}</p>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
         )}
       </div>
     </div>

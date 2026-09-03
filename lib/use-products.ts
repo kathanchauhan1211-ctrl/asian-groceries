@@ -8,6 +8,7 @@ import {
   limit,
   startAfter,
   orderBy,
+  onSnapshot,
   type QueryDocumentSnapshot,
   type DocumentData,
 } from 'firebase/firestore'
@@ -46,6 +47,8 @@ function normaliseProduct(id: string, data: any): Product {
     data.stock === 'Out of Stock' ? 'Out of Stock' :
     'In Stock'
 
+  const stockCount = typeof data.stockCount === 'number' ? data.stockCount : undefined
+
   return {
     id,
     name:        data.name        ?? 'Unnamed Product',
@@ -57,6 +60,7 @@ function normaliseProduct(id: string, data: any): Product {
     price,
     unit:        data.unit        ?? '1 unit',
     stock,
+    stockCount,
     diet,
     variants,
     bestseller:  data.bestseller  ?? false,
@@ -108,6 +112,43 @@ export function useProducts() {
       }
     })()
     return () => { cancelled = true }
+  }, [])
+
+  // Lightweight real-time stock sync
+  useEffect(() => {
+    const unsub = onSnapshot(collection(clientDb, 'products'), (snap) => {
+      setProducts(prev => {
+        const stockUpdates = new Map()
+        snap.docs.forEach(doc => {
+          const d = doc.data()
+          stockUpdates.set(doc.id, {
+            stock: d.stock === 'In Stock'  ? 'In Stock'  :
+                   d.stock === 'Low Stock' ? 'Low Stock' :
+                   d.stock === 'Sold Out'  ? 'Out of Stock' :
+                   d.stock === 'Out of Stock' ? 'Out of Stock' : 'In Stock',
+            stockCount: typeof d.stockCount === 'number' ? d.stockCount : undefined
+          })
+        })
+
+        let hasChanges = false
+        const next = prev.map(p => {
+          const update = stockUpdates.get(p.id)
+          if (!update) return p
+          
+          if (p.stock !== update.stock || p.stockCount !== update.stockCount) {
+            hasChanges = true
+            return { ...p, stock: update.stock, stockCount: update.stockCount }
+          }
+          return p
+        })
+        
+        return hasChanges ? next : prev
+      })
+    }, (error) => {
+      console.error('Firestore real-time sync error (insufficient permissions or other):', error.message)
+    })
+    
+    return () => unsub()
   }, [])
 
   // Load next page

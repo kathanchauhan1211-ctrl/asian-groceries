@@ -34,7 +34,7 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
         </div>
 
         {/* Telemetry feed layout */}
-        <div className="mx-auto max-w-lg rounded-xl border border-slate-200 bg-white p-5 shadow-lg">
+        <div className="mx-auto max-w-lg rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-lg">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
             <div className="flex items-center gap-3">
@@ -42,17 +42,17 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
                 <MessageCircle className="size-5.5" />
               </span>
               <div>
-                <p className="font-bold text-slate-900 text-sm">AG Stock Alerts · Vilnius</p>
-                <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                <p className="font-bold text-slate-900 dark:text-white text-sm">AG Stock Alerts · Vilnius</p>
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                   <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
                   Live Sync (Stock Stream Active)
                 </p>
               </div>
             </div>
             
-            <div className="rounded-md bg-slate-50 px-2.5 py-1 border border-slate-200 text-right">
-              <span className="text-[10px] uppercase font-bold text-slate-500 block leading-none">Members</span>
-              <span className="text-xs font-bold text-slate-700 tabular-nums">{members} online</span>
+            <div className="rounded-md bg-slate-50 dark:bg-slate-800 px-2.5 py-1 border border-slate-200 dark:border-slate-700 text-right">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block leading-none">Members</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{members} online</span>
             </div>
           </div>
 
@@ -68,13 +68,13 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
 
             {/* Bubble 1: Rice re-up */}
             <div className="flex items-start gap-2.5">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 dark:border-emerald-800/50">
                 AG
               </div>
               <div className="flex flex-col max-w-[85%]">
-                <div className="rounded-2xl rounded-tl-sm bg-slate-50 p-3.5 border border-slate-200 shadow-sm">
-                  <span className="text-[10px] font-bold text-emerald-700 block mb-1">🟢 STOCK RE-UP</span>
-                  <p className="text-xs text-slate-700 leading-relaxed">
+                <div className="rounded-2xl rounded-tl-sm bg-slate-50 dark:bg-slate-800 p-3.5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block mb-1">🟢 STOCK RE-UP</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                     Fresh <strong>Indian Sella Basmati Rice 5kg</strong> just stacked on shelves! Secure your bag before dispatch runs out.
                   </p>
                   
@@ -93,13 +93,13 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
 
             {/* Bubble 2: Everest Spices Alert */}
             <div className="flex items-start gap-2.5">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 dark:border-emerald-800/50">
                 AG
               </div>
               <div className="flex flex-col max-w-[85%]">
-                <div className="rounded-2xl rounded-tl-sm bg-slate-50 p-3.5 border border-slate-200 shadow-sm">
-                  <span className="text-[10px] font-bold text-amber-600 block mb-1">🚨 ALERT</span>
-                  <p className="text-xs text-slate-700 leading-relaxed">
+                <div className="rounded-2xl rounded-tl-sm bg-slate-50 dark:bg-slate-800 p-3.5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-500 block mb-1">🚨 ALERT</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                     <strong>Everest Tikhalal Spices</strong> running low. Only 2 items remaining in-store! Lock in your reservation today.
                   </p>
                   
@@ -118,13 +118,13 @@ export function WhatsAppSection({ onQuickBuy }: { onQuickBuy: (productId: string
 
             {/* Bubble 3: Delivery Reminder */}
             <div className="flex items-start gap-2.5">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 dark:border-emerald-800/50">
                 AG
               </div>
               <div className="flex flex-col max-w-[85%]">
-                <div className="rounded-2xl rounded-tl-sm bg-slate-50 p-3.5 border border-slate-200 shadow-sm">
-                  <span className="text-[10px] font-bold text-slate-600 block mb-1">📦 LOGISTICS UPDATE</span>
-                  <p className="text-xs text-slate-700 leading-relaxed">
+                <div className="rounded-2xl rounded-tl-sm bg-slate-50 dark:bg-slate-800 p-3.5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">📦 LOGISTICS UPDATE</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                     Kaunas and Klaipėda bus courier parcel dispatches leave Vilnius station in 45 mins. Finish checkout to bundle!
                   </p>
                 </div>

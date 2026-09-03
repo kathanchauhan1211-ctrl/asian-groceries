@@ -11,7 +11,7 @@ import { type Stock } from '@/lib/products'
 import {
   Plus, Trash2, Package, X, Check, Upload, Download,
   FileSpreadsheet, AlertCircle, Loader2, Pencil, Save,
-  ChevronDown, ChevronUp, Search, Filter, MoreHorizontal, CheckSquare, Square
+  ChevronDown, ChevronUp, Search, Filter, MoreHorizontal, CheckSquare, Square, Star
 } from 'lucide-react'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -197,18 +197,20 @@ function buildProductDoc(data: Record<string, any>) {
     ? data.dietary.split(',').map((d: string) => d.trim()).filter(Boolean)
     : []
   return {
-    name: data.name || 'Unnamed Product',
-    brand: data.brand || '',
-    category: data.category || 'Other',
-    origin: data.origin || 'India',
+    name:       data.name || 'Unnamed Product',
+    brand:      data.brand || '',
+    category:   data.category || 'Other',
+    origin:     data.origin || 'India',
     price,
     unit,
-    stock: data.stock || 'In Stock',
+    stock:      data.stock || 'In Stock',
     dietary,
-    diet: dietary,
-    image: data.image || '',
+    diet:       dietary,
+    image:      data.image || '',
+    tagline:    data.tagline || '',
     description: data.description || '',
-    variants: [{ label: unit, size: unit, price }],
+    bestseller: Boolean(data.bestseller),
+    variants:   [{ label: unit, size: unit, price }],
   }
 }
 
@@ -248,14 +250,16 @@ function ProductRow({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [form, setForm] = useState({
-    name: product.name ?? '',
-    brand: product.brand ?? '',
-    category: product.category ?? 'Other',
-    origin: product.origin ?? 'India',
-    price: String(product.price ?? ''),
-    unit: product.unit ?? '',
-    stock: product.stock ?? 'In Stock',
-    image: product.image ?? '',
+    name:       product.name ?? '',
+    brand:      product.brand ?? '',
+    category:   product.category ?? 'Other',
+    origin:     product.origin ?? 'India',
+    price:      String(product.price ?? ''),
+    unit:       product.unit ?? '',
+    stock:      product.stock ?? 'In Stock',
+    image:      product.image ?? '',
+    tagline:    product.tagline ?? '',
+    bestseller: Boolean(product.bestseller),
     dietary: Array.isArray(product.diet) ? product.diet.join(', ')
            : Array.isArray(product.dietary) ? product.dietary.join(', ') : '',
   })
@@ -296,6 +300,16 @@ function ProductRow({
         <td className="px-3 py-2.5 min-w-[200px]"><FInput value={form.image} onChange={v => setForm(f => ({ ...f, image: v }))} placeholder="https://…" /></td>
         <td className="px-4 py-2.5">
           <div className="flex items-center gap-1.5">
+            {/* Bestseller toggle in edit row */}
+            <button
+              type="button"
+              onClick={() => setForm(f => ({ ...f, bestseller: !f.bestseller }))}
+              title={form.bestseller ? 'Bestseller — click to unmark' : 'Mark as bestseller'}
+              className="flex size-7 items-center justify-center rounded-md transition-all"
+              style={{ color: form.bestseller ? '#F59E0B' : '#374151', background: form.bestseller ? 'rgba(245,158,11,0.1)' : 'transparent', border: '1px solid transparent' }}
+            >
+              <Star className="size-3.5" fill={form.bestseller ? '#F59E0B' : 'none'} />
+            </button>
             <button
               onClick={handleSave} disabled={saving}
               className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-semibold transition-all disabled:opacity-50"
@@ -346,7 +360,12 @@ function ProductRow({
             </div>
           )}
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold text-white max-w-[180px]">{product.name}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="truncate text-[13px] font-semibold text-white max-w-[180px]">{product.name}</p>
+              {product.bestseller && (
+                <Star className="size-3 shrink-0" style={{ color: '#F59E0B' }} fill="#F59E0B" />
+              )}
+            </div>
             {product.brand && <p className="text-[11px] mt-0.5" style={{ color: '#4B5563' }}>{product.brand}</p>}
           </div>
         </div>
@@ -569,7 +588,9 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
   const [form, setForm] = useState({
     name: '', brand: '', category: 'Rice & Atta', origin: 'India',
     price: '', unit: '', stock: 'In Stock', dietary: '', image: '', description: '',
+    tagline: '', bestseller: false,
   })
+
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -585,6 +606,7 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
   const fields = [
     { k: 'name',        label: 'Product Name', placeholder: 'e.g. Royal Basmati Rice', required: true },
     { k: 'brand',       label: 'Brand',         placeholder: 'e.g. Royal' },
+    { k: 'tagline',     label: 'Tagline',        placeholder: 'Short catchy line shown on card' },
     { k: 'price',       label: 'Price (€)',      placeholder: '0.00', type: 'number' },
     { k: 'unit',        label: 'Unit / Size',    placeholder: '5kg, 500g' },
     { k: 'origin',      label: 'Origin',         placeholder: 'India' },
@@ -643,6 +665,32 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#4B5563' }}>Stock Status</label>
               <FSelect value={form.stock} onChange={v => setForm(p => ({ ...p, stock: v }))} options={STOCK_OPTIONS} />
             </div>
+
+            {/* Bestseller toggle */}
+            <div className="col-span-2">
+              <button
+                type="button"
+                onClick={() => setForm(p => ({ ...p, bestseller: !p.bestseller }))}
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-all"
+                style={{
+                  background: form.bestseller ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.03)',
+                  border: form.bestseller ? '1px solid rgba(245,158,11,0.25)' : '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <Star
+                  className="size-4 shrink-0"
+                  style={{ color: form.bestseller ? '#F59E0B' : '#374151' }}
+                  fill={form.bestseller ? '#F59E0B' : 'none'}
+                />
+                <div className="text-left">
+                  <p className="text-[13px] font-semibold" style={{ color: form.bestseller ? '#F59E0B' : '#9CA3AF' }}>
+                    {form.bestseller ? '⭐ Marked as Bestseller' : 'Mark as Bestseller'}
+                  </p>
+                  <p className="text-[11px]" style={{ color: '#4B5563' }}>Appears in the Bestsellers carousel</p>
+                </div>
+              </button>
+            </div>
+
           </div>
 
           <button

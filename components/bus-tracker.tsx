@@ -46,56 +46,73 @@ const TRACK_STEPS: TrackStep[] = [
 ]
 
 // ── Lithuania SVG Map ──────────────────────────────────────────────────────
-// Viewbox: 0 0 500 400
-// City coords manually placed on a stylised Lithuania outline
+// Viewbox: 0 0 500 420
+// City coords placed on accurate Lithuania geographic outline
 // Vilnius = origin hub (bottom-right), routes radiate out to other cities
 
-const VILNIUS = { x: 380, y: 290, name: 'Vilnius', label: 'HUB' }
+const VILNIUS = { x: 370, y: 295, name: 'Vilnius', label: 'HUB' }
 
 const DESTINATIONS = [
-  { id: 'kaunas',     x: 245, y: 265, name: 'Kaunas',     eta: '1h 20m' },
-  { id: 'klaipeda',  x: 65,  y: 185, name: 'Klaipėda',  eta: '3h 00m' },
-  { id: 'siauliai',  x: 165, y: 110, name: 'Šiauliai',   eta: '2h 30m' },
-  { id: 'panevezys', x: 250, y: 140, name: 'Panevėžys',  eta: '2h 00m' },
-  { id: 'alytus',    x: 270, y: 330, name: 'Alytus',     eta: '1h 30m' },
-  { id: 'marijampole',x: 205, y: 320, name: 'Marijampolė', eta: '1h 45m' },
+  { id: 'kaunas',      x: 220, y: 270, name: 'Kaunas',      eta: '1h 20m' },
+  { id: 'klaipeda',   x: 55,  y: 195, name: 'Klaipėda',   eta: '3h 00m' },
+  { id: 'siauliai',   x: 160, y: 115, name: 'Šiauliai',    eta: '2h 30m' },
+  { id: 'panevezys',  x: 255, y: 145, name: 'Panevėžys',   eta: '2h 00m' },
+  { id: 'alytus',     x: 255, y: 340, name: 'Alytus',      eta: '1h 30m' },
+  { id: 'marijampole',x: 195, y: 330, name: 'Marijampolė', eta: '1h 45m' },
 ]
 
-// Approximate Lithuania outline path (stylised polygon)
+// Accurate Lithuania geographic outline path (scaled to 500x420 viewBox)
+// Based on real cartographic data — wider at top-right, tapering south-west
 const LITHUANIA_PATH = `
-  M 140 55
-  L 200 42
-  L 265 48
-  L 320 55
-  L 375 68
-  L 420 95
-  L 445 130
-  L 450 165
-  L 440 200
-  L 435 230
-  L 420 255
-  L 415 280
-  L 405 305
-  L 390 330
-  L 370 350
-  L 340 365
-  L 300 370
-  L 260 368
-  L 230 355
-  L 205 340
-  L 180 330
-  L 148 325
-  L 115 310
-  L 85 285
-  L 62 260
-  L 50 230
-  L 42 200
-  L 40 170
-  L 48 140
-  L 60 118
-  L 75 95
-  L 95 75
-  L 115 62
+  M 175 42
+  L 210 38
+  L 248 35
+  L 280 38
+  L 318 42
+  L 345 48
+  L 375 55
+  L 400 65
+  L 420 80
+  L 435 100
+  L 445 122
+  L 450 148
+  L 448 172
+  L 442 195
+  L 438 215
+  L 432 235
+  L 425 255
+  L 416 272
+  L 408 290
+  L 400 308
+  L 390 325
+  L 375 340
+  L 358 352
+  L 338 362
+  L 315 368
+  L 290 372
+  L 268 370
+  L 248 363
+  L 228 353
+  L 210 340
+  L 195 325
+  L 178 312
+  L 158 300
+  L 138 288
+  L 118 272
+  L 100 255
+  L 85 238
+  L 72 218
+  L 62 198
+  L 55 178
+  L 50 155
+  L 48 132
+  L 50 112
+  L 56 92
+  L 68 75
+  L 82 62
+  L 100 52
+  L 122 45
+  L 148 40
   Z
 `
 
@@ -129,9 +146,9 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
   const activeDest = DESTINATIONS.find(d => d.id === activeDestId)
 
   return (
-    <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100 shadow-inner">
+    <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 shadow-inner">
       <svg
-        viewBox="0 0 500 400"
+        viewBox="0 0 500 420"
         className="w-full"
         aria-label="Lithuania delivery route map"
       >
@@ -148,6 +165,14 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
             <stop offset="0%" stopColor="#f97316" stopOpacity="0.4"/>
             <stop offset="100%" stopColor="#f97316" stopOpacity="0"/>
           </radialGradient>
+          {/* Lithuanian flag clip path — clips the 3-stripe flag to the country shape */}
+          <clipPath id="lithuaniaClip">
+            <path d={LITHUANIA_PATH} />
+          </clipPath>
+          {/* Hatching pattern overlay for the sketch/crosshatch texture */}
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(0,0,0,0.18)" strokeWidth="1"/>
+          </pattern>
           {/* Route animation markers */}
           {DESTINATIONS.map(dest => {
             const id = `route-${dest.id}`
@@ -159,14 +184,24 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
           })}
         </defs>
 
-        <rect width="500" height="400" fill="url(#grid)" />
+        <rect width="500" height="420" fill="url(#grid)" />
 
-        {/* ── Lithuania outline ── */}
+        {/* ── Lithuanian flag fill: 3 horizontal stripes clipped to country shape ── */}
+        {/* Yellow/Gold — top third */}
+        <rect x="0" y="0" width="500" height="140" fill="#F9B732" clipPath="url(#lithuaniaClip)" />
+        {/* Green — middle third */}
+        <rect x="0" y="140" width="500" height="140" fill="#2E7D32" clipPath="url(#lithuaniaClip)" />
+        {/* Dark Red — bottom third */}
+        <rect x="0" y="280" width="500" height="140" fill="#8B1C2B" clipPath="url(#lithuaniaClip)" />
+        {/* Crosshatch texture overlay for sketch look */}
+        <rect x="0" y="0" width="500" height="420" fill="url(#hatch)" clipPath="url(#lithuaniaClip)" opacity="0.5"/>
+
+        {/* ── Lithuania outline border ── */}
         <path
           d={LITHUANIA_PATH}
-          fill="#f0fdf4"
-          stroke="#86efac"
-          strokeWidth="1.5"
+          fill="none"
+          stroke="#c9a227"
+          strokeWidth="2"
           strokeLinejoin="round"
         />
 
@@ -243,6 +278,7 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
                 fill={isActive ? '#f97316' : '#64748b'}
                 stroke="white"
                 strokeWidth="2"
+                className="dark:stroke-slate-900"
               />
               {/* City label */}
               <text
@@ -253,6 +289,7 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
                 fontWeight={isActive ? '700' : '500'}
                 fill={isActive ? '#c2410c' : '#475569'}
                 fontFamily="Inter, sans-serif"
+                className={isActive ? 'dark:fill-orange-400' : 'dark:fill-slate-400'}
               >
                 {dest.name}
               </text>
@@ -296,7 +333,10 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
           textAnchor="middle"
           fontSize="9"
           fontWeight="700"
-          fill="#1e293b"
+          fill="white"
+          stroke="#1e293b"
+          strokeWidth="3"
+          paintOrder="stroke"
           fontFamily="Inter, sans-serif"
         >
           Vilnius HUB
@@ -304,7 +344,7 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
 
         {/* ── Legend ── */}
         <g transform="translate(10, 10)">
-          <rect width="100" height="36" rx="6" fill="white" opacity="0.85" stroke="#e2e8f0" strokeWidth="0.5"/>
+          <rect width="110" height="36" rx="6" fill="white" opacity="0.92" stroke="#e2e8f0" strokeWidth="1"/>
           <circle cx="14" cy="12" r="5" fill="#1e293b" stroke="#f97316" strokeWidth="2"/>
           <text x="24" y="16" fontSize="8" fill="#1e293b" fontFamily="Inter, sans-serif" fontWeight="600">Origin Hub</text>
           <circle cx="14" cy="28" r="4" fill="#64748b" stroke="white" strokeWidth="1.5"/>
@@ -377,13 +417,13 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
     <section id="track" className="scroll-mt-40 relative overflow-hidden px-4 py-12 md:px-6">
       <div className="relative mx-auto max-w-4xl">
         <div className="mx-auto max-w-xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 shadow-sm">
             <Bus className="size-3.5" /> Vilnius Bus Delivery System
           </span>
-          <h2 className="mt-5 font-serif text-3xl font-bold text-slate-900 md:text-4xl">
+          <h2 className="mt-5 font-serif text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">
             Autobusų Stotis <span className="text-accent">Live Tracker</span>
           </h2>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
             Vilnius Bus Station direct courier pipeline. Track packages dispatched from our store at Šaltinių g. 22.
           </p>
         </div>
@@ -394,13 +434,13 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
           className="mx-auto mt-8 flex max-w-lg flex-col gap-3 sm:flex-row"
         >
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input
               value={ticket}
               onChange={(e) => setTicket(e.target.value)}
               placeholder="Enter Bus Ticket Number (e.g. AS-VLN-4821)"
               aria-label="Bus parcel ticket number"
-              className="h-12 w-full rounded-md border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none transition-all duration-300 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+              className="h-12 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-11 pr-4 text-sm text-slate-900 dark:text-slate-100 shadow-sm outline-none transition-all duration-300 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50 dark:hover:bg-slate-700/50"
             />
           </div>
           <Button
@@ -420,25 +460,25 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
         {activeStep !== null && (
           <div className="mt-10 card-enter">
             {/* Status Header */}
-            <div className="mb-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Active Parcel Link</p>
-                  <p className="text-md font-bold text-slate-900">{ticket.toUpperCase() || 'AS-VLN-4821'}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Parcel Link</p>
+                  <p className="text-md font-bold text-slate-900 dark:text-white">{ticket.toUpperCase() || 'AS-VLN-4821'}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   {activeDestId && (
-                    <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-3 py-1.5 border border-slate-200">
+                    <div className="flex items-center gap-1.5 rounded-md bg-slate-50 dark:bg-slate-800 px-3 py-1.5 border border-slate-200 dark:border-slate-700">
                       <Navigation className="size-3.5 text-accent" />
-                      <span className="text-xs font-bold text-slate-700">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                         {DESTINATIONS.find(d => d.id === activeDestId)?.name}
                       </span>
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">
                         · ETA {DESTINATIONS.find(d => d.id === activeDestId)?.eta}
                       </span>
                     </div>
                   )}
-                  <span className="inline-block rounded-md bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                  <span className="inline-block rounded-md bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50">
                     {TRACK_STEPS[activeStep - 1].label}
                   </span>
                 </div>
@@ -447,7 +487,7 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
 
             <div className="grid gap-5 lg:grid-cols-5">
               {/* Left: Pipeline steps */}
-              <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Transit Progress</p>
 
                 {/* Vertical step layout */}
@@ -467,8 +507,8 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
                               isDone
                                 ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
                                 : isCurrent
-                                  ? 'border-accent bg-white text-accent shadow-md scale-110'
-                                  : 'border-slate-200 bg-slate-50 text-slate-400'
+                                  ? 'border-accent bg-white dark:bg-slate-900 text-accent shadow-md scale-110'
+                                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                             }`}
                           >
                             {isDone ? (
@@ -479,7 +519,7 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
                           </span>
                           {!isLast && (
                             <div className={`w-0.5 flex-1 min-h-[32px] mt-1 mb-1 rounded-full transition-all duration-500 ${
-                              isDone ? 'bg-emerald-400' : 'bg-slate-200'
+                              isDone ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-700'
                             }`} />
                           )}
                         </div>
@@ -487,13 +527,13 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
                         {/* Text */}
                         <div className={`pb-6 ${isLast ? 'pb-0' : ''}`}>
                           <p className={`text-sm font-bold transition-colors ${
-                            isCurrent ? 'text-accent' : isDone ? 'text-emerald-600' : 'text-slate-500'
+                            isCurrent ? 'text-accent' : isDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'
                           }`}>
                             {step.label}
                           </p>
-                          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{step.time}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{step.time}</p>
                           {isCurrent && (
-                            <p className="text-xs text-slate-600 mt-1 leading-relaxed">{step.description}</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{step.description}</p>
                           )}
                         </div>
                       </div>
@@ -502,12 +542,12 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
                 </div>
 
                 {/* Live update */}
-                <div className="mt-4 rounded-lg bg-slate-50 p-3 border border-slate-200">
+                <div className="mt-4 rounded-lg bg-slate-50 dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700">
                   <p className="text-xs font-semibold text-accent flex items-center gap-1.5">
                     <span className="size-2 rounded-full bg-accent animate-pulse" />
                     Live Courier Update
                   </p>
-                  <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                     {activeStep === 2 
                       ? `Bus courier en route from Vilnius to ${DESTINATIONS.find(d => d.id === activeDestId)?.name ?? 'destination'} — ETA ${DESTINATIONS.find(d => d.id === activeDestId)?.eta ?? ''}`
                       : TRACK_STEPS[activeStep - 1].description
@@ -517,10 +557,10 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
               </div>
 
               {/* Right: Lithuania Map */}
-              <div className="lg:col-span-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="lg:col-span-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Route Map — Lithuania</p>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                  <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                     <span className="size-2 rounded-full bg-accent animate-pulse" />
                     {activeStep === 2 ? 'In Transit' : activeStep === 3 ? 'Delivered' : 'Processing'}
                   </div>
@@ -533,8 +573,8 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
                       key={dest.id}
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border transition-all ${
                         dest.id === activeDestId
-                          ? 'bg-orange-50 border-accent/40 text-accent'
-                          : 'bg-slate-50 border-slate-200 text-slate-500'
+                          ? 'bg-orange-50 dark:bg-orange-900/20 border-accent/40 text-accent'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
                       }`}
                     >
                       <MapPin className="size-2.5" /> {dest.name}

@@ -36,6 +36,43 @@ const DEFAULT_SLIDE: Omit<Slide, 'id'> = {
   enabled: true,
 }
 
+// ─── Fallback / seed slides — mirrors promo-slider.tsx FALLBACK_SLIDES ─────────
+const SEED_SLIDES: Omit<Slide, 'id'>[] = [
+  {
+    img:      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=1600&q=80',
+    brand:    'Aashirvaad',
+    label:    'Atta & Flour',
+    headline: "India's Most Loved Flour",
+    sub:      'Soft rotis every time — authentic stone-ground atta',
+    cta:      'Shop Flour',
+    href:     '/?category=Rice+%26+Grains',
+    order:    0,
+    enabled:  true,
+  },
+  {
+    img:      'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=1600&q=80',
+    brand:    'MDH',
+    label:    'Spices & Masalas',
+    headline: 'Real Taste, Real Spice',
+    sub:      'MDH — trusted by generations across South Asia',
+    cta:      'Shop Spices',
+    href:     '/?category=Spices',
+    order:    1,
+    enabled:  true,
+  },
+  {
+    img:      'https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1600&q=80',
+    brand:    'TRS',
+    label:    'Lentils & Pulses',
+    headline: 'Premium Quality Pulses',
+    sub:      "TRS — the UK's #1 South Asian ingredient brand",
+    cta:      'Shop Lentils',
+    href:     '/?category=Lentils+%26+Pulses',
+    order:    2,
+    enabled:  true,
+  },
+]
+
 // ─── SlideForm ────────────────────────────────────────────────────────────────
 function SlideForm({
   slide,
@@ -355,14 +392,33 @@ export default function AdminSlidesPage() {
           style={{ borderColor: 'var(--border)' }}>
           <ImageIcon className="size-10 mb-3" style={{ color: 'var(--muted-foreground)' }} />
           <p className="font-semibold text-lg" style={{ color: 'var(--foreground)' }}>No slides yet</p>
-          <p className="text-sm mt-1 mb-4" style={{ color: 'var(--muted-foreground)' }}>Click "Add Slide" to create your first banner</p>
-          <button
-            onClick={() => setEditingId('new')}
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white"
-            style={{ background: '#F97316' }}
-          >
-            <Plus className="size-4" /> Add Slide
-          </button>
+          <p className="text-sm mt-1 mb-4" style={{ color: 'var(--muted-foreground)' }}>Add a slide manually or load the 3 built-in default slides.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setEditingId('new')}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white"
+              style={{ background: '#F97316' }}
+            >
+              <Plus className="size-4" /> Add Slide
+            </button>
+            <button
+              onClick={async () => {
+                setSaving(true)
+                try {
+                  for (const slide of SEED_SLIDES) {
+                    await addDoc(collection(clientDb, 'slides'), slide)
+                  }
+                  await loadSlides()
+                } catch (e) { console.error(e) }
+                setSaving(false)
+              }}
+              disabled={saving}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all disabled:opacity-50"
+              style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--foreground)', border: '1px solid var(--border)' }}
+            >
+              {saving ? 'Loading…' : '✨ Load default slides'}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">

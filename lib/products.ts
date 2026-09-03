@@ -24,6 +24,7 @@ export type Product = {
   diet: Diet[]
   dietary?: Diet[]   // alias used by admin portal
   stock: Stock
+  stockCount?: number
   variants: Variant[]
   bestseller?: boolean
   price?: number
@@ -39,19 +40,45 @@ export const ORIGIN_FLAG = new Proxy(KNOWN_FLAGS, {
   get: (target, key: string) => target[key] ?? '🌍',
 })
 
-// CATEGORIES used by the filter sidebar — all known categories in one list
-export const CATEGORIES: Category[] = [
-  'Rice & Atta',
-  'Rice & Grains',
-  'Spices',
-  'Lentils & Pulses',
-  'Frozen Foods',
-  'Sweets',
-  'Tea & Drinks',
-  'Condiments',
-  'Snacks',
-  'Other',
+// ─── CANONICAL category grouping (single source of truth for ALL components) ──
+// Display label → array of raw Firestore category string values
+// Add new groups here; all filter dropdowns and category bars import this.
+export type CategoryGroup = {
+  label:  string        // what the user sees in the UI
+  icon:   string        // emoji icon
+  match:  Category[]    // raw DB category strings that belong to this group
+}
+
+export const CATEGORY_GROUPS: CategoryGroup[] = [
+  { label: 'Wheat & Chapati Flour', icon: '🌾', match: ['Rice & Atta', 'Atta & Flour'] },
+  { label: 'Basmati Rice',          icon: '🍚', match: ['Rice & Grains', 'Basmati Rice'] },
+  { label: 'Lentils & Pulses',      icon: '🫘', match: ['Lentils & Pulses', 'Dal & Pulses'] },
+  { label: 'Spices & Masala',       icon: '🌶️', match: ['Spices', 'Masala', 'Condiments'] },
+  { label: 'Instant & Ready Meals', icon: '🍱', match: ['Ready Meals', 'Instant Food'] },
+  { label: 'Sweets',                icon: '🍮', match: ['Sweets', 'Mithai'] },
+  { label: 'Savoury Snacks',        icon: '🥨', match: ['Snacks', 'Savoury'] },
+  { label: 'Pickles & Sauces',      icon: '🫙', match: ['Pickles', 'Sauces', 'Condiments'] },
+  { label: 'Beverages & Tea',       icon: '🍵', match: ['Tea & Drinks', 'Beverages', 'Drinks'] },
+  { label: 'Frozen Foods',          icon: '❄️',  match: ['Frozen Foods', 'Frozen'] },
 ]
+
+// Flat list of all raw DB categories (derived — do not edit manually)
+export const CATEGORIES: Category[] = Array.from(
+  new Set(CATEGORY_GROUPS.flatMap(g => g.match))
+)
+
+// Find which group a raw product category belongs to
+export function getCategoryGroup(rawCategory: Category): CategoryGroup | undefined {
+  return CATEGORY_GROUPS.find(g => g.match.includes(rawCategory))
+}
+
+// ─── Canonical origin + dietary filter options ────────────────────────────────
+export const ORIGINS = [
+  { label: 'All',       code: 'GLOBAL' },
+  { label: 'India',     code: 'IN' },
+  { label: 'Pakistan',  code: 'PK' },
+  { label: 'Sri Lanka', code: 'LK' },
+] as const
 
 export const DIETS: Diet[] = ['Halal', 'Vegetarian', 'Vegan']
 export const STOCKS: Exclude<Stock, 'Out of Stock'>[] = ['In Stock', 'Low Stock']

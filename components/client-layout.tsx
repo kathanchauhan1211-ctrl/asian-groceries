@@ -1,13 +1,53 @@
 'use client'
 
-import { Suspense } from 'react'
-import { usePathname } from 'next/navigation'
+import { Suspense, useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { CartProvider } from '@/lib/cart-context'
 import { AuthProvider } from '@/lib/auth-context'
 import { SiteHeader } from '@/components/site-header'
 import { CartSheet } from '@/components/cart-sheet'
+import { CheckoutModal } from '@/components/checkout-modal'
 import { SiteFooter } from '@/components/site-footer'
 import { FloatingNavigation } from '@/components/floating-navigation'
+
+const ANNOUNCEMENTS = [
+  '🚚  Free delivery on orders over €25',
+  '📱  Order via WhatsApp: +370 600 00000',
+  '🕐  Store open Mon–Sat 10:00–20:00',
+]
+
+function AnnouncementBar() {
+  const [idx, setIdx] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setIdx(i => (i + 1) % ANNOUNCEMENTS.length)
+        setVisible(true)
+      }, 350)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div
+      className="relative z-50 flex items-center justify-center px-4 py-1.5 text-center text-[11px] sm:text-xs font-semibold bg-[#1A365D] dark:bg-slate-900 text-white/90"
+    >
+      <span
+        style={{
+          transition: 'opacity 0.35s ease',
+          opacity: visible ? 1 : 0,
+          display: 'block',
+          letterSpacing: '0.01em',
+        }}
+      >
+        {ANNOUNCEMENTS[idx]}
+      </span>
+    </div>
+  )
+}
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -36,47 +76,37 @@ function AuthAwareLayout({ children }: { children: React.ReactNode }) {
 }
 
 function StorefrontLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      {/* Actual spice-decor.jpg as background — large tile so only a few spices show */}
       <SpiceDecorBackground />
+
+      {/* Announcement bar — above everything */}
+      <AnnouncementBar />
 
       <Suspense>
         <SiteHeader />
       </Suspense>
 
-      <main className="relative z-10 flex-1 pb-20 md:pb-0">{children}</main>
+      {/* pb-20 for floating nav on mobile, extra env() padding for iOS home indicator */}
+      <main
+        className="relative z-10 flex-1 pb-20 md:pb-0"
+        style={{ paddingBottom: 'max(80px, calc(80px + env(safe-area-inset-bottom)))' }}
+      >
+        {children}
+      </main>
 
       <SiteFooter />
-      <CartSheet />
+      <CartSheet onCheckout={() => {}} />
+      <CheckoutModal />
       <FloatingNavigation />
     </div>
   )
 }
 
-/**
- * Background spice decoration — uses the actual spice-decor.jpg photo tiled
- * at 2000px so only ~1 tile per screen (very few visible spice elements).
- * mix-blend-mode:multiply makes the cream background transparent on white.
- */
+// SpiceDecorBackground disabled — clean blank background.
+// Keep the component here so it can be re-enabled later.
 function SpiceDecorBackground() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0"
-      style={{ zIndex: 0 }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: "url('/spice-decor.jpg')",
-          backgroundSize: '2000px auto',
-          backgroundRepeat: 'repeat',
-          mixBlendMode: 'multiply',
-          opacity: 0.30,
-        }}
-      />
-    </div>
-  )
+  return null
 }

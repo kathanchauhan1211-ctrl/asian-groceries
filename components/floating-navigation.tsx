@@ -4,6 +4,7 @@ import { ShoppingBag, Bus, User, MessageSquare, Home } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCart } from '@/lib/cart-context'
+import { useTranslation } from '@/lib/translation-context'
 import { useEffect, useRef, useState } from 'react'
 
 const NAV_ITEMS = [
@@ -75,13 +76,13 @@ interface ItemProps {
 function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: ItemProps) {
   const inner = (
     <span
-      className="nav-item-btn relative flex flex-col items-center justify-center gap-[5px]"
-      style={{ minWidth: 60, minHeight: 60 }}
+      className="nav-item-btn relative flex flex-col items-center justify-center gap-[5px] px-3"
+      style={{ minWidth: 64, minHeight: 64 }}
     >
       {/* Active orange pill background */}
       {active && (
         <span
-          className="absolute inset-[5px] rounded-[18px]"
+          className="absolute inset-1 rounded-2xl"
           style={{
             background: 'linear-gradient(145deg, #F97316, #EA580C)',
             boxShadow: '0 4px 14px rgba(249,115,22,0.45), inset 0 1px 0 rgba(255,255,255,0.2)',
@@ -182,6 +183,7 @@ function IslandShell({ children, className, style, cartHasItems }: {
 
 export function FloatingNavigation() {
   const pathname = usePathname()
+  const { td } = useTranslation()
   const { count, setOpen } = useCart()
   const prevCount = useRef(count)
   const [cartPulse, setCartPulse] = useState(false)
@@ -205,8 +207,11 @@ export function FloatingNavigation() {
 
       {/* ── Mobile: floating bottom island ─────────────── */}
       <div
-        className="fixed bottom-6 left-1/2 z-40 lg:hidden"
-        style={{ animation: 'island-float 6s ease-in-out infinite' }}
+        className="fixed left-1/2 z-40 lg:hidden"
+        style={{
+          bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
+          animation: 'island-float 6s ease-in-out infinite',
+        }}
       >
         <IslandShell
           className={`${baseClass} flex-row px-2 py-2 rounded-[26px]`}
@@ -218,7 +223,7 @@ export function FloatingNavigation() {
               key={item.id}
               href={item.href}
               icon={item.icon}
-              label={item.label}
+              label={td(item.label)}
               active={isActive(item.href)}
             />
           ))}
@@ -231,7 +236,7 @@ export function FloatingNavigation() {
 
           <Item
             icon={ShoppingBag}
-            label="Cart"
+            label={td("Cart")}
             active={count > 0}
             badge={count > 0 ? count : undefined}
             onClick={() => setOpen(true)}
@@ -271,7 +276,7 @@ export function FloatingNavigation() {
                 key={item.id}
                 href={item.href}
                 icon={item.icon}
-                label={item.label}
+                label={td(item.label)}
                 active={isActive(item.href)}
               />
             ))}
@@ -283,7 +288,7 @@ export function FloatingNavigation() {
 
             <Item
               icon={ShoppingBag}
-              label="Cart"
+              label={td("Cart")}
               active={count > 0}
               badge={count > 0 ? count : undefined}
               onClick={() => setOpen(true)}

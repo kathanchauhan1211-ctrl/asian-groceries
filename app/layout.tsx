@@ -28,6 +28,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   colorScheme: 'light dark',
   themeColor: '#D4621A',
+  viewportFit: 'cover', // Required for env(safe-area-inset-*) to activate on iOS
 }
 
 import { ClientLayout } from '@/components/client-layout'

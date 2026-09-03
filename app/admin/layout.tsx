@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   LayoutDashboard, Package, ShoppingCart, Settings,
-  LogOut, ExternalLink, BarChart3, ChevronRight, Menu, X, MonitorPlay,
+  LogOut, ExternalLink, BarChart3, ChevronRight, Menu, X, MonitorPlay, Tag, Layers,
 } from 'lucide-react'
 import { LogoSVG } from '@/components/logo-svg'
 
@@ -14,7 +14,9 @@ const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/admin/products', label: 'Products', icon: Package },
+  { href: '/admin/collections', label: 'Collections', icon: Layers },
   { href: '/admin/slides', label: 'Slides', icon: MonitorPlay },
+  { href: '/admin/offers', label: 'Offers', icon: Tag },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
@@ -23,7 +25,9 @@ const PAGE_LABELS: Record<string, string> = {
   '/admin': 'Dashboard',
   '/admin/orders': 'Orders',
   '/admin/products': 'Products',
+  '/admin/collections': 'Collections',
   '/admin/slides': 'Slides',
+  '/admin/offers': 'Offers',
   '/admin/analytics': 'Analytics',
   '/admin/settings': 'Settings',
 }
