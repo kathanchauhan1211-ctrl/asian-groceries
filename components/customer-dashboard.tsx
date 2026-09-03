@@ -129,7 +129,7 @@ function Sidebar({
   const totalSpent = orders.reduce((s, o) => s + (o.grandTotal || 0), 0)
 
   const content = (
-    <aside className="flex h-full flex-col bg-card border-r border-border overflow-hidden">
+    <aside className="flex h-full flex-col bg-card border-r border-border overflow-hidden w-full md:w-64 shrink-0">
       {/* Header — navy gradient matching site header/footer */}
       <div className="relative shrink-0 p-5 pb-14" style={{ background: 'linear-gradient(135deg, var(--im-navy) 0%, var(--im-navy-mid) 100%)' }}>
         {/* Orange accent stripe top */}
@@ -837,9 +837,12 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
   }
 
   return (
-    // Full-width, full-height — fills the <main> from client-layout
-    // lg:pl-32 pushes content right of the fixed floating island (left-5, ~80px wide)
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-160px)] bg-background lg:pl-32">
+    // One unified panel — sidebar + content as a single component
+    // lg:pl-[120px] clears the fixed floating island on desktop
+    <div className="flex min-h-[calc(100dvh-130px)] bg-background lg:pl-[120px]">
+      {/* The single joined card that holds sidebar + content */}
+      <div className="flex flex-col md:flex-row flex-1 border border-border rounded-none md:rounded-2xl overflow-hidden shadow-sm bg-card m-0 md:m-4">
+
       <Sidebar
         section={section}
         onSection={setSection}
@@ -852,8 +855,8 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Content area */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      {/* Content area — fills all remaining space */}
+      <div className="flex-1 min-w-0 flex flex-col bg-background">
         {/* Mobile top bar */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card md:hidden">
           <button
@@ -865,9 +868,9 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
           <h1 className="font-bold text-foreground">{sectionNames[section]}</h1>
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-4xl mx-auto">
+        {/* Scrollable content — full width, no extra centering */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="w-full">
             {section === 'overview'  && <OverviewSection  orders={orders}  user={user}  onSection={setSection} />}
             {section === 'profile'   && <ProfileSection   user={user}  photoURL={photoURL} onPhotoUpdate={setPhotoURL} />}
             {section === 'address'   && <AddressSection   user={user} />}
@@ -876,6 +879,7 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
             {section === 'activity'  && <ActivitySection  orders={orders} />}
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
