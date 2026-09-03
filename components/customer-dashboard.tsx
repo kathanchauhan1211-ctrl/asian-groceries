@@ -838,7 +838,8 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
 
   return (
     // Full-width, full-height — fills the <main> from client-layout
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-160px)] bg-background">
+    // lg:pl-32 pushes content right of the fixed floating island (left-5, ~80px wide)
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-160px)] bg-background lg:pl-32">
       <Sidebar
         section={section}
         onSection={setSection}

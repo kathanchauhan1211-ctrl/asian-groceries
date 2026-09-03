@@ -8,10 +8,10 @@ import { useTranslation } from '@/lib/translation-context'
 import { useEffect, useRef, useState } from 'react'
 
 const NAV_ITEMS = [
-  { id: 'shop',      href: '/',          label: 'Shop',    icon: Home },
-  { id: 'track',     href: '/track',     label: 'Track',   icon: Bus },
+  { id: 'shop', href: '/', label: 'Shop', icon: Home },
+  { id: 'track', href: '/track', label: 'Track', icon: Bus },
   { id: 'dashboard', href: '/dashboard', label: 'Account', icon: User },
-  { id: 'group',     href: '/community', label: 'Group',   icon: MessageSquare },
+  { id: 'group', href: '/community', label: 'Group', icon: MessageSquare },
 ]
 
 const CSS = `
