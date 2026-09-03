@@ -129,7 +129,7 @@ export function SiteFooter() {
 
       {/* Bottom bar */}
       <div style={{ backgroundColor: 'var(--im-navy, #1A365D)' }}>
-        <div className="mx-auto max-w-7xl px-4 md:px-6 py-3 flex flex-col items-center justify-between gap-1 text-[11px] text-white/60 sm:flex-row">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 pt-3 pb-28 lg:pb-3 flex flex-col items-center justify-between gap-1 text-[11px] text-white/60 sm:flex-row">
           <p>© {new Date().getFullYear()} Asian Groceries Vilnius. All rights reserved.</p>
           <p>Made with care in Vilnius, Lithuania 🇱🇹</p>
         </div>
