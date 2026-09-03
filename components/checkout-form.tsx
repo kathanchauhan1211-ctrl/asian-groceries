@@ -5,7 +5,6 @@ import { useCart } from '@/lib/cart-context'
 import { Button } from '@/components/ui/button'
 import {
   Bus,
-  User,
   Phone,
   MapPin,
   ClipboardCheck,
@@ -15,6 +14,7 @@ import {
   Weight,
   Download,
   Building2,
+  User,
 } from 'lucide-react'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
@@ -31,10 +31,9 @@ const DESTINATIONS = [
 ]
 
 export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) => void }) {
-  const { lines, subtotal, totalWeight, setOpen, clearCart } = useCart()
+  const { lines, subtotal, totalWeight, clearCart } = useCart()
   const { user } = useAuth()
   const [step, setStep] = useState(1)
-  const [name, setName] = useState('')
   const [phone, setPhone] = useState('+370 ')
   const [transitHub, setTransitHub] = useState(DESTINATIONS[0].id)
   const [instructions, setInstructions] = useState('')
@@ -43,6 +42,9 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   const [orderCreated, setOrderCreated] = useState(false)
   const [ticketNumber, setTicketNumber] = useState('')
   const [finalStatus, setFinalStatus] = useState('')
+
+  // Name comes from auth profile — no manual entry needed
+  const customerName = user?.displayName || ''
 
   // Handle phone input formatting to respect the mask +370 XXXXXXX
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +58,8 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   }
 
   const selectedTransit = DESTINATIONS.find((d) => d.id === transitHub) || DESTINATIONS[0]
-  const deliveryPrice = subtotal >= 25 ? 0 : selectedTransit.price
+  // Bus delivery always applies — no free delivery
+  const deliveryPrice = selectedTransit.price
   const grandTotal = subtotal + deliveryPrice
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +73,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
       // Save order directly to Firestore via client SDK
       const orderData = {
         ticketNumber: ticketNum,
-        customerName: name,
+        customerName,
         customerPhone: phone,
         transitHub,
         orderNotes: instructions,
@@ -99,9 +102,9 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
       setFinalStatus('Pending Payment - Awaiting Bank Transfer')
       setOrderCreated(true)
       clearCart()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Order submission error:', err)
-      alert(err.message || 'An error occurred. Please try again.')
+      alert((err as Error).message || 'An error occurred. Please try again.')
       setIsSubmitting(false)
     }
   }
@@ -110,7 +113,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
     generateInvoice({
       ticketNum: ticketNumber,
       date: new Date().toLocaleDateString(),
-      customerName: name,
+      customerName,
       phone,
       destination: selectedTransit.label,
       items: lines,
@@ -128,7 +131,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
     generateInvoice({
       ticketNum: 'PENDING',
       date: new Date().toLocaleDateString(),
-      customerName: name || 'Guest',
+      customerName: customerName || 'Guest',
       phone: phone,
       destination: selectedTransit.label,
       items: lines,
@@ -159,26 +162,34 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
             <span className="font-bold text-accent">{ticketNumber}</span>
           </div>
           <div className="flex justify-between py-2 text-xs text-slate-500">
+            <span>Customer</span>
+            <span className="font-bold text-slate-900">{customerName}</span>
+          </div>
+          <div className="flex justify-between py-2 text-xs text-slate-500">
             <span>Destination Hub</span>
             <span className="font-bold text-slate-900">{selectedTransit.label.split(' - ')[0]}</span>
+          </div>
+          <div className="flex justify-between py-2 text-xs text-slate-500">
+            <span>Bus Station Dispatch (excl.)</span>
+            <span className="font-bold text-slate-900">€{deliveryPrice.toFixed(2)}</span>
           </div>
           <div className="flex justify-between py-2 text-xs text-slate-500">
             <span>Payment Status</span>
             <span className="font-bold text-amber-600">{finalStatus}</span>
           </div>
           <div className="flex justify-between pt-2.5 border-t border-slate-200 text-xs font-bold text-slate-900">
-            <span>Amount Charged</span>
+            <span>Amount Due (EUR)</span>
             <span>€{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
         {paymentMethod === 'bank_transfer' && (
           <div className="mt-4 rounded-xl bg-blue-50 border border-blue-200 p-4 text-left">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-blue-800 mb-2">Bank Transfer Details</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-blue-800 mb-2">Bank Transfer Details — Payment in EUR</h4>
             <p className="text-sm text-blue-900 mb-2">Please transfer <strong>€{grandTotal.toFixed(2)}</strong> to:</p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-blue-600 font-semibold text-xs">Account Name</span>
+                <span className="text-blue-600 font-semibold text-xs">Receiver</span>
                 <span className="font-bold text-slate-800 text-xs">{BANK_DETAILS.accountName}</span>
               </div>
               <div className="flex justify-between">
@@ -188,6 +199,10 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
               <div className="flex justify-between">
                 <span className="text-blue-600 font-semibold text-xs">BIC / SWIFT</span>
                 <span className="font-bold text-slate-800 text-xs font-mono">{BANK_DETAILS.bic}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-600 font-semibold text-xs">Currency</span>
+                <span className="font-bold text-emerald-700 text-xs">{BANK_DETAILS.currency}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-blue-600 font-semibold text-xs">IBAN</span>
@@ -250,30 +265,23 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
         {step === 1 && (
           <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 border-b border-slate-200 pb-2">
-              <User className="size-3.5 text-accent" /> Step 1: Customer & Delivery Info
+              <Bus className="size-3.5 text-accent" /> Step 1: Delivery Info
             </h3>
 
-            <div>
-              <label htmlFor="checkout-name" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="checkout-name"
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Jonas Kovas"
-                  className="h-11 w-full rounded-md border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
-                />
+            {/* Customer name — read-only from profile */}
+            <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 flex items-center gap-3">
+              <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 shrink-0">
+                <User className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Delivering to</p>
+                <p className="text-sm font-bold text-slate-900 truncate">{customerName || 'Please update your profile name'}</p>
               </div>
             </div>
 
             <div>
               <label htmlFor="checkout-phone" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Phone Number (Delivery Updates)
+                Phone Number (for delivery updates)
               </label>
               <div className="relative">
                 <Phone className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -291,7 +299,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
 
             <div>
               <label htmlFor="checkout-destination" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Destination Station (Lithuanian Hub)
+                Destination Bus Station
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -303,16 +311,19 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
                 >
                   {DESTINATIONS.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.label.split(' - ')[0]}
+                      {d.label.split(' - ')[0]} — €{d.price.toFixed(2)} excl.
                     </option>
                   ))}
                 </select>
               </div>
+              <p className="mt-1.5 text-[11px] text-slate-500">
+                Bus station dispatch fee: <strong className="text-slate-700">€{deliveryPrice.toFixed(2)}</strong> (excl. from product prices)
+              </p>
             </div>
 
             <Button
               type="button"
-              disabled={!name.trim() || phone.length < 13}
+              disabled={phone.length < 13}
               onClick={() => setStep(2)}
               className="w-full h-11 rounded-full bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-all duration-300"
             >
@@ -374,8 +385,8 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
                 <span>€{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs text-slate-600">
-                <span>Bus Station Dispatch Fee</span>
-                <span>{deliveryPrice === 0 ? 'FREE' : `€${deliveryPrice.toFixed(2)}`}</span>
+                <span>Bus Station Dispatch (excl.)</span>
+                <span className="font-semibold">€{deliveryPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs text-slate-600 items-center">
                 <span className="flex items-center gap-1">
@@ -384,11 +395,11 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
                 <span className="font-semibold text-slate-900">{totalWeight.toFixed(2)} kg</span>
               </div>
               <div className="border-t border-slate-200 pt-2 flex justify-between text-sm font-bold text-slate-900">
-                <span>Total Due</span>
+                <span>Total Due (EUR)</span>
                 <span className="text-accent">€{grandTotal.toFixed(2)}</span>
               </div>
             </div>
-            
+
             <div className="text-[11px] text-slate-500 bg-blue-50 text-blue-700 p-3 rounded-lg border border-blue-100">
               Payment Method: <strong className="uppercase">{paymentMethod.replace('_', ' ')}</strong>
             </div>

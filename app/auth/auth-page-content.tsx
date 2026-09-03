@@ -19,16 +19,28 @@ function GoogleIcon() {
   )
 }
 
-function Field({ id, label, type, value, onChange, placeholder, icon, showToggle, autoComplete, required }: {
+// ─── Valid name regex: letters, spaces, hyphens, apostrophes (incl. Lithuanian) ─
+const NAME_REGEX = /^[a-zA-ZÀ-žĄąČčĘęĖėĮįŠšŲųŪūŽžÀ-ÖØ-öø-ÿ\s'-]+$/
+
+function validateName(val: string): string | null {
+  const v = val.trim()
+  if (!v) return 'This field is required.'
+  if (v.length < 2) return 'Must be at least 2 characters.'
+  if (!NAME_REGEX.test(v)) return 'Only letters are allowed (no numbers or special characters).'
+  return null
+}
+
+function Field({ id, label, type, value, onChange, placeholder, icon, showToggle, autoComplete, required, errorMsg }: {
   id: string; label: string; type: string; value: string; onChange: (v: string) => void
   placeholder: string; icon: React.ReactNode; showToggle?: boolean; autoComplete?: string; required?: boolean
+  errorMsg?: string | null
 }) {
   const [show, setShow] = useState(false)
   const inputType = showToggle ? (show ? 'text' : 'password') : type
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-semibold text-slate-700">{label}</label>
-      <div className="group relative flex items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 shadow-sm focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-400/20 transition-all duration-200">
+      <div className={`group relative flex items-center overflow-hidden rounded-lg border bg-slate-50 shadow-sm focus-within:ring-2 transition-all duration-200 ${errorMsg ? 'border-red-400 focus-within:border-red-400 focus-within:ring-red-400/20' : 'border-slate-200 focus-within:border-orange-400 focus-within:ring-orange-400/20'}`}>
         <span className="ml-3.5 shrink-0 text-slate-400 group-focus-within:text-orange-500 transition-colors">{icon}</span>
         <input id={id} type={inputType} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
           autoComplete={autoComplete} required={required}
@@ -39,6 +51,7 @@ function Field({ id, label, type, value, onChange, placeholder, icon, showToggle
           </button>
         )}
       </div>
+      {errorMsg && <p className="text-xs text-red-600 font-medium">{errorMsg}</p>}
     </div>
   )
 }
@@ -50,7 +63,10 @@ export default function AuthPageContent() {
 
   const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
   const [tab, setTab] = useState<'login' | 'signup'>(defaultTab)
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [surname, setSurname] = useState('')
+  const [firstNameError, setFirstNameError] = useState<string | null>(null)
+  const [surnameError, setSurnameError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -64,7 +80,8 @@ export default function AuthPageContent() {
   }, [user, router])
 
   function clearForm() {
-    setName(''); setEmail(''); setPassword(''); setConfirmPassword(''); setError(null); setSuccess(null)
+    setFirstName(''); setSurname(''); setEmail(''); setPassword(''); setConfirmPassword('')
+    setError(null); setSuccess(null); setFirstNameError(null); setSurnameError(null)
   }
 
   function switchTab(t: 'login' | 'signup') { setTab(t); clearForm() }
@@ -86,15 +103,24 @@ export default function AuthPageContent() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null); setSuccess(null)
+
     if (tab === 'signup') {
-      if (name.trim().length < 2) { setError('Please enter your full name.'); return }
+      // Validate first name and surname separately
+      const fnErr = validateName(firstName)
+      const snErr = validateName(surname)
+      setFirstNameError(fnErr)
+      setSurnameError(snErr)
+      if (fnErr || snErr) return
+
       if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
       if (password !== confirmPassword) { setError('Passwords do not match.'); return }
     }
+
     setLoading(true)
     try {
       if (tab === 'signup') {
-        await signUp(name.trim(), email, password)
+        const displayName = `${firstName.trim()} ${surname.trim()}`
+        await signUp(displayName, email, password)
         setSuccess('Account created! Welcome to IndianMarket 🎉')
         setTimeout(() => router.replace('/'), 1200)
       } else {
@@ -184,8 +210,16 @@ export default function AuthPageContent() {
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
                 {tab === 'signup' && (
-                  <Field id="field-name" label="Full Name" type="text" value={name} onChange={setName}
-                    placeholder="Your full name" icon={<User className="size-4" />} autoComplete="name" required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field id="field-first-name" label="First Name" type="text" value={firstName}
+                      onChange={(v) => { setFirstName(v); if (firstNameError) setFirstNameError(validateName(v)) }}
+                      placeholder="e.g. Jonas" icon={<User className="size-4" />}
+                      autoComplete="given-name" required errorMsg={firstNameError} />
+                    <Field id="field-surname" label="Surname" type="text" value={surname}
+                      onChange={(v) => { setSurname(v); if (surnameError) setSurnameError(validateName(v)) }}
+                      placeholder="e.g. Kumar" icon={<User className="size-4" />}
+                      autoComplete="family-name" required errorMsg={surnameError} />
+                  </div>
                 )}
                 <Field id="field-email" label="Email Address" type="email" value={email} onChange={setEmail}
                   placeholder="you@example.com" icon={<Mail className="size-4" />} autoComplete="email" required />

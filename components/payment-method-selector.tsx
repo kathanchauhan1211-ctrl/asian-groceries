@@ -5,12 +5,13 @@ import { useState } from 'react';
 
 export type PaymentMethod = 'bank_transfer';
 
-// ── Bank account details (update IBAN + bank name when ready) ──────────────────
+// ── Bank account details ────────────────────────────────────────────────────────
 export const BANK_DETAILS = {
-  accountName:   'Asian Groceries UAB',
-  iban:          'LT12 3456 7890 1234 5678',
-  bank:          'Swedbank',
-  bic:           'HABALT22',
+  accountName:   'Indian Market',
+  iban:          'LT68 4010 0510 0593 7512',
+  bank:          'Luminor Bank',
+  bic:           'AGBLLT2XXXX',
+  currency:      'EUR',
   reference:     'Use your ticket number as reference',
 }
 
@@ -58,7 +59,7 @@ export function PaymentMethodSelector({ selected, onSelect }: Props) {
           {selected === 'bank_transfer' && (
             <div className="mt-3 rounded-lg bg-blue-50 border border-blue-100 p-3 space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-blue-600 font-semibold">Account Name</span>
+                <span className="text-blue-600 font-semibold">Receiver</span>
                 <span className="font-bold text-slate-800">{BANK_DETAILS.accountName}</span>
               </div>
               <div className="flex justify-between text-xs">
@@ -68,6 +69,10 @@ export function PaymentMethodSelector({ selected, onSelect }: Props) {
               <div className="flex justify-between text-xs">
                 <span className="text-blue-600 font-semibold">BIC / SWIFT</span>
                 <span className="font-bold text-slate-800">{BANK_DETAILS.bic}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-blue-600 font-semibold">Currency</span>
+                <span className="font-bold text-emerald-700">{BANK_DETAILS.currency}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-blue-600 font-semibold">IBAN</span>

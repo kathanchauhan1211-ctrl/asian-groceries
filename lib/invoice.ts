@@ -1,4 +1,4 @@
-import { type CartItem } from '@/lib/cart-context'
+import { type CartLine } from '@/lib/cart-context'
 
 export type InvoiceData = {
   ticketNum: string
@@ -6,7 +6,7 @@ export type InvoiceData = {
   customerName: string
   phone: string
   destination: string
-  items: CartItem[]
+  items: CartLine[]
   subtotal: number
   deliveryFee: number
   totalWeight: number
@@ -90,11 +90,11 @@ export function generateInvoice(data: InvoiceData) {
           <span>€${data.subtotal.toFixed(2)}</span>
         </div>
         <div class="flex justify-between text-sm text-slate-600 border-b border-slate-200 pb-3">
-          <span>Delivery Fee</span>
-          <span>${data.deliveryFee === 0 ? 'FREE' : `€${data.deliveryFee.toFixed(2)}`}</span>
+          <span>Bus Station Dispatch (excl.)</span>
+          <span>€${data.deliveryFee.toFixed(2)}</span>
         </div>
         <div class="flex justify-between text-lg font-bold text-slate-900 pt-1">
-          <span>Total Due</span>
+          <span>Total Due (EUR)</span>
           <span class="text-orange-600">€${data.grandTotal.toFixed(2)}</span>
         </div>
       </div>
@@ -105,6 +105,24 @@ export function generateInvoice(data: InvoiceData) {
       <p class="text-sm font-bold ${data.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}">
         ${data.paymentMethod.toUpperCase()} — ${data.paymentStatus}
       </p>
+    </div>
+
+    <div class="mt-6 p-5 bg-blue-50 rounded-lg border border-blue-200">
+      <h4 class="text-xs font-bold uppercase tracking-wider text-blue-700 mb-3">Bank Transfer Details — Payment in EUR</h4>
+      <div class="grid grid-cols-2 gap-1.5 text-sm">
+        <span class="text-blue-600 font-semibold">Receiver</span>
+        <span class="font-bold text-slate-800">Indian Market</span>
+        <span class="text-blue-600 font-semibold">Bank</span>
+        <span class="font-bold text-slate-800">Luminor Bank</span>
+        <span class="text-blue-600 font-semibold">BIC / SWIFT</span>
+        <span class="font-bold text-slate-800 font-mono">AGBLLT2XXXX</span>
+        <span class="text-blue-600 font-semibold">Currency</span>
+        <span class="font-bold text-emerald-700">EUR</span>
+        <span class="text-blue-600 font-semibold">IBAN</span>
+        <span class="font-bold text-slate-800 font-mono">LT68 4010 0510 0593 7512</span>
+        <span class="text-blue-600 font-semibold">Reference</span>
+        <span class="font-bold text-orange-700 font-mono">${data.ticketNum}</span>
+      </div>
     </div>
 
     <div class="mt-8 pt-8 border-t border-slate-200 text-center text-xs text-slate-400">
