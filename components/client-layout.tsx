@@ -12,8 +12,8 @@ import { FloatingNavigation } from '@/components/floating-navigation'
 
 const ANNOUNCEMENTS = [
   '🚚  Free delivery on orders over €25',
-  '📱  Order via WhatsApp: +370 600 00000',
-  '🕐  Store open Mon–Sat 10:00–20:00',
+  '📱  Order via WhatsApp: +370 616 76111',
+  '📧  eshop@asiangroceries.lt  |  Mon–Sat 10:00–20:00',
 ]
 
 function AnnouncementBar() {
