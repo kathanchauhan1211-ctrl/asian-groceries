@@ -49,6 +49,9 @@ env:
       - RUNTIME
 
   # ── Firebase Admin SDK (server-side only — RUNTIME only, never BUILD) ────────
+  # FIREBASE_PROJECT_ID is enough; FIREBASE_PRIVATE_KEY is NOT needed here
+  # because the runtime uses Application Default Credentials (ADC) via the
+  # firebase-app-hosting-compute service account automatically attached by Cloud Run.
   - variable: FIREBASE_PROJECT_ID
     value: asian-groceries-c1b58
     availability:
@@ -56,10 +59,5 @@ env:
 
   - variable: FIREBASE_CLIENT_EMAIL
     value: firebase-adminsdk-fbsvc@asian-groceries-c1b58.iam.gserviceaccount.com
-    availability:
-      - RUNTIME
-
-  - variable: FIREBASE_PRIVATE_KEY
-    secret: firebase-admin-private-key
     availability:
       - RUNTIME
