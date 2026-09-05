@@ -226,32 +226,28 @@ export function PromoSlider() {
             <button
               aria-label="Previous slide"
               onClick={goPrev}
-              className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-90"
+              className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-90 w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12"
               style={{
-                width: 'clamp(36px,5vw,48px)',
-                height: 'clamp(36px,5vw,48px)',
                 background: 'rgba(0,0,0,0.45)',
                 color: '#fff',
                 backdropFilter: 'blur(6px)',
                 border: '1px solid rgba(255,255,255,0.18)',
               }}
             >
-              <ChevronLeft style={{ width: 'clamp(16px,2.5vw,24px)', height: 'clamp(16px,2.5vw,24px)' }} />
+              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
             </button>
             <button
               aria-label="Next slide"
               onClick={goNext}
-              className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-90"
+              className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-90 w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12"
               style={{
-                width: 'clamp(36px,5vw,48px)',
-                height: 'clamp(36px,5vw,48px)',
                 background: 'rgba(0,0,0,0.45)',
                 color: '#fff',
                 backdropFilter: 'blur(6px)',
                 border: '1px solid rgba(255,255,255,0.18)',
               }}
             >
-              <ChevronRight style={{ width: 'clamp(16px,2.5vw,24px)', height: 'clamp(16px,2.5vw,24px)' }} />
+              <ChevronRight className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
             </button>
           </>
         )}
