@@ -176,28 +176,28 @@ export function PromoSlider() {
 
               {/* Caption bar — bottom */}
               <div
-                className="absolute inset-x-0 bottom-0 px-4 sm:px-8 md:px-12 pb-14 sm:pb-12 md:pb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-6"
+                className="absolute inset-x-0 bottom-0 px-12 sm:px-14 md:px-16 pb-4 sm:pb-8 md:pb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-6"
                 style={{
                   animation: isCurrent && !animating ? 'slide-caption-in 0.5s ease-out 0.15s both' : 'none',
                 }}
               >
-                <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0">
                   {/* Category pill */}
                   {slide.label && (
                     <span
-                      className="w-fit rounded-full px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest"
+                      className="w-fit rounded-full px-2 py-0.5 text-[9px] sm:text-[11px] font-bold uppercase tracking-widest"
                       style={{ background: 'var(--primary)', color: '#fff' }}
                     >
                       {td(slide.label)}
                     </span>
                   )}
                   {/* Headline */}
-                  <h2 className="text-white font-bold text-lg sm:text-2xl md:text-3xl lg:text-4xl leading-tight tracking-tight drop-shadow-lg">
+                  <h2 className="text-white font-bold text-base sm:text-2xl md:text-3xl lg:text-4xl leading-tight tracking-tight drop-shadow-lg">
                     {td(slide.headline)}
                   </h2>
                   {/* Subtitle */}
                   {slide.sub && (
-                    <p className="text-white/70 text-[12px] sm:text-sm md:text-base leading-snug max-w-md">
+                    <p className="text-white/70 text-[10px] sm:text-sm md:text-base leading-snug max-w-md hidden sm:block">
                       {td(slide.sub)}
                     </p>
                   )}
@@ -208,11 +208,11 @@ export function PromoSlider() {
                   <a
                     href={slide.href}
                     onClick={(e) => e.stopPropagation()}
-                    className="shrink-0 w-fit inline-flex items-center gap-1.5 rounded-full font-bold text-slate-900 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+                    className="shrink-0 w-fit inline-flex items-center gap-1 sm:gap-1.5 rounded-full font-bold text-slate-900 text-[10px] sm:text-sm px-3 sm:px-6 py-1.5 sm:py-2.5 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
                     style={{ background: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}
                   >
                     {td(slide.cta)}
-                    <span className="text-base leading-none">→</span>
+                    <span className="text-[12px] sm:text-base leading-none">→</span>
                   </a>
                 )}
               </div>
