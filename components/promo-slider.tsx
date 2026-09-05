@@ -208,7 +208,7 @@ export function PromoSlider() {
                   <a
                     href={slide.href}
                     onClick={(e) => e.stopPropagation()}
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full font-bold text-slate-900 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+                    className="shrink-0 w-fit inline-flex items-center gap-1.5 rounded-full font-bold text-slate-900 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
                     style={{ background: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}
                   >
                     {td(slide.cta)}
