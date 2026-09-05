@@ -176,7 +176,7 @@ export function PromoSlider() {
 
               {/* Caption bar — bottom */}
               <div
-                className="absolute inset-x-0 bottom-0 px-12 sm:px-14 md:px-16 pb-4 sm:pb-8 md:pb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-6"
+                className="absolute inset-x-0 bottom-0 px-12 sm:px-14 md:px-16 pb-4 sm:pb-8 md:pb-12 flex flex-row items-end justify-between gap-2 sm:gap-6"
                 style={{
                   animation: isCurrent && !animating ? 'slide-caption-in 0.5s ease-out 0.15s both' : 'none',
                 }}
