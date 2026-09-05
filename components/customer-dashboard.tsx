@@ -318,10 +318,11 @@ function OverviewSection({ orders, user, onSection }: {
 }
 
 // ─── Profile Section ─────────────────────────────────────────────────────────
-function ProfileSection({ user, photoURL, onPhotoUpdate }: {
+function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
   user: { uid: string; displayName: string | null; email: string | null }
   photoURL: string | null
   onPhotoUpdate: (url: string) => void
+  onNameUpdate?: (name: string) => Promise<void>
 }) {
   const [firstName, setFirstName] = useState(() => (user.displayName || '').split(' ')[0] || '')
   const [surname,   setSurname]   = useState(() => (user.displayName || '').split(' ').slice(1).join(' ') || '')
@@ -346,13 +347,17 @@ function ProfileSection({ user, photoURL, onPhotoUpdate }: {
   const handleSave = async () => {
     setSaving(true)
     try {
+      const newDisplayName = `${firstName.trim()} ${surname.trim()}`.trim()
       await setDoc(doc(clientDb, 'users', user.uid), {
         firstName: firstName.trim(),
         surname: surname.trim(),
         phone: phone.trim(),
-        displayName: `${firstName.trim()} ${surname.trim()}`.trim(),
+        displayName: newDisplayName,
         updatedAt: new Date().toISOString(),
       }, { merge: true })
+
+      if (onNameUpdate) await onNameUpdate(newDisplayName)
+
       setSaved(true); setIsEditing(false)
       setTimeout(() => setSaved(false), 3000)
     } catch (e) { console.error(e) }
@@ -784,7 +789,7 @@ function ActivitySection({ orders }: { orders: LiveOrder[] }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) => void }) {
   const { lines }   = useCart()
-  const { user, signOut } = useAuth()
+  const { user, signOut, updateUserProfile } = useAuth()
 
   const [section,  setSection]  = useState<DashboardSection>('overview')
   const [orders,   setOrders]   = useState<LiveOrder[]>([])
@@ -872,7 +877,7 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="w-full">
             {section === 'overview'  && <OverviewSection  orders={orders}  user={user}  onSection={setSection} />}
-            {section === 'profile'   && <ProfileSection   user={user}  photoURL={photoURL} onPhotoUpdate={setPhotoURL} />}
+            {section === 'profile'   && <ProfileSection   user={user}  photoURL={photoURL} onPhotoUpdate={setPhotoURL} onNameUpdate={updateUserProfile} />}
             {section === 'address'   && <AddressSection   user={user} />}
             {section === 'orders'    && <OrdersSection    orders={orders}  loading={loading} />}
             {section === 'basket'    && <BasketSection />}

@@ -124,7 +124,9 @@ export async function POST(req: NextRequest) {
 
     let subtotal = 0
 
-    const orderRef = db.collection('orders').doc() // pre-generate ID
+    // Use the unguessable ticketNumber as the document ID so clients can fetch it directly
+    // and we can lock down Firestore rules to allow get() but deny list()
+    const orderRef = db.collection('orders').doc(ticketNumber)
 
     await db.runTransaction(async (transaction) => {
       // a) Read all product docs inside the transaction (for consistency)

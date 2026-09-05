@@ -38,6 +38,7 @@ type AuthContextValue = {
   signIn: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
+  updateUserProfile: (displayName: string) => Promise<void>
 }
 
 // ─── Context ─────────────────────────────────────────────────────────────────
@@ -79,8 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await firebaseSignOut(clientAuth)
   }
 
+  async function updateUserProfile(displayName: string) {
+    if (clientAuth.currentUser) {
+      await updateProfile(clientAuth.currentUser, { displayName })
+      // Trigger a state update so the app UI reflects the new name instantly
+      setUser({ ...clientAuth.currentUser, displayName } as User)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithGoogle, signOut, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   )

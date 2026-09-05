@@ -10,12 +10,12 @@ service cloud.firestore {
 
     // ── Orders: Admin SDK (server-side /api/orders) is the only writer. ──
     // ── Client-side direct writes are blocked (allow create: if false). ──
-    // ── Authenticated users can read their own orders by email.         ──
-    match /orders/{id} {
-      allow read: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+    // ── Tracking: order doc ID is the unguessable ticketNumber.         ──
+    // ── allow get but deny list prevents enumerating all orders.        ──
+    match /orders/{ticketNumber} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update, delete: if false;
     }
 
     // ── Users: each user can only read/write their own document ──
