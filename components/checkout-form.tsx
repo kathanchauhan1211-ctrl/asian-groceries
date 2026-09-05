@@ -16,8 +16,6 @@ import {
   Building2,
   User,
 } from 'lucide-react'
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
 import { useAuth } from '@/lib/auth-context'
 import { PaymentMethodSelector, type PaymentMethod, BANK_DETAILS } from './payment-method-selector'
 import { generateInvoice } from '@/lib/invoice'
@@ -42,6 +40,8 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   const [orderCreated, setOrderCreated] = useState(false)
   const [ticketNumber, setTicketNumber] = useState('')
   const [finalStatus, setFinalStatus] = useState('')
+  // Surfaces server-side errors (e.g. out of stock) gracefully in the UI
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   // Name comes from auth profile — no manual entry needed
   const customerName = user?.displayName || ''
@@ -65,46 +65,48 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setSubmitError(null)
 
     try {
-      // Generate a short ticket number: AG + timestamp suffix
-      const ticketNum = `AG-${Date.now().toString(36).toUpperCase()}`
-
-      // Save order directly to Firestore via client SDK
-      const orderData = {
-        ticketNumber: ticketNum,
-        customerName,
-        customerPhone: phone,
-        transitHub,
-        orderNotes: instructions,
-        paymentMethod,
-        paymentStatus: 'Pending Payment - Bank Transfer',
-        status: 'Pending Payment',
-        items: lines.map(l => ({
+      // Build a safe payload — no client-side prices sent.
+      // The server recalculates all prices from the database.
+      const safePayload = {
+        items: lines.map((l) => ({
           productId: l.product.id,
-          productName: l.product.name,
           variantLabel: l.variant.label,
-          price: l.variant.price,
           quantity: l.quantity,
         })),
-        subtotal,
+        customerName,
+        customerPhone: phone,
+        customerEmail: user?.email ?? null,
+        transitHub,
         deliveryFee: deliveryPrice,
-        grandTotal,
-        totalWeight,
-        customerEmail: user?.email || null,
-        createdAt: serverTimestamp(),
+        orderNotes: instructions,
+        paymentMethod,
       }
 
-      const docRef = await addDoc(collection(clientDb, 'orders'), orderData)
-      console.log('Order saved to Firestore:', docRef.id)
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(safePayload),
+      })
 
-      setTicketNumber(ticketNum)
+      const json = await res.json()
+
+      if (!res.ok) {
+        // Surface the server's error message (e.g. "Insufficient stock for X") to the user
+        throw new Error(json.error ?? `Server error (${res.status}). Please try again.`)
+      }
+
+      const { ticketNumber: serverTicket } = json
+
+      setTicketNumber(serverTicket)
       setFinalStatus('Pending Payment - Awaiting Bank Transfer')
       setOrderCreated(true)
       clearCart()
     } catch (err: unknown) {
       console.error('Order submission error:', err)
-      alert((err as Error).message || 'An error occurred. Please try again.')
+      setSubmitError((err as Error).message || 'An error occurred. Please try again.')
       setIsSubmitting(false)
     }
   }
@@ -403,6 +405,13 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
             <div className="text-[11px] text-slate-500 bg-blue-50 text-blue-700 p-3 rounded-lg border border-blue-100">
               Payment Method: <strong className="uppercase">{paymentMethod.replace('_', ' ')}</strong>
             </div>
+
+            {/* Server-side error banner — e.g. "Insufficient stock for X" */}
+            {submitError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium">
+                ⚠️ {submitError}
+              </div>
+            )}
 
             <div className="flex gap-3">
               <Button
