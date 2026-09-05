@@ -6,11 +6,12 @@ import { useState } from 'react';
 export type PaymentMethod = 'bank_transfer';
 
 // ── Bank account details ────────────────────────────────────────────────────────
+// ⚠️  TEST MODE — swap these back to real details before going live
 export const BANK_DETAILS = {
-  accountName:   'Indian Market',
-  iban:          'LT68 4010 0510 0593 7512',
-  bank:          'Luminor Bank',
-  bic:           'AGBLLT2XXXX',
+  accountName:   'TEST ACCOUNT — Do Not Transfer',
+  iban:          'LT00 0000 0000 0000 0000',
+  bank:          'Test Bank (Sandbox)',
+  bic:           'TESTLT22XXX',
   currency:      'EUR',
   reference:     'Use your ticket number as reference',
 }
