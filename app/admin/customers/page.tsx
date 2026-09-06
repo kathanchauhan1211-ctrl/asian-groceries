@@ -1,9 +1,10 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
-import { Search, User, Phone, MapPin, Mail } from 'lucide-react'
+import { Search, User, Phone, MapPin, Mail, ShoppingBag } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AdminCustomersPage() {
   const [users, setUsers] = useState<any[]>([])
@@ -99,6 +100,14 @@ export default function AdminCustomersPage() {
                     </div>
                   )}
                 </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
+                <Link
+                  href={`/admin/orders?search=${encodeURIComponent(u.email || u.id)}`}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 px-3 py-1.5 rounded-lg transition-all"
+                >
+                  <ShoppingBag className="size-3.5" /> View Orders
+                </Link>
               </div>
             </div>
           ))}

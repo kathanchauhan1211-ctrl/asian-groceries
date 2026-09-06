@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
@@ -7,8 +7,10 @@ import { updateOrderStatus } from '@/lib/admin-actions'
 import {
   Package, Truck, CheckCircle, Clock, Search, ChevronDown,
   ChevronUp, MapPin, Phone, Mail, ShoppingBag, ArrowRight,
-  CreditCard,
+  CreditCard, User
 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import type { Order } from '@/app/lib/order-types'
 
 const STATUSES = ['Pending Payment', 'Accepted', 'Preparing', 'Dispatched', 'Delivered'] as const
@@ -107,7 +109,17 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
           {/* Customer details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Customer</p>
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Customer</p>
+                {order.customerEmail && (
+                  <Link
+                    href={`/admin/customers?search=${encodeURIComponent(order.customerEmail)}`}
+                    className="flex items-center gap-1 text-[10px] font-bold text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 px-1.5 py-0.5 rounded transition-all"
+                  >
+                    <User className="size-3" /> View Profile
+                  </Link>
+                )}
+              </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <Mail className="size-3.5 text-slate-500 shrink-0" />
@@ -214,11 +226,14 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
   )
 }
 
-export default function AdminOrdersPage() {
+import { Suspense } from 'react'
+
+function AdminOrdersContent() {
+  const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || '')
 
   useEffect(() => {
     const q = query(collection(clientDb, 'orders'), orderBy('createdAt', 'desc'))
@@ -327,5 +342,13 @@ export default function AdminOrdersPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AdminOrdersPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-white">Loading orders...</div>}>
+      <AdminOrdersContent />
+    </Suspense>
   )
 }
