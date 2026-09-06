@@ -52,15 +52,6 @@ export function SiteHeader() {
     if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50)
   }, [searchOpen])
 
-  const searchParams = useSearchParams()
-  const query = searchParams.get('q') || ''
-
-  const updateSearch = (q: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (q) params.set('q', q); else params.delete('q')
-    router.push(`/?${params.toString()}`)
-  }
-
   const activeLangData = LANGUAGES.find(l => l.name === activeLang) || LANGUAGES[0]
 
   return (
@@ -85,40 +76,10 @@ export function SiteHeader() {
             </span>
           </Link>
 
-          {/* Search bar — hidden on mobile (toggle below), visible md+ */}
-          <div className="relative flex-1 min-w-0 hidden md:block">
-            <div className="flex items-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/60 shadow-inner border border-transparent focus-within:border-orange-500/50 focus-within:bg-white dark:focus-within:bg-[#0B1120] focus-within:ring-2 focus-within:ring-orange-500/20 transition-all duration-200">
-              <Search className="ml-3 size-4 shrink-0 text-slate-400 dark:text-slate-500" />
-              <input
-                id="site-search"
-                value={query}
-                onChange={(e) => updateSearch(e.target.value)}
-                placeholder={t('nav.searchPlaceholder') || 'Search rice, atta, spices…'}
-                className="w-full bg-transparent px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              />
-              {query && (
-                <button
-                  onClick={() => updateSearch('')}
-                  className="mr-2 flex size-6 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-                  aria-label="Clear search"
-                >
-                  <X className="size-3" />
-                </button>
-              )}
-            </div>
-          </div>
+          <div className="flex flex-1" />
 
           {/* Actions */}
           <div className="flex items-center gap-1.5">
-
-            {/* Mobile search toggle — hidden on md+ */}
-            <button
-              className="flex md:hidden size-9 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700/50 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-              onClick={() => setSearchOpen(v => !v)}
-              aria-label="Search"
-            >
-              {searchOpen ? <X className="size-4" /> : <Search className="size-4" />}
-            </button>
 
             {/* Dark mode toggle */}
             {isMounted ? (
@@ -250,33 +211,6 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile expandable search bar \u2014 slides down when searchOpen */}
-      <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-out bg-white dark:bg-[#0B1120] ${searchOpen ? 'max-h-16 opacity-100' : 'max-h-0 opacity-0'}`}
-      >
-        <div className="px-3 pb-2.5">
-          <div className="flex items-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800/60 shadow-inner border border-transparent focus-within:border-orange-500/50 focus-within:bg-white dark:focus-within:bg-[#0B1120] focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
-            <Search className="ml-3 size-4 shrink-0 text-slate-400 dark:text-slate-500" />
-            <input
-              ref={searchInputRef}
-              id="site-search-mobile"
-              value={query}
-              onChange={(e) => updateSearch(e.target.value)}
-              placeholder={t('nav.searchPlaceholder') || 'Search rice, atta, spices…'}
-              className="w-full bg-transparent px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
-            />
-            {query && (
-              <button
-                onClick={() => updateSearch('')}
-                className="mr-2 flex size-6 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                aria-label="Clear search"
-              >
-                <X className="size-3" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
     </header>
   )
 }

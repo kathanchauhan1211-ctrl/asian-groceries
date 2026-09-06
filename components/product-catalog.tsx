@@ -273,6 +273,43 @@ function PriceDropdown({ min, max, value, onChange }: {
   )
 }
 
+// ─── Debounced Search Input ───────────────────────────────────────────────────
+function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [local, setLocal] = useState(value)
+  
+  useEffect(() => {
+    setLocal(value)
+  }, [value])
+
+  useEffect(() => {
+    const t = setTimeout(() => onChange(local), 300)
+    return () => clearTimeout(t)
+  }, [local, onChange])
+
+  return (
+    <div className="relative flex-1 min-w-[200px] max-w-[320px]">
+      <div className="flex items-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800/60 shadow-inner border border-transparent focus-within:border-orange-500/50 focus-within:bg-white dark:focus-within:bg-[#0B1120] focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
+        <PackageSearch className="ml-3 size-4 shrink-0 text-slate-400 dark:text-slate-500" />
+        <input
+          type="text"
+          value={local}
+          onChange={(e) => setLocal(e.target.value)}
+          placeholder="Search products..."
+          className="w-full bg-transparent px-3 py-2 text-[13px] text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+        />
+        {local && (
+          <button
+            onClick={() => setLocal('')}
+            className="mr-2 flex size-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 transition-colors"
+          >
+            <X className="size-3" />
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Active Filter Chip ───────────────────────────────────────────────────────
 function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
@@ -297,6 +334,7 @@ function MobileFilterDrawer({
   stocks, selectedStocks, onToggleStock,
   priceMin, priceMax, priceRange, onPriceChange,
   sort, onSortChange,
+  searchQuery, onSearchChange,
   filteredCount,
   onClearAll,
 }: {
@@ -310,6 +348,7 @@ function MobileFilterDrawer({
   stocks: string[]; selectedStocks: string[]; onToggleStock: (v: string) => void
   priceMin: number; priceMax: number; priceRange: [number, number]; onPriceChange: (v: [number, number]) => void
   sort: SortKey; onSortChange: (v: SortKey) => void
+  searchQuery: string; onSearchChange: (v: string) => void
   filteredCount: number; onClearAll: () => void
 }) {
   if (!open) return null
@@ -329,6 +368,11 @@ function MobileFilterDrawer({
         </div>
 
         <div className="px-5 py-4 space-y-6">
+          {/* Search */}
+          <div className="flex" style={{ minHeight: 44 }}>
+            <SearchInput value={searchQuery} onChange={onSearchChange} />
+          </div>
+
           {/* Sort */}
           <div>
             <p className="mb-2.5 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>Sort By</p>
@@ -702,7 +746,7 @@ export function ProductCatalog({
           <div className="hidden md:flex items-center justify-between gap-2 rounded-2xl border px-4 py-2.5 shadow-sm" style={{ borderColor: 'var(--border)', background: 'var(--card)' }}>
             {/* Left: filters */}
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-              <SlidersHorizontal className="size-4 shrink-0 opacity-40" />
+              <SearchInput value={query} onChange={v => setParam('q', v)} />
 
               {/* Category */}
               <CheckDropdown
@@ -789,10 +833,11 @@ export function ProductCatalog({
           )}
         </div>}
 
-        {/* ── Mobile filter drawer ── */}
         <MobileFilterDrawer
           open={!!isDrawerOpen}
           onClose={() => { setMobileFilterOpen(false); onCloseExternalFilter?.() }}
+          searchQuery={query}
+          onSearchChange={v => setParam('q', v)}
           categories={categoryOptions}
           selectedCategories={selectedCategories}
           onToggleCategory={v => toggleListParam('category', selectedCategories, v)}

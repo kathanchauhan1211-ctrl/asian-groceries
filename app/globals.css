@@ -71,9 +71,9 @@
   --radius: 0.5rem;
 
   /* ── IndianMarket Brand Palette ── */
-  --im-navy:       #1A365D; /* Lighter deep blue — header, darkest footer */
-  --im-navy-mid:   #1E3A8A; /* Mid blue — footer main zone */
-  --im-navy-light: #2563EB; /* Lighter blue — footer hover, panel accents */
+  --im-green:       #064E3B; /* Emerald 900 — header, darkest footer */
+  --im-green-mid:   #047857; /* Emerald 700 — footer main zone */
+  --im-green-light: #10B981; /* Emerald 500 — footer hover, panel accents */
   --im-orange:     #F97316; /* Brand orange — CTAs, badges, pills */
   --im-orange-lt:  #FB923C; /* Light orange — hovers, highlights */
   --im-gold:       #FBBF24; /* Gold — star ratings, decorative shimmer */
@@ -98,14 +98,14 @@
   --destructive: #F87171;       /* Red 400 */
   --destructive-foreground: #0F1117;
   --border: #2A3347;            /* Dark slate border */
-  --input: #2A3347;
+  --input: #1E2538;
   --ring: #FB923C;
   --radius: 0.5rem;
 
-  /* ── IndianMarket Brand Palette (Dark Mode) ── */
-  --im-navy:       #0F2044;     /* Deeper navy for dark header contrast */
-  --im-navy-mid:   #162A58;
-  --im-navy-light: #3B82F6;
+  /* Emerald Dark Variants */
+  --im-green:       #022C22; /* Emerald 950 for very dark backgrounds */
+  --im-green-mid:   #064E3B; /* Emerald 900 */
+  --im-green-light: #059669; /* Emerald 600 */
   --im-orange:     #FB923C;     /* Slightly brighter orange for dark bg */
   --im-orange-lt:  #FDBA74;
   --im-gold:       #FCD34D;
@@ -470,9 +470,9 @@ select:focus {
 
 /* ── IndianMarket webapp utility classes ── */
 
-/* Navy header/footer bg */
-.im-navy-bg { background-color: var(--im-navy, #0F2044); }
-.im-navy-mid-bg { background-color: var(--im-navy-mid, #162A58); }
+/* Green header/footer bg */
+.im-green-bg { background-color: var(--im-green, #064E3B); }
+.im-green-mid-bg { background-color: var(--im-green-mid, #047857); }
 
 /* Smooth app-like hover lift for cards */
 .im-card-lift {
@@ -496,7 +496,7 @@ select:focus {
   letter-spacing: 0.04em;
 }
 
-/* Navy-on-white divider */
+/* Green-on-white divider */
 .im-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(15,32,68,0.1) 30%, rgba(15,32,68,0.1) 70%, transparent);

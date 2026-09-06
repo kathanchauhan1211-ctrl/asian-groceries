@@ -55,7 +55,22 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
 
   // Name comes from auth profile; unauthenticated users enter it manually
   const [guestName, setGuestName] = useState('')
-  const customerName = user?.displayName || guestName
+  const [profileName, setProfileName] = useState('')
+
+  useEffect(() => {
+    if (user) {
+      getDoc(doc(clientDb, 'users', user.uid)).then(d => {
+        if (d.exists()) {
+          const data = d.data()
+          if (data.phone && phone === '+370 ') setPhone(data.phone)
+          if (data.displayName) setProfileName(data.displayName)
+          else if (data.firstName) setProfileName(`${data.firstName} ${data.surname || ''}`.trim())
+        }
+      }).catch(console.error)
+    }
+  }, [user])
+
+  const customerName = user ? (profileName || user.displayName || 'Customer') : guestName
 
   // Handle phone input formatting to respect the mask +370 XXXXXXX
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,7 +318,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
             </h3>
 
             {/* Customer name — read-only from profile OR editable for guests */}
-            {user?.displayName ? (
+            {user ? (
               <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 flex items-center gap-3">
                 <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 shrink-0">
                   <User className="size-4" />

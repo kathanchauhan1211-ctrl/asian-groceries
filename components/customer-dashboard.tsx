@@ -84,14 +84,14 @@ function StatusBadge({ status }: { status: string }) {
   if (s.includes('pending'))
     return <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/25 px-2.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400"><Clock className="size-3" />{status}</span>
   if (s.includes('dispatch') || s.includes('transit'))
-    return <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/25 px-2.5 py-0.5 text-[10px] font-bold" style={{ color: 'var(--im-navy-light)' }}><Truck className="size-3" />{status}</span>
+    return <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/25 px-2.5 py-0.5 text-[10px] font-bold" style={{ color: 'var(--im-green-light)' }}><Truck className="size-3" />{status}</span>
   return <span className="inline-flex items-center gap-1 rounded-full bg-muted border border-border px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground"><AlertCircle className="size-3" />{status}</span>
 }
 
 // ─── Navy section icon (matches header/footer brand blue) ────────────────────
 function SectionIcon({ icon }: { icon: React.ReactNode }) {
   return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white" style={{ background: 'var(--im-navy-mid)' }}>
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white" style={{ background: 'var(--im-green-mid)' }}>
       {icon}
     </span>
   )
@@ -125,7 +125,7 @@ function Sidebar({
   const content = (
     <aside className="flex h-full flex-col bg-card border-r border-border overflow-hidden w-full md:w-64 shrink-0">
       {/* Header — navy gradient matching site header/footer */}
-      <div className="relative shrink-0 p-5 pb-14" style={{ background: 'linear-gradient(135deg, var(--im-navy) 0%, var(--im-navy-mid) 100%)' }}>
+      <div className="relative shrink-0 p-5 pb-14" style={{ background: 'linear-gradient(135deg, var(--im-green) 0%, var(--im-green-mid) 100%)' }}>
         {/* Orange accent stripe top */}
         <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: 'linear-gradient(90deg, var(--im-orange), var(--im-gold), var(--im-orange))' }} />
         {/* Dot pattern */}
@@ -229,7 +229,7 @@ function OverviewSection({ orders, user, onSection }: {
   return (
     <div className="space-y-6">
       {/* Hero banner */}
-      <div className="relative overflow-hidden rounded-2xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, var(--im-navy) 0%, var(--im-navy-mid) 65%, #2563EB 100%)' }}>
+      <div className="relative overflow-hidden rounded-2xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, var(--im-green) 0%, var(--im-green-mid) 65%, #10B981 100%)' }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: 'linear-gradient(90deg, var(--im-orange), var(--im-gold), var(--im-orange))' }} />
         <div className="absolute right-6 bottom-4 text-7xl opacity-[0.08] select-none">🛒</div>
@@ -245,7 +245,7 @@ function OverviewSection({ orders, user, onSection }: {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Orders',  value: String(orders.length), icon: <Package className="size-4" />, accentColor: 'var(--im-navy-mid)', accentBg: 'rgba(30,58,138,0.1)' },
+          { label: 'Total Orders',  value: String(orders.length), icon: <Package className="size-4" />, accentColor: 'var(--im-green-mid)', accentBg: 'rgba(4, 120, 87, 0.1)' },
           { label: 'Total Spent',   value: `€${totalSpent.toFixed(2)}`, icon: <TrendingUp className="size-4" />, accentColor: '#059669', accentBg: 'rgba(5,150,105,0.1)' },
           { label: 'Awaiting',      value: String(pending),  icon: <Clock className="size-4" />, accentColor: 'var(--im-orange)', accentBg: 'rgba(249,115,22,0.1)' },
         ].map(stat => (
@@ -410,7 +410,7 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
             {photoURL ? (
               <img src={photoURL} alt="Profile" className="size-24 rounded-2xl object-cover border border-border shadow-sm" />
             ) : (
-              <div className="size-24 rounded-2xl flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, var(--im-navy), var(--im-navy-mid))' }}>
+              <div className="size-24 rounded-2xl flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, var(--im-green), var(--im-green-mid))' }}>
                 <User className="size-11 text-white" />
               </div>
             )}
@@ -580,7 +580,7 @@ function AddressSection({ user }: { user: { uid: string } }) {
       <div className={`${card} p-6`}>
         <div className="flex items-center gap-3 mb-4">
           <div className="flex size-10 items-center justify-center rounded-xl" style={{ background: 'rgba(30,58,138,0.1)' }}>
-            <ShoppingBag className="size-5" style={{ color: 'var(--im-navy-mid)' }} />
+            <ShoppingBag className="size-5" style={{ color: 'var(--im-green-mid)' }} />
           </div>
           <div>
             <h3 className="font-bold text-foreground text-sm">Store Location</h3>
@@ -658,7 +658,7 @@ function OrdersSection({ orders, loading }: { orders: LiveOrder[]; loading: bool
                   <div className="text-base font-bold text-foreground">Total (EUR): €{(order.grandTotal || 0).toFixed(2)}</div>
                 </div>
                 <div className="flex gap-2">
-                  <Link href={`/track?ticket=${order.id}`} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity" style={{ background: 'var(--im-navy-mid)' }}>
+                  <Link href={`/track?ticket=${order.id}`} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity" style={{ background: 'var(--im-green-mid)' }}>
                     <Truck className="size-3" /> Track
                   </Link>
                   <button className="flex items-center gap-1.5 rounded-full bg-muted border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/80 transition-colors">
@@ -743,7 +743,7 @@ function BasketSection() {
 // ─── Activity Section ────────────────────────────────────────────────────────
 function ActivitySection({ orders }: { orders: LiveOrder[] }) {
   const events = orders.flatMap(o => [
-    { time: o.createdAt, label: `Order placed: ${o.ticketNumber}`, detail: `€${(o.grandTotal || 0).toFixed(2)} · ${o.items?.length || 0} items`, icon: <Package className="size-3" />, dotColor: 'var(--im-navy-mid)' },
+    { time: o.createdAt, label: `Order placed: ${o.ticketNumber}`, detail: `€${(o.grandTotal || 0).toFixed(2)} · ${o.items?.length || 0} items`, icon: <Package className="size-3" />, dotColor: 'var(--im-green-mid)' },
     ...(o.status.toLowerCase().includes('delivered') ? [{ time: o.createdAt, label: `Delivered: ${o.ticketNumber}`, detail: `To ${o.transitHub}`, icon: <CheckCircle2 className="size-3" />, dotColor: '#059669' }] : []),
   ]).sort((a, b) => b.time.localeCompare(a.time))
 
