@@ -5,21 +5,22 @@ import { collection, onSnapshot } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
 import { useProducts } from '@/lib/use-products'
 import { TrendingUp, ShoppingCart, Package, Users } from 'lucide-react'
+import type { Order } from '@/app/lib/order-types'
 
-type Order = { id: string; amountTotal: number; status: string; createdAt: any }
+type AnalyticsOrder = Pick<Order, 'id' | 'grandTotal' | 'status' | 'createdAt'>
 
 export default function AdminAnalyticsPage() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<AnalyticsOrder[]>([])
   const { products } = useProducts()
 
   useEffect(() => {
     const unsub = onSnapshot(collection(clientDb, 'orders'), snap => {
-      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Order[])
+      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })) as AnalyticsOrder[])
     })
     return () => unsub()
   }, [])
 
-  const revenue = orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.amountTotal || 0), 0)
+  const revenue = orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.grandTotal || 0), 0)
   const pending = orders.filter(o => o.status !== 'Delivered').length
   const delivered = orders.filter(o => o.status === 'Delivered').length
   const inStock = products.filter(p => p.stock === 'In Stock').length

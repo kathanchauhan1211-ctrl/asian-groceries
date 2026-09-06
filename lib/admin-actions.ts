@@ -1,7 +1,7 @@
 'use client'
 
 import { doc, updateDoc, deleteDoc, writeBatch, collection, addDoc } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { clientDb, clientAuth } from '@/lib/firebase-client'
 import { Stock } from '@/lib/products'
 
 export async function updateProductStock(productId: string, newStock: Stock) {
@@ -35,9 +35,39 @@ export async function updateProduct(productId: string, fields: Record<string, an
   }
 }
 
+/**
+ * updateOrderStatus — routes through /api/admin/orders (Admin SDK)
+ *
+ * Firestore security rules block ALL client-side writes to the 'orders' collection.
+ * This function gets the admin's current Firebase ID token and sends it to the
+ * server-side PATCH route which uses the Admin SDK to bypass the rules.
+ */
 export async function updateOrderStatus(orderId: string, status: string) {
   try {
-    await updateDoc(doc(clientDb, 'orders', orderId), { status })
+    const currentUser = clientAuth.currentUser
+    if (!currentUser) {
+      console.error('[updateOrderStatus] No authenticated user')
+      return { success: false, error: 'Not authenticated' }
+    }
+
+    const idToken = await currentUser.getIdToken()
+
+    const res = await fetch('/api/admin/orders', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ orderId, status }),
+    })
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      const msg = json.error ?? `Server error (${res.status})`
+      console.error('[updateOrderStatus] Failed:', msg)
+      return { success: false, error: msg }
+    }
+
     return { success: true }
   } catch (error) {
     console.error('Failed to update order status:', error)

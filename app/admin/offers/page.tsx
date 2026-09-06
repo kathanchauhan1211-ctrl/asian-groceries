@@ -425,7 +425,7 @@ export default function AdminOffersPage() {
     setSaving(true)
     try {
       if (id) {
-        await updateDoc(doc(clientDb, 'offers', id), data as Record<string, unknown>)
+        await updateDoc(doc(clientDb, 'offers', id), data as Record<string, any>)
         showToast('Offer updated ✓')
       } else {
         await addDoc(collection(clientDb, 'offers'), { ...data, order: offers.length })

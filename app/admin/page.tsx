@@ -6,16 +6,7 @@ import { clientDb } from '@/lib/firebase-client'
 import { useProducts } from '@/lib/use-products'
 import { TrendingUp, Package, AlertTriangle, ShoppingCart, Users, ArrowUpRight, Clock } from 'lucide-react'
 import { updateOrderStatus } from '@/lib/admin-actions'
-
-type Order = {
-  id: string
-  customerEmail: string
-  customerName: string
-  amountTotal: number
-  status: string
-  createdAt: any
-  itemsSummary: string
-}
+import type { Order } from '@/app/lib/order-types'
 
 function StatCard({ label, value, sub, icon: Icon, color }: { label: string; value: string; sub?: string; icon: any; color: string }) {
   return (
@@ -49,7 +40,7 @@ export default function AdminDashboard() {
     return () => unsub()
   }, [])
 
-  const totalTurnover = orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.amountTotal || 0), 0)
+  const totalTurnover = orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.grandTotal || 0), 0)
   const activeOrders = orders.filter(o => o.status !== 'Delivered').length
   const lowStockCount = products.filter(p => p.stock === 'Low Stock' || p.stock === 'Sold Out').length
   const totalProducts = products.length
@@ -107,12 +98,14 @@ export default function AdminDashboard() {
                 <tr key={order.id} className="hover:bg-white/2 transition-colors">
                   <td className="px-6 py-3 font-mono text-[11px] text-slate-500">{order.id.slice(0, 12)}…</td>
                   <td className="px-6 py-3 text-slate-300">{order.customerEmail || 'Guest'}</td>
-                  <td className="px-6 py-3 font-semibold text-white">€{Number(order.amountTotal || 0).toFixed(2)}</td>
+                  <td className="px-6 py-3 font-semibold text-white">€{Number(order.grandTotal || 0).toFixed(2)}</td>
                   <td className="px-6 py-3">
                     <select disabled={updating === order.id} value={order.status}
                       onChange={e => handleStatus(order.id, e.target.value)}
                       className={`rounded-full border px-3 py-1 text-xs font-semibold outline-none cursor-pointer disabled:opacity-50 bg-transparent ${statusColor(order.status)}`}>
-                      <option value="Paid - Processing">Processing</option>
+                      <option value="Pending Payment">Pending Payment</option>
+                      <option value="Accepted">Accepted</option>
+                      <option value="Preparing">Preparing</option>
                       <option value="Dispatched">Dispatched</option>
                       <option value="Delivered">Delivered</option>
                     </select>

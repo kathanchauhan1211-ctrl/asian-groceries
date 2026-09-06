@@ -1,10 +1,18 @@
-import { NextResponse } from 'next/headers'
+import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY || 're_mock_key')
 
 export async function POST(req: Request) {
   try {
+    const resendApiKey = process.env.RESEND_API_KEY
+    if (!resendApiKey) {
+      console.error('[/api/emails] RESEND_API_KEY is not set — cannot send email.')
+      return NextResponse.json(
+        { error: 'Email service is not configured. Set RESEND_API_KEY.' },
+        { status: 500 }
+      )
+    }
+
+    const resend = new Resend(resendApiKey)
     const { to, subject, html } = await req.json()
 
     // Note: To use Resend without a verified domain, you must send FROM 'onboarding@resend.dev'

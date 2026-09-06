@@ -6,10 +6,10 @@ import { clientDb } from './firebase-client'
 
 export type ActiveOrder = {
   id: string
-  ticketNum: string
+  ticketNumber: string
   status: string
   itemsSummary: string
-  amountTotal: number
+  grandTotal: number
   createdAt: any
 }
 
@@ -42,15 +42,15 @@ export function useActiveOrder(email: string | null | undefined) {
         const doc = snapshot.docs[0]
         const data = doc.data() as DocumentData
         
-        // Extract a ticket number from the document ID if not explicitly saved
-        const ticketNum = data.ticketNum || doc.id.slice(0, 8).toUpperCase()
+        // Read the real ticket number written by the orders API
+        const ticketNumber = data.ticketNumber || doc.id.slice(0, 8).toUpperCase()
         
         setActiveOrder({
           id: doc.id,
-          ticketNum,
+          ticketNumber,
           status: data.status || 'Processing',
           itemsSummary: data.itemsSummary || '',
-          amountTotal: data.amountTotal || 0,
+          grandTotal: data.grandTotal || 0,
           createdAt: data.createdAt
         })
       }

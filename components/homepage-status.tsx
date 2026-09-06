@@ -10,9 +10,9 @@ import { Package, ChevronRight, Clock, CheckCircle2, Truck, PackageCheck, XCircl
 
 interface OrderPreview {
   id: string;
-  ticketNum: string;
+  ticketNumber: string;
   status: string;
-  amountTotal: number;
+  grandTotal: number;
   createdAt: any;
 }
 
@@ -77,9 +77,9 @@ export default function HomepageStatus() {
           const data = docSnap.data() as any;
           setOrder({
             id: docSnap.id,
-            ticketNum: docSnap.id.slice(0, 8).toUpperCase(),
+            ticketNumber: data.ticketNumber || docSnap.id.slice(0, 8).toUpperCase(),
             status: data.status ?? 'Processing',
-            amountTotal: data.amountTotal ?? 0,
+            grandTotal: data.grandTotal ?? 0,
             createdAt: data.createdAt,
           });
         } else {
@@ -135,14 +135,14 @@ export default function HomepageStatus() {
             {order ? (
               <>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-none mb-0.5">
-                  Latest Order · #{order.ticketNum}
+                  Latest Order · #{order.ticketNumber}
                 </p>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-bold ${cfg?.color}`}>
                     {cfg?.label ?? order.status}
                   </span>
                   <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                    €{order.amountTotal.toFixed(2)}
+                    €{order.grandTotal.toFixed(2)}
                   </span>
                   {/* Animated pulse dot for active statuses */}
                   {order.status !== 'Delivered' && (

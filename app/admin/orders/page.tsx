@@ -5,25 +5,17 @@ import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
 import { updateOrderStatus } from '@/lib/admin-actions'
 import { Package, Truck, CheckCircle, Clock, Search } from 'lucide-react'
+import type { Order } from '@/app/lib/order-types'
 
-type Order = {
-  id: string
-  customerEmail: string
-  customerName: string
-  amountTotal: number
-  paymentStatus: string
-  status: string
-  itemsSummary: string
-  orderNotes: string
-  createdAt: any
-}
 
-const STATUSES = ['Paid - Processing', 'Dispatched', 'Delivered']
+const STATUSES: string[] = ['Pending Payment', 'Accepted', 'Preparing', 'Dispatched', 'Delivered']
 
 const STATUS_CONFIG: Record<string, { icon: any; color: string; label: string }> = {
-  'Paid - Processing': { icon: Clock, color: 'text-orange-400 bg-orange-400/10 border-orange-400/20', label: 'Processing' },
-  'Dispatched': { icon: Truck, color: 'text-blue-400 bg-blue-400/10 border-blue-400/20', label: 'Dispatched' },
-  'Delivered': { icon: CheckCircle, color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', label: 'Delivered' },
+  'Pending Payment':          { icon: Clock,       color: 'text-amber-400 bg-amber-400/10 border-amber-400/20',   label: 'Pending Payment' },
+  'Accepted':                 { icon: CheckCircle, color: 'text-blue-400 bg-blue-400/10 border-blue-400/20',     label: 'Accepted' },
+  'Preparing':                { icon: Package,     color: 'text-purple-400 bg-purple-400/10 border-purple-400/20', label: 'Preparing' },
+  'Dispatched':               { icon: Truck,       color: 'text-orange-400 bg-orange-400/10 border-orange-400/20', label: 'Dispatched' },
+  'Delivered':                { icon: CheckCircle, color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', label: 'Delivered' },
 }
 
 export default function AdminOrdersPage() {
@@ -54,11 +46,13 @@ export default function AdminOrdersPage() {
     return matchFilter && matchSearch
   })
 
-  const counts = {
+  const counts: Record<string, number> = {
     all: orders.length,
-    'Paid - Processing': orders.filter(o => o.status === 'Paid - Processing').length,
-    'Dispatched': orders.filter(o => o.status === 'Dispatched').length,
-    'Delivered': orders.filter(o => o.status === 'Delivered').length,
+    'Pending Payment': orders.filter(o => o.status === 'Pending Payment').length,
+    'Accepted':        orders.filter(o => o.status === 'Accepted').length,
+    'Preparing':       orders.filter(o => o.status === 'Preparing').length,
+    'Dispatched':      orders.filter(o => o.status === 'Dispatched').length,
+    'Delivered':       orders.filter(o => o.status === 'Delivered').length,
   }
 
   return (
@@ -107,7 +101,7 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {filtered.map(order => {
-                const cfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG['Paid - Processing']
+                const cfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG['Pending Payment']
                 const Icon = cfg.icon
                 return (
                   <tr key={order.id} className="hover:bg-white/2 transition-colors">
@@ -116,7 +110,7 @@ export default function AdminOrdersPage() {
                       <p className="font-medium text-white">{order.customerName || 'Guest'}</p>
                       <p className="text-[11px] text-slate-500">{order.customerEmail}</p>
                     </td>
-                    <td className="px-5 py-4 font-semibold text-white">€{Number(order.amountTotal || 0).toFixed(2)}</td>
+                    <td className="px-5 py-4 font-semibold text-white">€{Number(order.grandTotal || 0).toFixed(2)}</td>
                     <td className="px-5 py-4 text-xs text-slate-400 max-w-[160px]">
                       <p className="truncate">{order.itemsSummary || '—'}</p>
                     </td>

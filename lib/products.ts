@@ -2,7 +2,7 @@
 export type Origin   = string
 export type Category = string
 export type Diet     = string
-export type Stock    = 'In Stock' | 'Low Stock' | 'Out of Stock'
+export type Stock    = 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Sold Out'
 
 export type Variant = {
   label: string

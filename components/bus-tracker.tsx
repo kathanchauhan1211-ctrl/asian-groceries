@@ -12,6 +12,7 @@ import {
   Navigation,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DESTINATIONS } from '@/lib/destinations'
 
 type TrackStep = {
   id: number
@@ -52,14 +53,8 @@ const TRACK_STEPS: TrackStep[] = [
 
 const VILNIUS = { x: 370, y: 295, name: 'Vilnius', label: 'HUB' }
 
-const DESTINATIONS = [
-  { id: 'kaunas',      x: 220, y: 270, name: 'Kaunas',      eta: '1h 20m' },
-  { id: 'klaipeda',   x: 55,  y: 195, name: 'Klaipėda',   eta: '3h 00m' },
-  { id: 'siauliai',   x: 160, y: 115, name: 'Šiauliai',    eta: '2h 30m' },
-  { id: 'panevezys',  x: 255, y: 145, name: 'Panevėžys',   eta: '2h 00m' },
-  { id: 'alytus',     x: 255, y: 340, name: 'Alytus',      eta: '1h 30m' },
-  { id: 'marijampole',x: 195, y: 330, name: 'Marijampolė', eta: '1h 45m' },
-]
+// DESTINATIONS is imported from lib/destinations — single source of truth for all city data
+// Map coords (mapX, mapY) are defined there alongside prices and labels
 
 // Accurate Lithuania geographic outline path (scaled to 500x420 viewBox)
 // Based on real cartographic data — wider at top-right, tapering south-west
@@ -210,7 +205,7 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
           <line
             key={`line-bg-${dest.id}`}
             x1={VILNIUS.x} y1={VILNIUS.y}
-            x2={dest.x} y2={dest.y}
+            x2={dest.mapX} y2={dest.mapY}
             stroke="#cbd5e1"
             strokeWidth="1.5"
             strokeDasharray="5 4"
@@ -224,7 +219,7 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
             {/* Glowing route line */}
             <line
               x1={VILNIUS.x} y1={VILNIUS.y}
-              x2={activeDest.x} y2={activeDest.y}
+              x2={activeDest.mapX} y2={activeDest.mapY}
               stroke="#f97316"
               strokeWidth="3"
               strokeLinecap="round"
@@ -234,8 +229,8 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
             {/* Animated bus dot travelling along the route */}
             {(() => {
               const t = animProgress
-              const x = VILNIUS.x + (activeDest.x - VILNIUS.x) * t
-              const y = VILNIUS.y + (activeDest.y - VILNIUS.y) * t
+              const x = VILNIUS.x + (activeDest.mapX - VILNIUS.x) * t
+              const y = VILNIUS.y + (activeDest.mapY - VILNIUS.y) * t
               return (
                 <>
                   {/* Trail glow */}
@@ -263,7 +258,7 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
               {/* Pulse ring for active */}
               {isActive && (
                 <circle
-                  cx={dest.x} cy={dest.y} r="14"
+                  cx={dest.mapX} cy={dest.mapY} r="14"
                   fill="none"
                   stroke="#f97316"
                   strokeWidth="2"
@@ -274,7 +269,7 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
                 </circle>
               )}
               <circle
-                cx={dest.x} cy={dest.y} r={isActive ? 7 : 5}
+                cx={dest.mapX} cy={dest.mapY} r={isActive ? 7 : 5}
                 fill={isActive ? '#f97316' : '#64748b'}
                 stroke="white"
                 strokeWidth="2"
@@ -282,8 +277,8 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
               />
               {/* City label */}
               <text
-                x={dest.x}
-                y={dest.y - 12}
+                x={dest.mapX}
+                y={dest.mapY - 12}
                 textAnchor="middle"
                 fontSize="9"
                 fontWeight={isActive ? '700' : '500'}
@@ -293,19 +288,6 @@ function LithuaniaMap({ activeDestId }: { activeDestId: string | null }) {
               >
                 {dest.name}
               </text>
-              {isActive && (
-                <text
-                  x={dest.x}
-                  y={dest.y - 23}
-                  textAnchor="middle"
-                  fontSize="8"
-                  fontWeight="600"
-                  fill="#f97316"
-                  fontFamily="Inter, sans-serif"
-                >
-                  {dest.eta}
-                </text>
-              )}
             </g>
           )
         })}
@@ -474,7 +456,7 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
                         {DESTINATIONS.find(d => d.id === activeDestId)?.name}
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                        · ETA {DESTINATIONS.find(d => d.id === activeDestId)?.eta}
+                        · {DESTINATIONS.find(d => d.id === activeDestId)?.label.split(' - ')[0]}
                       </span>
                     </div>
                   )}
@@ -549,7 +531,7 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
                   </p>
                   <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                     {activeStep === 2 
-                      ? `Bus courier en route from Vilnius to ${DESTINATIONS.find(d => d.id === activeDestId)?.name ?? 'destination'} — ETA ${DESTINATIONS.find(d => d.id === activeDestId)?.eta ?? ''}`
+                      ? `Bus courier en route from Vilnius to ${DESTINATIONS.find(d => d.id === activeDestId)?.name ?? 'destination'}`
                       : TRACK_STEPS[activeStep - 1].description
                     }
                   </p>

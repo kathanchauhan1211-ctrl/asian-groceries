@@ -1,6 +1,7 @@
 // app/lib/order-types.ts
 
 export type OrderStatus =
+  | 'Pending Payment'
   | 'Paid - Pending Acceptance'
   | 'Accepted'
   | 'Preparing'
@@ -27,12 +28,12 @@ export interface OrderLineItem {
 
 export interface Order {
   id: string;
-  sessionId: string;
+  ticketNumber?: string;
   customerEmail: string;
   customerName: string;
   customerPhone: string;
   transitHub: string;
-  amountTotal: number;
+  grandTotal: number;       // written by /api/orders — use this field everywhere
   paymentStatus: string;
   status: OrderStatus;
   orderNotes: string;
@@ -40,11 +41,9 @@ export interface Order {
   createdAt: string; // ISO string
   timestamps: OrderTimestamps;
   // ── Fields added by the secure server-side order route ──────────────────
-  ticketNumber?: string;
   paymentMethod?: string;
   items?: OrderLineItem[];
   subtotal?: number;
   deliveryFee?: number;
-  grandTotal?: number;
   totalWeight?: number;
 }

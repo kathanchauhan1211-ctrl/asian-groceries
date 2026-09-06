@@ -163,7 +163,8 @@ export async function POST(req: Request) {
       } else if (data.translatedText) {
         translations = Array.from(data.translatedText)
       } else {
-        translations = texts.map((t: string) => `${t} [Mock]`)
+        // Fall back to original text — better to show English than garbled labels
+        translations = [...texts]
       }
 
       return NextResponse.json({ translations })
@@ -191,8 +192,7 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error('Error in translate API:', error)
-    // Fallback on error to prevent breaking UI
-    const mockTranslations = texts.map((t: any) => typeof t === 'string' && t.trim() ? `${t} [${code}]` : t)
-    return NextResponse.json({ translations: mockTranslations })
+    // Fall back to original text — better to show English than appending [lang_code] in the UI
+    return NextResponse.json({ translations: texts })
   }
 }

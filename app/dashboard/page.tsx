@@ -2,7 +2,6 @@
 
 import { CustomerDashboard } from '@/components/customer-dashboard'
 import { useRouter } from 'next/navigation'
-import type { Tab } from '@/components/site-header'
 import { useAuth } from '@/lib/auth-context'
 import { useEffect } from 'react'
 
@@ -24,7 +23,7 @@ export default function DashboardPage() {
     )
   }
 
-  const handleSelectTab = (tab: Tab) => {
+  const handleSelectTab = (tab: string) => {
     if (tab === 'shop') router.push('/')
     else router.push(`/${tab}`)
   }

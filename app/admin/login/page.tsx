@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { LogoSVG } from '@/components/logo-svg'
+import { ADMIN_EMAIL } from '@/lib/admin-config'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -18,14 +19,14 @@ export default function AdminLoginPage() {
 
   // If admin is already signed in → go to portal immediately
   useEffect(() => {
-    if (!authLoading && user?.email === 'indianmarket@test.com') {
+    if (!authLoading && user?.email === ADMIN_EMAIL) {
       router.replace('/admin')
     }
   }, [user, authLoading]) // eslint-disable-line
 
   // If a DIFFERENT (non-admin) user lands here → sign them out silently first
   useEffect(() => {
-    if (!authLoading && user && user.email !== 'indianmarket@test.com') {
+    if (!authLoading && user && user.email !== ADMIN_EMAIL) {
       setClearing(true)
       signOut().finally(() => setClearing(false))
     }
@@ -33,7 +34,7 @@ export default function AdminLoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (email !== 'indianmarket@test.com') {
+    if (email !== ADMIN_EMAIL) {
       setError('This portal is for the store owner only.')
       return
     }

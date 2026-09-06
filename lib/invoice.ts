@@ -35,7 +35,7 @@ export function generateInvoice(data: InvoiceData) {
     <div class="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
       <div>
         <h1 class="text-3xl font-bold text-orange-600 tracking-tight">IndianMarket</h1>
-        <p class="text-sm text-slate-500 mt-1">Authentic Indian & South Asian Store</p>
+        <p class="text-sm text-slate-500 mt-1">Authentic Indian &amp; South Asian Store</p>
         <p class="text-xs text-slate-400 mt-2">Šaltinių g. 22, Vilnius<br>Lithuania</p>
       </div>
       <div class="text-right">

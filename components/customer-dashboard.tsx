@@ -44,6 +44,7 @@ import {
 } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
 import Link from 'next/link'
+import { DESTINATIONS as TERMINAL_OPTIONS } from '@/lib/destinations'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,13 +64,6 @@ type LiveOrder = {
 
 type DashboardSection = 'overview' | 'profile' | 'address' | 'orders' | 'basket' | 'activity'
 
-const TERMINAL_OPTIONS = [
-  { id: 'kaunas',    label: 'Kaunas Bus Station',    price: 4.5 },
-  { id: 'klaipeda', label: 'Klaipėda Bus Station',  price: 6.0 },
-  { id: 'siauliai', label: 'Šiauliai Bus Station',   price: 5.0 },
-  { id: 'panevezys',label: 'Panevėžys Bus Station',  price: 4.5 },
-  { id: 'alytus',   label: 'Alytus Bus Station',     price: 4.0 },
-]
 
 // ─── Shared style helpers (use CSS vars so dark mode works automatically) ────
 

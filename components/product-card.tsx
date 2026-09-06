@@ -11,6 +11,7 @@ const STOCK_STYLES: Record<Product['stock'], { pill: string; label: React.ReactN
   'In Stock':     { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-200', label: 'In Stock' },
   'Low Stock':    { pill: 'bg-amber-50  text-amber-700  border border-amber-200',  label: <span className="flex items-center gap-0.5"><AlertTriangle className="size-2.5" />Low Stock</span> },
   'Out of Stock': { pill: 'bg-rose-50   text-rose-700   border border-rose-200',   label: 'Sold Out' },
+  'Sold Out':     { pill: 'bg-rose-50   text-rose-700   border border-rose-200',   label: 'Sold Out' },
 }
 
 // Tiny base64 grey blur placeholder — prevents CLS while real image loads

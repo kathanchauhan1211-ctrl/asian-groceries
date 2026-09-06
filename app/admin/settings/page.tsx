@@ -1,27 +1,57 @@
 'use client'
 
-import { useState } from 'react'
-import { Check, Store, Shield, FileText, Bell } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Check, Store, Shield, FileText, Bell, Loader2 } from 'lucide-react'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { clientDb } from '@/lib/firebase-client'
+import { ADMIN_EMAIL } from '@/lib/admin-config'
+
+const SETTINGS_DOC = doc(clientDb, 'settings', 'store')
+
+const DEFAULT_FORM = {
+  storeName: 'Asian Groceries',
+  storeEmail: ADMIN_EMAIL,
+  storePhone: '+370 600 00000',
+  storeAddress: 'Šaltinių g. 22, Vilnius, Lithuania',
+  storeDescription: 'Your local Asian grocery store in Vilnius — authentic products, delivered via bus courier.',
+  whatsappGroup: '',
+  orderNotify: true,
+  stockNotify: true,
+}
 
 export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false)
-  const [form, setForm] = useState({
-    storeName: 'IndianMarket',
-    storeEmail: 'indianmarket@test.com',
-    storePhone: '+370 600 00000',
-    storeAddress: 'Šaltinių g. 22, Vilnius, Lithuania',
-    storeDescription: 'Your local Asian grocery store in Vilnius — authentic products, delivered via bus courier.',
-    whatsappGroup: '',
-    orderNotify: true,
-    stockNotify: true,
-  })
+  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(DEFAULT_FORM)
+
+  // Load saved settings from Firestore on mount
+  useEffect(() => {
+    getDoc(SETTINGS_DOC)
+      .then((snap) => {
+        if (snap.exists()) {
+          setForm((prev) => ({ ...prev, ...snap.data() }))
+        }
+      })
+      .catch((err) => console.error('[Settings] Failed to load:', err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setSaving(true)
+    try {
+      await setDoc(SETTINGS_DOC, form, { merge: true })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      console.error('[Settings] Failed to save:', err)
+      alert('Failed to save settings. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
@@ -41,6 +71,14 @@ export default function AdminSettingsPage() {
         className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all" />
     </div>
   )
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 p-8 text-slate-400 text-sm">
+        <Loader2 className="size-4 animate-spin" /> Loading settings…
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -91,26 +129,27 @@ export default function AdminSettingsPage() {
         <Section title="Admin Access" icon={Shield}>
           <div className="rounded-xl border border-white/5 bg-white/5 p-4 space-y-2">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Credentials (read-only)</p>
-            <p className="text-sm text-white">Email: <span className="text-orange-400">indianmarket@test.com</span></p>
+            <p className="text-sm text-white">Email: <span className="text-orange-400">{ADMIN_EMAIL}</span></p>
             <p className="text-sm text-slate-400">Password: stored securely in Firebase Auth</p>
           </div>
         </Section>
 
         <Section title="Legal" icon={FileText}>
           <div className="space-y-3">
-            {['Terms & Conditions', 'Privacy Policy', 'Refund Policy'].map(doc => (
-              <button key={doc} type="button"
+            {['Terms & Conditions', 'Privacy Policy', 'Refund Policy'].map(docName => (
+              <button key={docName} type="button"
                 className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-all">
-                <span>{doc}</span>
+                <span>{docName}</span>
                 <span className="text-xs text-slate-500">Edit →</span>
               </button>
             ))}
           </div>
         </Section>
 
-        <button type="submit"
-          className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-orange-400 transition-all shadow-lg shadow-orange-500/20">
-          <Check className="size-4" />Save All Settings
+        <button type="submit" disabled={saving}
+          className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-orange-400 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-60 disabled:cursor-not-allowed">
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+          {saving ? 'Saving…' : 'Save All Settings'}
         </button>
       </form>
     </div>

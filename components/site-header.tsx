@@ -168,11 +168,11 @@ export function SiteHeader() {
             {/* Active Order Tracking Pill */}
             {activeOrder && (
               <Link
-                href={`/track?ticket=${activeOrder.ticketNum}`}
+                href={`/track?ticket=${activeOrder.ticketNumber}`}
                 className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-500/10 pl-2 pr-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500 hover:text-white transition-all duration-300 mx-1"
               >
                 <span className="text-sm leading-none">🚌</span>
-                <span>{activeOrder.ticketNum}: <span className="opacity-80">{activeOrder.status}</span></span>
+                <span>{activeOrder.ticketNumber}: <span className="opacity-80">{activeOrder.status}</span></span>
               </Link>
             )}
 

@@ -9,6 +9,7 @@ import {
   LogOut, ExternalLink, BarChart3, ChevronRight, Menu, X, MonitorPlay, Tag, Layers,
 } from 'lucide-react'
 import { LogoSVG } from '@/components/logo-svg'
+import { ADMIN_EMAIL } from '@/lib/admin-config'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -178,7 +179,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return
     }
 
-    if (user.email !== 'indianmarket@test.com') {
+    if (user.email !== ADMIN_EMAIL) {
       redirected.current = true
       // Sign out the wrong account silently, then send to admin login
       signOut().then(() => router.replace('/admin/login')).catch(() => router.replace('/admin/login'))
@@ -187,7 +188,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Reset redirect flag when auth state changes (e.g. user logs in again)
   useEffect(() => {
-    if (!loading && user?.email === 'indianmarket@test.com') {
+    if (!loading && user?.email === ADMIN_EMAIL) {
       redirected.current = false
     }
   }, [user, loading])
@@ -203,7 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // User is being signed out / redirected — show spinner instead of blank/storefront
 
 
-  if (!user || user.email !== 'indianmarket@test.com') return <Spinner msg="Redirecting…" />
+  if (!user || user.email !== ADMIN_EMAIL) return <Spinner msg="Redirecting…" />
 
   const currentLabel = PAGE_LABELS[pathname] ?? 'Portal'
 

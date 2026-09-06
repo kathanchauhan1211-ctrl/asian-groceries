@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { doc, getDoc } from 'firebase/firestore'
+import { clientDb } from '@/lib/firebase-client'
 import { useCart } from '@/lib/cart-context'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,18 +17,12 @@ import {
   Download,
   Building2,
   User,
+  MessageCircle,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { PaymentMethodSelector, type PaymentMethod, BANK_DETAILS } from './payment-method-selector'
 import { generateInvoice } from '@/lib/invoice'
-
-const DESTINATIONS = [
-  { id: 'kaunas', label: 'Kaunas Bus Station - Via Autobusų Stotis Courier', price: 4.5 },
-  { id: 'klaipeda', label: 'Klaipėda Bus Station - Via Autobusų Stotis Courier', price: 6.0 },
-  { id: 'siauliai', label: 'Šiauliai Bus Station - Via Autobusų Stotis Courier', price: 5.0 },
-  { id: 'panevezys', label: 'Panevėžys Bus Station - Via Autobusų Stotis Courier', price: 4.5 },
-  { id: 'alytus', label: 'Alytus Bus Station - Via Autobusų Stotis Courier', price: 4.0 },
-]
+import { DESTINATIONS, getDestinationById } from '@/lib/destinations'
 
 export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) => void }) {
   const { lines, subtotal, totalWeight, clearCart } = useCart()
@@ -42,9 +38,24 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   const [finalStatus, setFinalStatus] = useState('')
   // Surfaces server-side errors (e.g. out of stock) gracefully in the UI
   const [submitError, setSubmitError] = useState<string | null>(null)
+  
+  const [whatsappLink, setWhatsappLink] = useState('')
 
-  // Name comes from auth profile — no manual entry needed
-  const customerName = user?.displayName || ''
+  useEffect(() => {
+    if (orderCreated) {
+      getDoc(doc(clientDb, 'settings', 'store'))
+        .then((snap) => {
+          if (snap.exists() && snap.data().whatsappGroup) {
+            setWhatsappLink(snap.data().whatsappGroup)
+          }
+        })
+        .catch(err => console.error('Failed to load whatsapp settings:', err))
+    }
+  }, [orderCreated])
+
+  // Name comes from auth profile; unauthenticated users enter it manually
+  const [guestName, setGuestName] = useState('')
+  const customerName = user?.displayName || guestName
 
   // Handle phone input formatting to respect the mask +370 XXXXXXX
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +68,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
     setPhone('+370 ' + limitedSuffix)
   }
 
-  const selectedTransit = DESTINATIONS.find((d) => d.id === transitHub) || DESTINATIONS[0]
+  const selectedTransit = getDestinationById(transitHub) || DESTINATIONS[0]
   // Bus delivery always applies — no free delivery
   const deliveryPrice = selectedTransit.price
   const grandTotal = subtotal + deliveryPrice
@@ -80,7 +91,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
         customerPhone: phone,
         customerEmail: user?.email ?? null,
         transitHub,
-        deliveryFee: deliveryPrice,
+        // deliveryFee intentionally omitted — server calculates it from transitHub
         orderNotes: instructions,
         paymentMethod,
       }
@@ -217,6 +228,27 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
           </div>
         )}
 
+        {whatsappLink && (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 border-l-4 border-l-emerald-500 text-left">
+            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5 mb-1">
+              <MessageCircle className="size-3.5 text-emerald-600" /> Join Our WhatsApp Group
+            </h4>
+            <p className="text-[11px] text-slate-600 mb-3">
+              Get real-time updates on dispatch times and restocks directly in Vilnius.
+            </p>
+            <Button
+              asChild
+              variant="emerald"
+              size="sm"
+              className="w-full font-bold shadow-sm"
+            >
+              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="size-4 mr-2" /> Join WhatsApp Group
+              </a>
+            </Button>
+          </div>
+        )}
+
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
           <Button
             variant="outline"
@@ -270,16 +302,36 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
               <Bus className="size-3.5 text-accent" /> Step 1: Delivery Info
             </h3>
 
-            {/* Customer name — read-only from profile */}
-            <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 flex items-center gap-3">
-              <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 shrink-0">
-                <User className="size-4" />
+            {/* Customer name — read-only from profile OR editable for guests */}
+            {user?.displayName ? (
+              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 flex items-center gap-3">
+                <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 shrink-0">
+                  <User className="size-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Delivering to</p>
+                  <p className="text-sm font-bold text-slate-900 truncate">{customerName}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Delivering to</p>
-                <p className="text-sm font-bold text-slate-900 truncate">{customerName || 'Please update your profile name'}</p>
+            ) : (
+              <div>
+                <label htmlFor="checkout-name" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    id="checkout-name"
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    required
+                    placeholder="Enter your full name"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label htmlFor="checkout-phone" className="block text-xs font-semibold text-slate-700 mb-1.5">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getFirebaseAdmin } from '@/lib/firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
 import { Resend } from 'resend'
+import { DESTINATIONS, getDestinationById } from '@/lib/destinations'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,7 +18,8 @@ interface OrderRequestBody {
   customerPhone: string
   customerEmail: string | null
   transitHub: string
-  deliveryFee: number
+  // NOTE: deliveryFee is intentionally NOT accepted from the client.
+  // The server calculates it from transitHub to prevent price tampering.
   orderNotes: string
   paymentMethod: string
 }
@@ -77,7 +79,7 @@ function buildOrderEmailHtml(params: {
         <strong>Payment:</strong> ${params.paymentMethod.replace('_', ' ')}
       </p>
       <p style="font-size:12px;color:#94a3b8;">
-        Track your order at <a href="https://asianmarket.lt/track?ticket=${params.ticketNumber}">asianmarket.lt/track</a>
+        Track your order at <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://asianmarket.lt'}/track?ticket=${params.ticketNumber}">${process.env.NEXT_PUBLIC_APP_URL ?? 'https://asianmarket.lt'}/track</a>
       </p>
     </div>
   `
@@ -89,7 +91,7 @@ export async function POST(req: NextRequest) {
   try {
     // ── 1. Parse & basic validate ──────────────────────────────────────────
     const body: OrderRequestBody = await req.json()
-    const { items, customerName, customerPhone, customerEmail, transitHub, deliveryFee, orderNotes, paymentMethod } = body
+    const { items, customerName, customerPhone, customerEmail, transitHub, orderNotes, paymentMethod } = body
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
@@ -97,9 +99,13 @@ export async function POST(req: NextRequest) {
     if (!customerName || !customerPhone || !transitHub) {
       return NextResponse.json({ error: 'Missing required customer fields.' }, { status: 400 })
     }
-    if (typeof deliveryFee !== 'number' || deliveryFee < 0) {
-      return NextResponse.json({ error: 'Invalid delivery fee.' }, { status: 400 })
+
+    // ── Server-side delivery fee lookup (prevents client price tampering) ──────
+    const destination = getDestinationById(transitHub)
+    if (!destination) {
+      return NextResponse.json({ error: `Unknown transit hub: ${transitHub}` }, { status: 400 })
     }
+    const deliveryFee = destination.price
 
     // ── 2. Init Admin SDK ──────────────────────────────────────────────────
     const { db } = getFirebaseAdmin()
@@ -200,6 +206,11 @@ export async function POST(req: NextRequest) {
 
       const grandTotal = subtotal + deliveryFee
 
+      // Computed summary string for admin orders list display
+      const itemsSummary = enrichedItems
+        .map((i) => `${i.quantity}× ${i.productName} (${i.variantLabel})`)
+        .join(', ')
+
       // e) Write the order document inside the transaction
       transaction.set(orderRef, {
         ticketNumber,
@@ -222,20 +233,27 @@ export async function POST(req: NextRequest) {
         subtotal,
         deliveryFee,
         grandTotal,
+        itemsSummary,
         totalWeight: 0, // weight not tracked server-side without variant weightKg in DB
         createdAt: FieldValue.serverTimestamp(),
       })
     })
 
+    // Compute grandTotal in outer scope (subtotal + deliveryFee are declared above the transaction)
     const grandTotal = subtotal + deliveryFee
 
-    // ── 4. Non-blocking email (does NOT fail the order if email fails) ─────
+    // ── 4. Non-blocking customer confirmation email ────────────────────────
     if (customerEmail) {
       ;(async () => {
         try {
-          const resend = new Resend(process.env.RESEND_API_KEY || 're_mock_key')
+          const resendApiKey = process.env.RESEND_API_KEY
+          if (!resendApiKey) {
+            console.error('[orders/route] RESEND_API_KEY is not set — order confirmation email will NOT be sent. Set this env var in production.')
+            return
+          }
+          const resend = new Resend(resendApiKey)
           await resend.emails.send({
-            from: 'Asian Groceries <onboarding@resend.dev>',
+            from: 'IndianMarket <onboarding@resend.dev>',
             to: [customerEmail],
             subject: `Order Confirmed – ${ticketNumber}`,
             html: buildOrderEmailHtml({
@@ -249,10 +267,48 @@ export async function POST(req: NextRequest) {
           })
         } catch (emailErr) {
           // Intentionally swallowed — email failure must never break the order
-          console.error('[orders/route] Non-blocking email failed:', emailErr)
+          console.error('[orders/route] Non-blocking customer email failed:', emailErr)
         }
       })()
     }
+
+    // ── 4b. Non-blocking admin alert email (new order notification) ────────
+    ;(async () => {
+      try {
+        const resendApiKey = process.env.RESEND_API_KEY
+        const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL
+        if (!resendApiKey || !adminEmail) return
+        const resend = new Resend(resendApiKey)
+        const itemsSummaryText = enrichedItems
+          .map((i) => `${i.quantity}× ${i.productName} (${i.variantLabel}) — €${i.lineTotal.toFixed(2)}`)
+          .join('<br/>')
+        await resend.emails.send({
+          from: 'IndianMarket Orders <onboarding@resend.dev>',
+          to: [adminEmail],
+          subject: `🛒 New Order ${ticketNumber} — €${grandTotal.toFixed(2)}`,
+          html: `
+            <div style="font-family:sans-serif;max-width:480px;color:#1e293b;">
+              <h2 style="color:#ea580c;">New Order Received</h2>
+              <p><strong>Ticket:</strong> ${ticketNumber}</p>
+              <p><strong>Customer:</strong> ${customerName} ${customerEmail ? `(${customerEmail})` : ''}</p>
+              <p><strong>Phone:</strong> ${customerPhone}</p>
+              <p><strong>Destination:</strong> ${transitHub}</p>
+              <p><strong>Payment:</strong> ${paymentMethod.replace('_', ' ')}</p>
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:12px 0;"/>
+              <p style="font-size:13px;">${itemsSummaryText}</p>
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:12px 0;"/>
+              <p><strong>Grand Total: €${grandTotal.toFixed(2)}</strong></p>
+              <p style="font-size:12px;color:#94a3b8;">
+                Manage this order at
+                <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/admin/orders">Admin → Orders</a>
+              </p>
+            </div>
+          `,
+        })
+      } catch (adminEmailErr) {
+        console.error('[orders/route] Non-blocking admin alert email failed:', adminEmailErr)
+      }
+    })()
 
     // ── 5. Return success payload ──────────────────────────────────────────
     return NextResponse.json(

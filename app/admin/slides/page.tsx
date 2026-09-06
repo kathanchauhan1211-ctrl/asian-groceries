@@ -298,7 +298,7 @@ export default function AdminSlidesPage() {
         const newOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) + 1 : 0
         await addDoc(slidesRef, { ...data, order: newOrder })
       } else if (editingId) {
-        await updateDoc(doc(clientDb, 'slides', editingId), data as Record<string, unknown>)
+        await updateDoc(doc(clientDb, 'slides', editingId), data as Record<string, any>)
       }
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
@@ -329,14 +329,14 @@ export default function AdminSlidesPage() {
     if ((dir === 'up' && idx === 0) || (dir === 'down' && idx === slides.length - 1)) return
     const swapIdx = dir === 'up' ? idx - 1 : idx + 1
     const a = slides[idx], b = slides[swapIdx]
-    await updateDoc(doc(clientDb, 'slides', a.id!), { order: b.order } as Record<string, unknown>)
-    await updateDoc(doc(clientDb, 'slides', b.id!), { order: a.order } as Record<string, unknown>)
+    await updateDoc(doc(clientDb, 'slides', a.id!), { order: b.order } as Record<string, any>)
+    await updateDoc(doc(clientDb, 'slides', b.id!), { order: a.order } as Record<string, any>)
     await loadSlides()
   }
 
   // ── Toggle enabled ──
   async function toggleEnabled(id: string, current: boolean) {
-    await updateDoc(doc(clientDb, 'slides', id), { enabled: !current } as Record<string, unknown>)
+    await updateDoc(doc(clientDb, 'slides', id), { enabled: !current } as Record<string, any>)
     await loadSlides()
   }
 

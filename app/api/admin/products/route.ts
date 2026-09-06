@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFirebaseAdmin } from '@/lib/firebase-admin'
+import { getAdminEmail } from '@/lib/admin-config'
 
 /**
  * POST /api/admin/products
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     const { auth, db } = getFirebaseAdmin()
     const decoded = await auth.verifyIdToken(idToken)
 
-    if (decoded.email !== 'indianmarket@test.com') {
+    if (decoded.email !== getAdminEmail()) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
