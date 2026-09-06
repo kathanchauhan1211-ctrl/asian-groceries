@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/lib/auth-context'
+import { useAdminAuth, AdminAuthProvider } from '@/lib/admin-auth-context'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -131,11 +131,11 @@ function SidebarContent({
             className="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
             style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)' }}
           >
-            K
+            {(user?.displayName ?? user?.email ?? 'A').charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[11px] font-semibold text-white leading-tight">Owner</p>
-            <p className="truncate text-[10px]" style={{ color: '#4B5563' }}>{user.email}</p>
+            <p className="truncate text-[10px]" style={{ color: '#4B5563' }}>{user?.email}</p>
           </div>
         </div>
         <Link
@@ -160,18 +160,19 @@ function SidebarContent({
   )
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, signOut } = useAuth()
+// ── Inner layout — uses useAdminAuth ─────────────────────────────────────────
+
+function AdminLayoutInner({ children }: { children: React.ReactNode }) {
+  const { user, loading, signOut } = useAdminAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const redirected = useRef(false)
 
-  // ── Login page passthrough — checked AFTER all hooks (Rules of Hooks)
   const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
-    if (isLoginPage) return  // login page needs no auth check
+    if (isLoginPage) return
     if (loading) return
     if (redirected.current) return
 
@@ -183,29 +184,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     if (user.email !== ADMIN_EMAIL) {
       redirected.current = true
-      // Sign out the wrong account silently, then send to admin login
       signOut().then(() => router.replace('/admin/login')).catch(() => router.replace('/admin/login'))
     }
   }, [user, loading, isLoginPage]) // eslint-disable-line
 
-  // Reset redirect flag when auth state changes (e.g. user logs in again)
   useEffect(() => {
     if (!loading && user?.email === ADMIN_EMAIL) {
       redirected.current = false
     }
   }, [user, loading])
 
-  // ── Login page: pass through with no chrome
-  if (isLoginPage) {
-    return <>{children}</>
-  }
+  // Login page: pass through with no chrome
+  if (isLoginPage) return <>{children}</>
 
-  // While Firebase is resolving auth — show spinner (never blank)
   if (loading) return <Spinner msg="Loading workspace…" />
-
-  // User is being signed out / redirected — show spinner instead of blank/storefront
-
-
   if (!user || user.email !== ADMIN_EMAIL) return <Spinner msg="Redirecting…" />
 
   const currentLabel = PAGE_LABELS[pathname] ?? 'Portal'
@@ -263,7 +255,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="flex size-7 items-center justify-center rounded-full text-[11px] font-bold text-white"
               style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)' }}
             >
-              K
+              {(user?.displayName ?? user?.email ?? 'A').charAt(0).toUpperCase()}
             </div>
           </div>
         </header>
@@ -274,5 +266,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </main>
       </div>
     </div>
+  )
+}
+
+// ── Root export — wraps inner with AdminAuthProvider ──────────────────────────
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminAuthProvider>
+      <AdminLayoutInner>{children}</AdminLayoutInner>
+    </AdminAuthProvider>
   )
 }
