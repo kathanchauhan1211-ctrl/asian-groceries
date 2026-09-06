@@ -27,7 +27,11 @@ service cloud.firestore {
     // ── Users: each user can only read/write their own document ──────────────
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read: if isAdmin();
+      allow read, list: if isAdmin();
+    }
+    // Allow admin to query (list) the entire users collection
+    match /users/{document=**} {
+      allow read, list: if isAdmin();
     }
 
     // ── Offers: public read, ADMIN-ONLY write ────────────────────────────────

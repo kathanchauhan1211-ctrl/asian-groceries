@@ -3,11 +3,14 @@
 /**
  * lib/auth-context.tsx
  *
- * Firebase Authentication React Context.
- * Provides user state + helpers (signUp, signIn, signInWithGoogle, signOut)
- * to all client components.
+ * Firebase Authentication React Context — STOREFRONT ONLY.
  *
- * Wrap your app with <AuthProvider> in client-layout.tsx.
+ * Key rule: the admin account (ADMIN_EMAIL) is invisible to the storefront.
+ * If the admin signs into Firebase, the storefront AuthProvider exposes user=null
+ * so admin login never shows up as a customer session.
+ *
+ * The admin portal uses its own AdminAuthContext (lib/admin-auth-context.tsx)
+ * but shares the SAME Firebase app/clientAuth so Firestore security rules work.
  */
 
 import {
@@ -29,6 +32,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { clientAuth, clientDb } from '@/lib/firebase-client'
+import { ADMIN_EMAIL } from '@/lib/admin-config'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,7 +43,7 @@ export type GoogleSignInResult = {
 }
 
 type AuthContextValue = {
-  user: User | null
+  user: User | null        // always null for the admin account
   loading: boolean
   signUp: (
     firstName: string,
@@ -79,10 +83,7 @@ async function saveUserProfile(
 ) {
   await setDoc(
     doc(clientDb, 'users', uid),
-    {
-      ...data,
-      updatedAt: new Date().toISOString(),
-    },
+    { ...data, updatedAt: new Date().toISOString() },
     { merge: true },
   )
 }
@@ -93,10 +94,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(clientAuth, (firebaseUser) => {
-      setUser(firebaseUser)
+      // Admin account is hidden from storefront — storefront sees null
+      if (firebaseUser?.email === ADMIN_EMAIL) {
+        setUser(null)
+      } else {
+        setUser(firebaseUser)
+      }
       setLoading(false)
     })
     return () => unsubscribe()
@@ -112,17 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ) {
-    const { user: newUser } = await createUserWithEmailAndPassword(
-      clientAuth,
-      email,
-      password,
-    )
+    const { user: newUser } = await createUserWithEmailAndPassword(clientAuth, email, password)
     const displayName = `${firstName.trim()} ${surname.trim()}`.trim()
-
-    // Set Firebase Auth display name
     await updateProfile(newUser, { displayName })
-
-    // Persist full profile in Firestore
     await saveUserProfile(newUser.uid, {
       firstName: firstName.trim(),
       surname: surname.trim(),
@@ -131,7 +128,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: newUser.email,
       photoURL: newUser.photoURL,
     })
-
     setUser({ ...newUser, displayName } as User)
   }
 
@@ -140,16 +136,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   /**
-   * Google sign-in.
-   * Returns { profileComplete: boolean, user } so the UI can decide
-   * whether to show the profile-completion step.
+   * Google sign-in — returns profileComplete flag so UI can show completion step.
    */
   async function signInWithGoogle(): Promise<GoogleSignInResult> {
     const provider = new GoogleAuthProvider()
+    provider.addScope('email')
     const result = await signInWithPopup(clientAuth, provider)
     const { user: googleUser } = result
 
-    // Check if we already have a complete profile in Firestore
+    // Check Firestore for existing profile
     const snap = await getDoc(doc(clientDb, 'users', googleUser.uid))
     const data = snap.exists() ? snap.data() : {}
 
@@ -157,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (data.firstName || googleUser.displayName) && data.phone,
     )
 
-    // If first-time Google user, pre-seed name from Google account
+    // Seed Firestore on first Google sign-in
     if (!snap.exists() || !data.displayName) {
       const parts = (googleUser.displayName || '').split(' ')
       const firstName = parts[0] || ''
@@ -185,12 +180,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone: string,
   ) {
     const displayName = `${firstName.trim()} ${surname.trim()}`.trim()
-
     if (clientAuth.currentUser) {
       await updateProfile(clientAuth.currentUser, { displayName })
       setUser({ ...clientAuth.currentUser, displayName } as User)
     }
-
     await saveUserProfile(uid, {
       firstName: firstName.trim(),
       surname: surname.trim(),

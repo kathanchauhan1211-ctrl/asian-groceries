@@ -511,6 +511,8 @@ export default function AuthPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, signUp, signIn, signInWithGoogle, completeGoogleProfile } = useAuth()
+  // Ref to block the auto-redirect while Google OAuth is in-flight
+  const googleSigningIn = useRef(false)
 
   const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
   const [tab, setTab] = useState<'login' | 'signup'>(defaultTab)
@@ -545,6 +547,8 @@ export default function AuthPageContent() {
   const [showChecklist, setShowChecklist] = useState(false)
 
   useEffect(() => {
+    // Don't redirect if Google sign-in is still in-flight or completion modal is showing
+    if (googleSigningIn.current) return
     if (user && !googleCompletionUser) router.replace('/')
   }, [user, router, googleCompletionUser])
 
@@ -630,16 +634,21 @@ export default function AuthPageContent() {
   }
 
   async function handleGoogleSignIn() {
-    setError(null); setGoogleLoading(true)
+    setError(null)
+    setGoogleLoading(true)
+    googleSigningIn.current = true   // block the auto-redirect useEffect
     try {
       const result = await signInWithGoogle()
       if (result.profileComplete) {
+        googleSigningIn.current = false
         router.replace('/')
       } else {
-        // Show profile completion step
+        // Show profile completion step — keep flag true until modal is dismissed
         setGoogleCompletionUser(result.user)
+        googleSigningIn.current = false
       }
     } catch (err: unknown) {
+      googleSigningIn.current = false
       setError(friendlyError((err as { code?: string }).code ?? ''))
     } finally {
       setGoogleLoading(false)

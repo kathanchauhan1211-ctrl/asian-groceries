@@ -3,10 +3,14 @@
 /**
  * lib/admin-auth-context.tsx
  *
- * Isolated authentication context for the admin portal ONLY.
+ * Authentication context for the ADMIN PORTAL ONLY.
  *
- * Uses a SEPARATE Firebase App ("admin-portal") so admin sign-in
- * never touches or replaces the storefront customer session.
+ * Uses the SAME clientAuth (same Firebase app) as the storefront so that
+ * Firestore security rules (isAdmin() checks) work correctly with the
+ * admin's auth token.
+ *
+ * The storefront AuthProvider filters out the admin user (user=null when
+ * email === ADMIN_EMAIL), so admin login is invisible to the storefront UI.
  *
  * Import useAdminAuth() in admin/* components instead of useAuth().
  */
@@ -24,7 +28,8 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
 } from 'firebase/auth'
-import { adminPortalAuth } from '@/lib/firebase-admin-client'
+import { clientAuth } from '@/lib/firebase-client'
+import { ADMIN_EMAIL } from '@/lib/admin-config'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -46,19 +51,24 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(adminPortalAuth, (firebaseUser) => {
-      setUser(firebaseUser)
+    const unsubscribe = onAuthStateChanged(clientAuth, (firebaseUser) => {
+      // Admin context only exposes the admin account — others are null here
+      if (firebaseUser?.email === ADMIN_EMAIL) {
+        setUser(firebaseUser)
+      } else {
+        setUser(null)
+      }
       setLoading(false)
     })
     return () => unsubscribe()
   }, [])
 
   async function signIn(email: string, password: string) {
-    await signInWithEmailAndPassword(adminPortalAuth, email, password)
+    await signInWithEmailAndPassword(clientAuth, email, password)
   }
 
   async function signOut() {
-    await firebaseSignOut(adminPortalAuth)
+    await firebaseSignOut(clientAuth)
   }
 
   return (
