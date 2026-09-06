@@ -1,13 +1,12 @@
-'use client'
+﻿'use client'
 
-import { Search, ShoppingBag, User, LogOut, ChevronDown, X, Sun, Moon, Globe } from 'lucide-react'
+import { ShoppingBag, User, LogOut, ChevronDown, Sun, Moon, Globe } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useCart } from '@/lib/cart-context'
 import { useAuth } from '@/lib/auth-context'
 import { useTranslation } from '@/lib/translation-context'
 import { useTheme } from '@/lib/theme-context'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { LogoSVG } from '@/components/logo-svg'
 import { Switch } from '@/components/ui/switch-button'
 import { useActiveOrder } from '@/lib/use-active-order'
@@ -21,21 +20,51 @@ const LANGUAGES = [
   { name: 'Hindi',      flag: '🇮🇳', code: 'HI' },
 ]
 
+const ANNOUNCEMENTS = [
+  '🚚  Free delivery on orders over €25',
+  '📱  Order via WhatsApp: +370 616 76111',
+  '📧  eshop@asiangroceries.lt  |  Mon–Sat 10:00–20:00',
+  '🌿  Fresh Indian & Asian groceries in Vilnius',
+]
+
+function HeaderTicker() {
+  const [idx, setIdx] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setIdx(i => (i + 1) % ANNOUNCEMENTS.length)
+        setVisible(true)
+      }, 400)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="flex flex-1 items-center justify-center overflow-hidden px-2">
+      <span
+        className="text-[11px] sm:text-xs font-semibold tracking-wide text-white/90 whitespace-nowrap select-none"
+        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }}
+      >
+        {ANNOUNCEMENTS[idx]}
+      </span>
+    </div>
+  )
+}
 
 export function SiteHeader() {
   const { count, setOpen } = useCart()
   const { user, signOut } = useAuth()
   const { lang: activeLang, setLang: setActiveLang, t } = useTranslation()
   const { theme, toggleTheme } = useTheme()
-  const router = useRouter()
   const { activeOrder } = useActiveOrder(user?.email)
   const [profileOpen, setProfileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
   const langRef = useRef<HTMLDivElement>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -47,16 +76,12 @@ export function SiteHeader() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Auto-focus search input when mobile search expands
-  useEffect(() => {
-    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50)
-  }, [searchOpen])
-
   const activeLangData = LANGUAGES.find(l => l.name === activeLang) || LANGUAGES[0]
 
   return (
     <header
-      className="sticky top-0 z-40 shadow-md border-b-[3px] border-orange-500 bg-white dark:bg-[#0B1120] transition-colors duration-300"
+      className="sticky top-0 z-40 shadow-lg border-b-[3px] border-orange-500 transition-colors duration-300"
+      style={{ backgroundColor: 'var(--im-green, #064E3B)' }}
     >
       <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6">
         <div className="flex items-center gap-2 py-2.5 sm:gap-3 sm:py-3">
@@ -67,16 +92,17 @@ export function SiteHeader() {
               <LogoSVG size={36} />
             </span>
             <span className="hidden xs:block sm:block leading-none">
-              <span className="block font-serif text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200">
+              <span className="block font-serif text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-orange-300 transition-colors duration-200">
                 IndianMarket
               </span>
-              <span className="hidden sm:block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 mt-0.5">
-                Šaltinių g. 22, Vilnius
+              <span className="hidden sm:block text-[10px] font-semibold uppercase tracking-[0.1em] text-white/60 mt-0.5">
+                Saltiniµ g. 22, Vilnius
               </span>
             </span>
           </Link>
 
-          <div className="flex flex-1" />
+          {/* Animated Announcement Ticker — center of header */}
+          <HeaderTicker />
 
           {/* Actions */}
           <div className="flex items-center gap-1.5">
@@ -90,36 +116,36 @@ export function SiteHeader() {
                 iconOff={<Sun className="size-3.5 text-orange-400" />}
               />
             ) : (
-              <div className="w-12 h-6" /> // Placeholder to prevent layout shift
+              <div className="w-12 h-6" />
             )}
 
-            {/* Language selector — visible on ALL devices */}
+            {/* Language selector */}
             <div className="relative" ref={langRef}>
               <button
                 type="button"
                 onClick={() => setLangOpen(!langOpen)}
-                className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50 bg-slate-100 dark:bg-slate-800 px-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+                className="flex h-9 items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 hover:bg-white/20 px-2.5 text-xs font-semibold text-white transition-all duration-200"
                 aria-label="Select Language"
               >
                 <Globe className="size-4" />
                 <span className="hidden sm:inline">{activeLangData.code}</span>
-                <ChevronDown className={`size-3 text-slate-400 transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`size-3 text-white/60 transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`} />
               </button>
               {langOpen && (
-                <div className="absolute right-0 top-11 z-50 w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
+                <div className="absolute right-0 top-11 z-50 w-44 rounded-xl border border-white/10 shadow-xl overflow-hidden" style={{ backgroundColor: 'var(--im-green, #064E3B)' }}>
                   {LANGUAGES.map(lang => (
                     <button
                       key={lang.name}
                       onClick={() => { setActiveLang(lang.name); setLangOpen(false) }}
                       className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                         activeLang === lang.name
-                          ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 font-semibold'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          ? 'bg-orange-500/20 text-orange-300 font-semibold'
+                          : 'text-white/80 hover:bg-white/10'
                       }`}
                     >
                       <span className="text-base">{lang.flag}</span>
                       {lang.name}
-                      {activeLang === lang.name && <span className="ml-auto text-orange-500">✓</span>}
+                      {activeLang === lang.name && <span className="ml-auto text-orange-400">✓</span>}
                     </button>
                   ))}
                 </div>
@@ -130,7 +156,7 @@ export function SiteHeader() {
             {activeOrder && (
               <Link
                 href={`/track?ticket=${activeOrder.ticketNumber}`}
-                className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-500/10 pl-2 pr-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500 hover:text-white transition-all duration-300 mx-1"
+                className="hidden md:flex items-center gap-1.5 rounded-full border border-orange-400/50 bg-orange-500/15 pl-2 pr-3 py-1.5 text-xs font-semibold text-orange-300 hover:bg-orange-500 hover:text-white transition-all duration-300 mx-1"
               >
                 <span className="text-sm leading-none">🚌</span>
                 <span>{activeOrder.ticketNumber}: <span className="opacity-80">{activeOrder.status}</span></span>
@@ -144,7 +170,7 @@ export function SiteHeader() {
               className={`relative flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-bold transition-all duration-200 shadow-sm ${
                 (isMounted && count > 0)
                   ? 'hover:bg-orange-600 hover:shadow-md hover:shadow-orange-500/30'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
               }`}
               aria-label={`Open cart, ${isMounted ? count : 0} items`}
             >
@@ -157,13 +183,13 @@ export function SiteHeader() {
               )}
             </button>
 
-            {/* Auth — visible on all screen sizes */}
+            {/* Auth */}
             <div>
               {!user ? (
                 <Link
                   href="/auth"
                   id="btn-header-login"
-                  className="flex h-9 items-center gap-1.5 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-3 text-sm font-semibold text-orange-600 dark:text-orange-400 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white hover:border-orange-500 transition-all duration-200"
+                  className="flex h-9 items-center gap-1.5 rounded-lg border border-orange-400/50 bg-orange-500/15 px-3 text-sm font-semibold text-orange-300 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-200"
                 >
                   <User className="size-4" />
                   <span className="hidden lg:inline">{t('nav.login') || 'Log In'}</span>
@@ -174,29 +200,29 @@ export function SiteHeader() {
                     id="btn-header-profile"
                     type="button"
                     onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700/50 bg-slate-100 dark:bg-slate-800 pl-1.5 pr-2.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+                    className="flex h-9 items-center gap-2 rounded-lg border border-white/20 bg-white/10 hover:bg-white/20 pl-1.5 pr-2.5 transition-all duration-200"
                     aria-label="Account menu"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: 'var(--im-orange, #F97316)' }}>
                       {(user.displayName ?? user.email ?? '?').charAt(0).toUpperCase()}
                     </span>
-                    <ChevronDown className={`size-3 text-slate-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`size-3 text-white/60 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {profileOpen && (
-                    <div className="absolute right-0 top-11 z-50 min-w-[190px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
-                      <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-3">
-                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Signed in as</p>
-                        <p className="mt-0.5 text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{user.email}</p>
+                    <div className="absolute right-0 top-11 z-50 min-w-[190px] rounded-xl border border-white/10 shadow-xl overflow-hidden" style={{ backgroundColor: 'var(--im-green, #064E3B)' }}>
+                      <div className="border-b border-white/10 px-4 py-3">
+                        <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Signed in as</p>
+                        <p className="mt-0.5 text-sm font-semibold text-white truncate">{user.email}</p>
                       </div>
                       <div className="py-1">
-                        <Link href="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
+                        <Link href="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-orange-300 transition-colors">
                           <User className="size-4" /> My Account
                         </Link>
                         <button
                           id="btn-sign-out"
                           type="button"
                           onClick={() => { signOut(); setProfileOpen(false) }}
-                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                         >
                           <LogOut className="size-4" /> Sign Out
                         </button>
@@ -210,7 +236,6 @@ export function SiteHeader() {
           </div>
         </div>
       </div>
-
     </header>
   )
 }

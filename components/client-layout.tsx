@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { CartProvider } from '@/lib/cart-context'
 import { AuthProvider } from '@/lib/auth-context'
@@ -10,44 +10,6 @@ import { CheckoutModal } from '@/components/checkout-modal'
 import { SiteFooter } from '@/components/site-footer'
 import { FloatingNavigation } from '@/components/floating-navigation'
 
-const ANNOUNCEMENTS = [
-  '🚚  Free delivery on orders over €25',
-  '📱  Order via WhatsApp: +370 616 76111',
-  '📧  eshop@asiangroceries.lt  |  Mon–Sat 10:00–20:00',
-]
-
-function AnnouncementBar() {
-  const [idx, setIdx] = useState(0)
-  const [visible, setVisible] = useState(true)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false)
-      setTimeout(() => {
-        setIdx(i => (i + 1) % ANNOUNCEMENTS.length)
-        setVisible(true)
-      }, 350)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div
-      className="relative z-50 flex items-center justify-center px-4 py-1.5 text-center text-[11px] sm:text-xs font-semibold bg-[#1A365D] dark:bg-slate-900 text-white/90"
-    >
-      <span
-        style={{
-          transition: 'opacity 0.35s ease',
-          opacity: visible ? 1 : 0,
-          display: 'block',
-          letterSpacing: '0.01em',
-        }}
-      >
-        {ANNOUNCEMENTS[idx]}
-      </span>
-    </div>
-  )
-}
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -81,9 +43,6 @@ function StorefrontLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <SpiceDecorBackground />
-
-      {/* Announcement bar — above everything */}
-      <AnnouncementBar />
 
       <Suspense>
         <SiteHeader />
