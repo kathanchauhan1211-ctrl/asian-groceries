@@ -649,7 +649,10 @@ export default function AuthPageContent() {
       }
     } catch (err: unknown) {
       googleSigningIn.current = false
-      setError(friendlyError((err as { code?: string }).code ?? ''))
+      const errorObj = err as any
+      const rawError = errorObj?.code || errorObj?.message || String(err)
+      console.error('GOOGLE AUTH ERROR RAW:', err)
+      setError(`Google Sign-In failed: ${rawError}`)
     } finally {
       setGoogleLoading(false)
     }

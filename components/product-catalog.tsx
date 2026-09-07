@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useCallback, useRef, useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
   X, ChevronDown, Check, ArrowUpDown, Loader2,
   SlidersHorizontal, PackageSearch, AlertTriangle, Globe, Filter,
@@ -547,6 +547,7 @@ export function ProductCatalog({
   const searchParams = useSearchParams()
   const { products: allProducts, loading, loadingMore, hasMore, loadMore, errorMessage } = useProducts()
   const { td } = useTranslation()
+  const pathname = usePathname()
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   // ── Read all filter state from URL params (single source of truth) ──────────
@@ -582,8 +583,9 @@ export function ProductCatalog({
     const params = new URLSearchParams(searchParams.toString())
     if (value === null || value === '') params.delete(key)
     else params.set(key, value)
-    router.replace(`/?${params.toString()}`, { scroll: false })
-  }, [router, searchParams])
+    const queryString = params.toString()
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+  }, [router, searchParams, pathname])
 
   const toggleListParam = useCallback((key: string, current: string[], value: string) => {
     const next = current.includes(value) ? current.filter(x => x !== value) : [...current, value]
@@ -719,8 +721,8 @@ export function ProductCatalog({
     <section id="shop" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
 
-        {/* ══ Filter Bar — only shown when grid is visible ══ */}
-        {!hideGridWhenUnfiltered && <div id="shop-grid" className="scroll-mt-24 mb-4 relative z-40">
+        {/* ══ Filter Bar ══ */}
+        <div id="shop-grid" className="scroll-mt-24 mb-4 relative z-40">
 
           {/* ── MOBILE: Filter & Sort button ── */}
           <div className="flex items-center gap-2 md:hidden mb-3">
@@ -831,7 +833,7 @@ export function ProductCatalog({
               )}
             </div>
           )}
-        </div>}
+        </div>
 
         <MobileFilterDrawer
           open={!!isDrawerOpen}

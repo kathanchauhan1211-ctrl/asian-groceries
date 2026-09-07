@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CATEGORY_GROUPS, type CategoryGroup } from '@/lib/products'
 import { useTranslation } from '@/lib/translation-context'
@@ -29,6 +29,7 @@ export function SwipeableCategoryBar({
   const { td } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
@@ -56,8 +57,9 @@ export function SwipeableCategoryBar({
         params.set('category', grp.match[0])
       }
     }
-    router.replace(`/?${params.toString()}`, { scroll: false })
-  }, [router, searchParams, selectedCategories])
+    const queryString = params.toString()
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+  }, [router, searchParams, selectedCategories, pathname])
 
   const checkScroll = () => {
     if (!scrollRef.current) return
