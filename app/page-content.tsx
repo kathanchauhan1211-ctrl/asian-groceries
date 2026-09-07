@@ -69,6 +69,9 @@ export default function PageContent() {
         />
       </div>
 
+      {/* ═══ Full product catalog + filter grid — filter bar is always visible, grid only when active ═══ */}
+      <ProductCatalog hideGridWhenUnfiltered={!hasActiveFilter} />
+
       {/* ═══ Featured Carousels — live from Firestore, hidden when filter active ═══ */}
       {!hasActiveFilter && collections.length > 0 && (
         <div className="mx-auto max-w-7xl px-4 md:px-6">
@@ -82,9 +85,6 @@ export default function PageContent() {
           ))}
         </div>
       )}
-
-      {/* ═══ Full product catalog + filter grid — grid only shows when a filter/search is active ═══ */}
-      <ProductCatalog hideGridWhenUnfiltered={!hasActiveFilter} />
     </>
   )
 }

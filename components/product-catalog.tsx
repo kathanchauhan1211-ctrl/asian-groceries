@@ -287,15 +287,15 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
   }, [local, onChange])
 
   return (
-    <div className="relative flex-1 min-w-[200px] max-w-[320px]">
-      <div className="flex items-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800/60 shadow-inner border border-transparent focus-within:border-orange-500/50 focus-within:bg-white dark:focus-within:bg-[#0B1120] focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
-        <PackageSearch className="ml-3 size-4 shrink-0 text-slate-400 dark:text-slate-500" />
+    <div className="relative flex-1 min-w-[200px] md:max-w-[320px]">
+      <div className="flex items-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/60 shadow-inner border border-transparent focus-within:border-orange-500/50 focus-within:bg-white dark:focus-within:bg-[#0B1120] focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
+        <PackageSearch className="ml-3 size-4.5 shrink-0 text-slate-400 dark:text-slate-500" />
         <input
           type="text"
           value={local}
           onChange={(e) => setLocal(e.target.value)}
           placeholder="Search products..."
-          className="w-full bg-transparent px-3 py-2 text-[13px] text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+          className="w-full bg-transparent px-3 py-3 text-[14px] text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
         />
         {local && (
           <button
@@ -725,23 +725,26 @@ export function ProductCatalog({
         <div id="shop-grid" className="scroll-mt-24 mb-4 relative z-40">
 
           {/* ── MOBILE: Filter & Sort button ── */}
-          <div className="flex items-center gap-2 md:hidden mb-3">
-            <button
-              onClick={() => setMobileFilterOpen(true)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border py-2.5 text-sm font-bold transition-all"
-              style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
-            >
-              <Filter className="size-4" style={{ color: 'var(--primary)' }} />
-              Filters & Sort
-              {totalActiveFilters > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: 'var(--primary)' }}>
-                  {totalActiveFilters}
-                </span>
-              )}
-            </button>
-            <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>
-              {filtered.length} items
-            </span>
+          <div className="flex flex-col gap-3 md:hidden mb-3">
+            <SearchInput value={query} onChange={v => setParam('q', v)} />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMobileFilterOpen(true)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border py-2.5 text-sm font-bold transition-all"
+                style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
+              >
+                <Filter className="size-4" style={{ color: 'var(--primary)' }} />
+                Filters & Sort
+                {totalActiveFilters > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: 'var(--primary)' }}>
+                    {totalActiveFilters}
+                  </span>
+                )}
+              </button>
+              <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>
+                {filtered.length} items
+              </span>
+            </div>
           </div>
 
           {/* ── DESKTOP: Dookan-style filter bar ── */}
