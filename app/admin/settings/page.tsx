@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Check, Store, Shield, FileText, Bell, Loader2 } from 'lucide-react'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
 import { ADMIN_EMAIL } from '@/lib/admin-config'
 
 const SETTINGS_DOC = doc(clientDb, 'settings', 'store')

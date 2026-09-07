@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb } from '@/lib/firebase-admin-client'
 import { updateOrderStatus } from '@/lib/admin-actions'
 import {
   Package, Truck, CheckCircle, Clock, Search, ChevronDown,
@@ -236,7 +236,7 @@ function AdminOrdersContent() {
   const [search, setSearch] = useState(searchParams.get('search') || '')
 
   useEffect(() => {
-    const q = query(collection(clientDb, 'orders'), orderBy('createdAt', 'desc'))
+    const q = query(collection(adminPortalDb, 'orders'), orderBy('createdAt', 'desc'))
     const unsub = onSnapshot(q,
       (snap) => {
         setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Order[])

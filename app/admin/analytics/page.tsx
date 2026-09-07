@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { collection, onSnapshot } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
 import { useProducts } from '@/lib/use-products'
 import { TrendingUp, ShoppingCart, Package, Users } from 'lucide-react'
 import type { Order } from '@/app/lib/order-types'

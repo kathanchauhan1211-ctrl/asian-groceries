@@ -5,7 +5,7 @@ import {
   collection, onSnapshot, query, orderBy,
   addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
 } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
 import { useProducts } from '@/lib/use-products'
 import {
   Plus, Trash2, X, Save, ChevronUp, ChevronDown,

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query,
 } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
 import {
   Plus, Trash2, Edit3, Save, X, GripVertical, Eye, EyeOff,
   Tag, Link2, Type, AlignLeft, ArrowUp, ArrowDown, Check,

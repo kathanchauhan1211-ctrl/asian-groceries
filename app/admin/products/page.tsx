@@ -5,8 +5,7 @@ import {
   collection, onSnapshot, query, orderBy,
   doc, addDoc, updateDoc
 } from 'firebase/firestore'
-import { getAuth } from 'firebase/auth'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { type Stock } from '@/lib/products'
 import {
   Plus, Trash2, Package, X, Check, Upload, Download,
@@ -142,8 +141,7 @@ function FSelect({ value, onChange, options }: { value: string; onChange: (v: st
 
 // ─── Server delete helper ────────────────────────────────────────────────────
 async function serverDeleteProducts(ids: string[]): Promise<void> {
-  const auth = getAuth()
-  const user = auth.currentUser
+  const user = adminPortalAuth.currentUser
   if (!user) throw new Error('Not authenticated')
   const token = await user.getIdToken(true)
   const res = await fetch('/api/admin/products', {
@@ -220,7 +218,7 @@ function useAdminProducts() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const q = query(collection(clientDb, 'products'), orderBy('name'))
+    const q = query(collection(adminPortalDb, 'products'), orderBy('name'))
     const unsub = onSnapshot(q, (snap) => {
       setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })))
       setLoading(false)
@@ -268,7 +266,7 @@ function ProductRow({
     setSaving(true)
     const fields = buildProductDoc({ ...form })
     try {
-      await updateDoc(doc(clientDb, 'products', product.id), fields)
+      await updateDoc(doc(adminPortalDb, 'products', product.id), fields)
       onSaved(fields)
       setEditing(false)
     } catch (err) { console.error(err) }
@@ -416,9 +414,9 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
     const BATCH_SIZE = 400
     let done = 0
     for (let i = 0; i < preview.length; i += BATCH_SIZE) {
-      const batch = writeBatch(clientDb)
+      const batch = writeBatch(adminPortalDb)
       preview.slice(i, i + BATCH_SIZE).forEach(row => {
-        batch.set(firestoreDoc(collection(clientDb, 'products')), buildProductDoc(row))
+        batch.set(firestoreDoc(collection(adminPortalDb, 'products')), buildProductDoc(row))
       })
       await batch.commit()
       done += Math.min(BATCH_SIZE, preview.length - i)
@@ -596,7 +594,7 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
     e.preventDefault()
     setCreating(true)
     try {
-      await addDoc(collection(clientDb, 'products'), buildProductDoc(form))
+      await addDoc(collection(adminPortalDb, 'products'), buildProductDoc(form))
       onAdded(`"${form.name}" added successfully`)
       onClose()
     } catch (err) { console.error(err) }

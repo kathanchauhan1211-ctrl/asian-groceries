@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb } from '@/lib/firebase-admin-client'
 import { useProducts } from '@/lib/use-products'
 import { TrendingUp, Package, AlertTriangle, ShoppingCart, Users, ArrowUpRight, Clock } from 'lucide-react'
 import { updateOrderStatus } from '@/lib/admin-actions'
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const [updating, setUpdating] = useState<string | null>(null)
 
   useEffect(() => {
-    const q = query(collection(clientDb, 'orders'), orderBy('createdAt', 'desc'), limit(10))
+    const q = query(collection(adminPortalDb, 'orders'), orderBy('createdAt', 'desc'), limit(10))
     const unsub = onSnapshot(q, (snap) => {
       setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Order[])
       setOrdersLoading(false)

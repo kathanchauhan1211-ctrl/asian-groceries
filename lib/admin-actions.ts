@@ -1,12 +1,12 @@
 'use client'
 
 import { doc, updateDoc, deleteDoc, writeBatch, collection, addDoc } from 'firebase/firestore'
-import { clientDb, clientAuth } from '@/lib/firebase-client'
+import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { Stock } from '@/lib/products'
 
 export async function updateProductStock(productId: string, newStock: Stock) {
   try {
-    await updateDoc(doc(clientDb, 'products', productId), { stock: newStock })
+    await updateDoc(doc(adminPortalDb, 'products', productId), { stock: newStock })
     return { success: true }
   } catch (error) {
     console.error('Failed to update stock:', error)
@@ -16,7 +16,7 @@ export async function updateProductStock(productId: string, newStock: Stock) {
 
 export async function updateProductPrice(productId: string, newPrice: number) {
   try {
-    await updateDoc(doc(clientDb, 'products', productId), { price: newPrice })
+    await updateDoc(doc(adminPortalDb, 'products', productId), { price: newPrice })
     return { success: true }
   } catch (error) {
     console.error('Failed to update price:', error)
@@ -27,7 +27,7 @@ export async function updateProductPrice(productId: string, newPrice: number) {
 /** Full product update — any fields */
 export async function updateProduct(productId: string, fields: Record<string, any>) {
   try {
-    await updateDoc(doc(clientDb, 'products', productId), fields)
+    await updateDoc(doc(adminPortalDb, 'products', productId), fields)
     return { success: true }
   } catch (error) {
     console.error('Failed to update product:', error)
@@ -44,7 +44,7 @@ export async function updateProduct(productId: string, fields: Record<string, an
  */
 export async function updateOrderStatus(orderId: string, status: string) {
   try {
-    const currentUser = clientAuth.currentUser
+    const currentUser = adminPortalAuth.currentUser
     if (!currentUser) {
       console.error('[updateOrderStatus] No authenticated user')
       return { success: false, error: 'Not authenticated' }
@@ -77,7 +77,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
 export async function createProduct(productData: any) {
   try {
-    const ref = await addDoc(collection(clientDb, 'products'), productData)
+    const ref = await addDoc(collection(adminPortalDb, 'products'), productData)
     return { success: true, id: ref.id }
   } catch (error) {
     console.error('Failed to create product:', error)
@@ -87,7 +87,7 @@ export async function createProduct(productData: any) {
 
 export async function deleteProduct(productId: string) {
   try {
-    await deleteDoc(doc(clientDb, 'products', productId))
+    await deleteDoc(doc(adminPortalDb, 'products', productId))
     return { success: true }
   } catch (error) {
     console.error('Failed to delete product:', error)
@@ -100,9 +100,9 @@ export async function deleteProducts(productIds: string[]) {
   try {
     const BATCH = 450
     for (let i = 0; i < productIds.length; i += BATCH) {
-      const batch = writeBatch(clientDb)
+      const batch = writeBatch(adminPortalDb)
       productIds.slice(i, i + BATCH).forEach(id =>
-        batch.delete(doc(clientDb, 'products', id))
+        batch.delete(doc(adminPortalDb, 'products', id))
       )
       await batch.commit()
     }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+import { adminPortalDb } from '@/lib/firebase-admin-client'
 import { Search, User, Phone, MapPin, Mail, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 
@@ -12,7 +12,7 @@ export default function AdminCustomersPage() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    const q = query(collection(clientDb, 'users'))
+    const q = query(collection(adminPortalDb, 'users'))
     const unsub = onSnapshot(q,
       (snap) => {
         setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })))
