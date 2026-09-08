@@ -24,13 +24,12 @@ const PLACEHOLDER = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg
 function ProductModal({ product, onClose }: { product: Product; onClose: () => void }) {
   const { addItem } = useCart()
   const { td } = useTranslation()
-  const [variantIndex, setVariantIndex] = useState(0)
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
 
-  const variant = product.variants?.[variantIndex] ?? product.variants?.[0]
+  // Use the first variant as default since we removed the variant selector for this view
+  const variant = product.variants?.[0]
   const soldOut = product.stock === 'Out of Stock' || product.stock === 'Sold Out'
-  const stockStyle = STOCK_STYLES[product.stock] ?? STOCK_STYLES['In Stock']
   
   const stockLabel = product.stock === 'Low Stock' && typeof product.stockCount === 'number'
     ? `Only ${product.stockCount} left!`
@@ -44,103 +43,68 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}>
       <div 
-        className="relative w-full max-w-[55rem] bg-white dark:bg-slate-900 shadow-2xl rounded-sm overflow-hidden flex flex-col md:flex-row max-h-[95vh]"
+        className="relative w-full max-w-[55rem] bg-gradient-to-b from-[#1c2c4d] to-[#0c162c] shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row max-h-[95vh]"
         onClick={e => e.stopPropagation()}
       >
+        {/* iOS style strong top white gradient shine for the modal */}
+        <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+        {/* Inner shadow for sharp 3D gel effect on the modal */}
+        <div className="absolute inset-0 rounded-[inherit] shadow-[inset_0_2px_1px_rgba(255,255,255,0.15),inset_0_-3px_5px_rgba(0,0,0,0.4)] pointer-events-none" />
+
         {/* Close Button */}
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10 transition-colors bg-white/50 backdrop-blur-md rounded-sm p-1 md:bg-transparent md:backdrop-blur-none">
-           <X className="size-6" />
+        <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white z-20 transition-colors bg-black/30 backdrop-blur-md rounded-full p-2">
+           <X className="size-5" />
         </button>
 
-        {/* Right side (Image) - shown on right on desktop, top on mobile */}
-        <div className="w-full md:w-[45%] bg-slate-50 dark:bg-slate-800/50 p-6 md:p-10 flex items-center justify-center order-1 md:order-2">
-           <div className="relative w-full aspect-[4/5] md:aspect-square max-w-sm mx-auto">
-              <Image 
-                src={product.image || PLACEHOLDER} 
-                alt={product.name} 
-                fill 
-                className="object-contain drop-shadow-lg" 
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-           </div>
+        {/* Left side (Image) - Full bleed panel */}
+        <div className="relative w-full md:w-1/2 aspect-square md:aspect-auto flex items-center justify-center order-1 bg-black/20">
+           <Image 
+             src={product.image || PLACEHOLDER} 
+             alt={product.name} 
+             fill 
+             className="object-cover" 
+             sizes="(max-width: 768px) 100vw, 50vw"
+           />
         </div>
 
-        {/* Left side (Content) */}
-        <div className="w-full md:w-[55%] p-6 md:p-10 lg:p-12 overflow-y-auto order-2 md:order-1 flex flex-col custom-scrollbar">
+        {/* Right side (Content) */}
+        <div className="w-full md:w-1/2 p-6 md:p-10 lg:p-12 overflow-y-auto order-2 flex flex-col custom-scrollbar relative z-10">
            {/* Breadcrumbs */}
-           <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 font-medium">
+           <div className="flex items-center gap-2 text-sm text-white/50 mb-3 font-medium tracking-wide">
               <span>{td(product.origin)}</span>
-              <span className="text-gray-300">/</span>
+              <span className="text-white/20">/</span>
               <span>{product.brand || 'Store'}</span>
            </div>
 
-           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-3">
+           <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-3">
              {td(product.name)}
            </h2>
            
            <div className="flex items-center flex-wrap gap-4 mb-5">
-              <span className="text-2xl font-semibold text-gray-900 dark:text-white">€{(variant?.price ?? product.price ?? 0).toFixed(2)}</span>
-              <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block" />
-              <div className="flex items-center gap-1 text-yellow-400">
-                 <Star className="size-4 fill-current" />
-                 <Star className="size-4 fill-current" />
-                 <Star className="size-4 fill-current" />
-                 <Star className="size-4 fill-current" />
-                 <Star className="size-4 text-gray-200 dark:text-gray-600" />
-                 <span className="text-sm font-medium text-gray-500 hover:text-gray-700 cursor-pointer ml-2">1624 reviews</span>
-              </div>
+              <span className="text-2xl font-semibold text-white">€{(variant?.price ?? product.price ?? 0).toFixed(2)}</span>
            </div>
 
-           <p className="text-base text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+           <p className="text-base text-white/70 mb-8 leading-relaxed">
              {td(product.tagline)}
            </p>
 
-           <div className={`flex items-center gap-2 text-sm font-medium mb-8 ${soldOut ? 'text-rose-500' : 'text-emerald-600'}`}>
+           <div className={`flex items-center gap-2 text-sm font-medium mb-8 ${soldOut ? 'text-rose-400' : 'text-emerald-400'}`}>
               {!soldOut && <Check className="size-5" />}
               {soldOut && <AlertTriangle className="size-5" />}
               <span>{stockLabel}</span>
            </div>
 
-           {/* Variants */}
-           {(product.variants?.length ?? 0) > 0 && (
-             <div className="mb-8">
-               <div className="flex items-center justify-between mb-4">
-                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Size</span>
-                 <a href="#" className="text-sm text-orange-600 hover:text-orange-500 font-medium flex items-center gap-1">
-                    What size should I buy? <HelpCircle className="size-4 text-gray-400" />
-                 </a>
-               </div>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                 {product.variants!.map((v, i) => (
-                   <div 
-                     key={v.label} 
-                     onClick={() => setVariantIndex(i)}
-                     className={`cursor-pointer rounded-sm border p-4 transition-all ${variantIndex === i ? 'border-orange-500 ring-1 ring-orange-500 bg-orange-50/50 dark:bg-orange-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}
-                   >
-                      <div className="flex justify-between items-center mb-1">
-                         <span className={`font-semibold ${variantIndex === i ? 'text-orange-700 dark:text-orange-400' : 'text-gray-900 dark:text-white'}`}>{td(v.label)}</span>
-                         {variantIndex === i && <CheckCircle2 className="size-5 text-orange-500" />}
-                      </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        €{v.price.toFixed(2)} — Perfect size.
-                      </p>
-                   </div>
-                 ))}
-               </div>
-             </div>
-           )}
-
            {/* Add Action Row */}
-           <div className="mt-auto flex items-center gap-4 mb-6 pt-4">
-             {/* Keep Qty stepper to keep functionality working */}
-             <div className="flex items-center rounded-sm border border-gray-200 dark:border-gray-700 h-12 bg-white dark:bg-slate-900">
-                <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 h-full flex items-center justify-center transition-colors">
+           <div className="mt-auto flex flex-col sm:flex-row items-center gap-4 pt-4">
+             {/* Qty stepper */}
+             <div className="flex items-center rounded-xl border border-white/10 h-12 bg-black/20 text-white w-full sm:w-auto shrink-0 shadow-inner">
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 hover:text-orange-400 h-full flex items-center justify-center transition-colors">
                   <Minus className="size-4" />
                 </button>
-                <span className="w-8 text-center font-bold text-gray-900 dark:text-white">{qty}</span>
-                <button onClick={() => setQty(q => q + 1)} className="px-4 text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 h-full flex items-center justify-center transition-colors">
+                <span className="w-8 text-center font-bold">{qty}</span>
+                <button onClick={() => setQty(q => q + 1)} className="px-4 hover:text-orange-400 h-full flex items-center justify-center transition-colors">
                   <Plus className="size-4" />
                 </button>
              </div>
@@ -149,15 +113,10 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
                onClick={handleAdd}
                disabled={soldOut}
                variant={added ? 'emerald' : soldOut ? 'secondary' : 'default'}
-               className="flex-1 h-12 text-base shadow-sm"
+               className="flex-1 h-12 text-base w-full shadow-lg"
              >
                {soldOut ? 'Sold Out' : added ? 'Added to bag' : 'Add to bag'}
              </Button>
-           </div>
-
-           <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-             <Shield className="size-4" />
-             <span>Lifetime Guarantee</span>
            </div>
         </div>
       </div>
