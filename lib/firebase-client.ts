@@ -23,7 +23,7 @@ const firebaseConfig = {
 }
 
 // ─── Singleton (avoids duplicate app warnings in Next.js dev hot-reload) ─────
-const clientApp: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
+const clientApp: FirebaseApp = getApps().find(a => a.name === '[DEFAULT]') ? getApp() : initializeApp(firebaseConfig)
 
 const clientDb: Firestore = getFirestore(
   clientApp,

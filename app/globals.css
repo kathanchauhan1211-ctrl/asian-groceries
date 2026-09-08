@@ -77,6 +77,9 @@
   --im-orange:     #F97316; /* Brand orange — CTAs, badges, pills */
   --im-orange-lt:  #FB923C; /* Light orange — hovers, highlights */
   --im-gold:       #FBBF24; /* Gold — star ratings, decorative shimmer */
+  --im-plum:       #4A154B; /* Deep plum — header, footer */
+  --im-plum-mid:   #3E0F3A; /* Dark plum */
+  --im-plum-light: #6E226F; /* Lighter plum */
 }
 
 .dark {
@@ -109,6 +112,9 @@
   --im-orange:     #FB923C;     /* Slightly brighter orange for dark bg */
   --im-orange-lt:  #FDBA74;
   --im-gold:       #FCD34D;
+  --im-plum:       #3E0F3A; /* Slightly darker for dark bg */
+  --im-plum-mid:   #2D0B2A;
+  --im-plum-light: #5E1A5F;
 }
 
 @layer base {

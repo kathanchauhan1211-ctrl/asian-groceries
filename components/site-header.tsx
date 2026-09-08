@@ -114,18 +114,18 @@ export function SiteHeader() {
 
       {/* ── Main header row ──────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6">
-        <div className="flex items-center gap-3 py-4 sm:py-5">
+        <div className="flex items-center gap-1.5 sm:gap-3 py-3 sm:py-5">
 
           {/* Brand Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-3 group" aria-label="IndianMarket home">
+          <Link href="/" className="flex shrink-0 items-center gap-2 sm:gap-3 group" aria-label="IndianMarket home">
             <span
-              className="flex shrink-0 items-center justify-center rounded-xl p-1.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+              className="flex shrink-0 items-center justify-center rounded-xl p-1 sm:p-1.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
               style={{ background: 'rgba(255,255,255,0.08)', boxShadow: '0 0 0 1px rgba(255,255,255,0.1)' }}
             >
-              <LogoSVG size={42} />
+              <LogoSVG size={36} className="sm:w-[42px] sm:h-[42px]" />
             </span>
-            <span className="hidden xs:block sm:block leading-none">
-              <span className="block font-serif text-xl sm:text-2xl font-bold tracking-tight text-white group-hover:text-orange-300 transition-colors duration-200">
+            <span className="block leading-none">
+              <span className="block font-serif text-base xs:text-lg sm:text-2xl font-bold tracking-tight text-white group-hover:text-orange-300 transition-colors duration-200">
                 IndianMarket
               </span>
               <span className="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/50 mt-0.5">
@@ -159,7 +159,7 @@ export function SiteHeader() {
           <div className="hidden lg:block h-8 w-px mx-1" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
           {/* Controls group */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
 
             {/* Dark mode toggle */}
             {isMounted ? (
@@ -181,7 +181,7 @@ export function SiteHeader() {
                 size="default"
                 onClick={() => setLangOpen(!langOpen)}
                 aria-label="Select Language"
-                className="gap-1.5 px-3"
+                className="gap-1 px-2 sm:gap-1.5 sm:px-3"
               >
                 <Globe className="size-4" />
                 <span className="hidden sm:inline text-xs font-semibold">{activeLangData.code}</span>
@@ -232,13 +232,13 @@ export function SiteHeader() {
               onClick={() => setOpen(true)}
               variant={isMounted && count > 0 ? 'orange' : 'glass-dark'}
               size="default"
-              className="gap-2 px-4"
+              className="gap-1.5 px-2 sm:gap-2 sm:px-4"
               aria-label={`Open cart, ${isMounted ? count : 0} items`}
             >
-              <ShoppingBag className="size-5" />
+              <ShoppingBag className="size-4 sm:size-5" />
               <span className="hidden sm:inline text-sm">{t('nav.basket') || 'Basket'}</span>
               {isMounted && count > 0 && (
-                <span className="flex min-w-[20px] h-5 items-center justify-center rounded-full bg-white/25 px-1.5 text-[10px] font-bold text-white ring-1 ring-white/20">
+                <span className="flex min-w-[18px] h-4 sm:min-w-[20px] sm:h-5 items-center justify-center rounded-full bg-white/25 px-1 sm:px-1.5 text-[9px] sm:text-[10px] font-bold text-white ring-1 ring-white/20">
                   {count}
                 </span>
               )}
@@ -252,9 +252,9 @@ export function SiteHeader() {
                   id="btn-header-login"
                   variant="orange"
                   size="default"
-                  className="gap-2 px-4"
+                  className="gap-1.5 px-2.5 sm:gap-2 sm:px-4"
                 >
-                  <User className="size-5" />
+                  <User className="size-4 sm:size-5" />
                   <span className="hidden lg:inline">{t('nav.login') || 'Log In'}</span>
                 </Button>
               ) : (
@@ -265,7 +265,7 @@ export function SiteHeader() {
                     variant="glass-dark"
                     size="default"
                     onClick={() => setProfileOpen(!profileOpen)}
-                    className="pl-2 pr-3 gap-2"
+                    className="pl-1.5 pr-2 sm:pl-2 sm:pr-3 gap-1.5 sm:gap-2"
                     aria-label="Account menu"
                   >
                     <span

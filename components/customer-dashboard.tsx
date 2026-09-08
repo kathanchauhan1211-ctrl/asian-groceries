@@ -230,14 +230,14 @@ function OverviewSection({ orders, user, onSection }: {
   return (
     <div className="space-y-6">
       {/* Hero banner */}
-      <div className="relative overflow-hidden rounded-2xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, var(--im-green) 0%, var(--im-green-mid) 65%, #10B981 100%)' }}>
+      <div className="relative overflow-hidden rounded-2xl p-6 text-white shadow-lg backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, var(--im-plum) 0%, var(--im-plum-mid) 65%, #c2410c 100%)' }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: 'linear-gradient(90deg, var(--im-orange), var(--im-gold), var(--im-orange))' }} />
         <div className="absolute right-6 bottom-4 text-7xl opacity-[0.08] select-none">🛒</div>
         <div className="relative">
-          <p className="text-blue-200 text-sm font-medium mb-1">Welcome back 👋</p>
+          <p className="text-orange-200 text-sm font-medium mb-1">Welcome back 👋</p>
           <h2 className="text-2xl md:text-3xl font-bold text-white">{user.displayName || 'Customer'}</h2>
-          <p className="text-blue-200 text-sm mt-2">
+          <p className="text-orange-100 text-sm mt-2">
             <span className="text-white font-bold">{orders.length}</span> order{orders.length !== 1 ? 's' : ''} placed &nbsp;·&nbsp; <span className="text-white font-bold">€{totalSpent.toFixed(2)}</span> total spent
           </p>
         </div>
@@ -246,8 +246,8 @@ function OverviewSection({ orders, user, onSection }: {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Orders',  value: String(orders.length), icon: <Package className="size-4" />, accentColor: 'var(--im-green-mid)', accentBg: 'rgba(4, 120, 87, 0.1)' },
-          { label: 'Total Spent',   value: `€${totalSpent.toFixed(2)}`, icon: <TrendingUp className="size-4" />, accentColor: '#059669', accentBg: 'rgba(5,150,105,0.1)' },
+          { label: 'Total Orders',  value: String(orders.length), icon: <Package className="size-4" />, accentColor: 'var(--im-plum-mid)', accentBg: 'rgba(62,15,58,0.1)' },
+          { label: 'Total Spent',   value: `€${totalSpent.toFixed(2)}`, icon: <TrendingUp className="size-4" />, accentColor: 'var(--im-plum-mid)', accentBg: 'rgba(62,15,58,0.1)' },
           { label: 'Awaiting',      value: String(pending),  icon: <Clock className="size-4" />, accentColor: 'var(--im-orange)', accentBg: 'rgba(249,115,22,0.1)' },
         ].map(stat => (
           <div key={stat.label} className={`${card} p-5`}>
