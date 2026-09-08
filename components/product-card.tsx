@@ -1,13 +1,12 @@
 'use client'
 
 import { memo, useState, useEffect } from 'react'
-import { Check, Minus, Plus, ShoppingBag, Star, X, ChevronDown, AlertTriangle } from 'lucide-react'
+import { Check, Minus, Plus, ShoppingBag, Star, X, ChevronDown, AlertTriangle, HelpCircle, Shield, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import { useCart } from '@/lib/cart-context'
 import { useTranslation } from '@/lib/translation-context'
 import { ORIGIN_FLAG, type Product } from '@/lib/products'
 import { Button } from '@/components/ui/button'
-import { LiquidGlassBox } from '@/components/ui/liquid-glass-box'
 
 const STOCK_STYLES: Record<Product['stock'], { pill: string; label: React.ReactNode }> = {
   'In Stock':     { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-200', label: 'In Stock' },
@@ -30,11 +29,12 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
   const [added, setAdded] = useState(false)
 
   const variant = product.variants?.[variantIndex] ?? product.variants?.[0]
-  const soldOut = product.stock === 'Out of Stock'
+  const soldOut = product.stock === 'Out of Stock' || product.stock === 'Sold Out'
   const stockStyle = STOCK_STYLES[product.stock] ?? STOCK_STYLES['In Stock']
+  
   const stockLabel = product.stock === 'Low Stock' && typeof product.stockCount === 'number'
-    ? <span className="flex items-center gap-0.5 animate-pulse"><AlertTriangle className="size-2.5" />Only {product.stockCount} left!</span>
-    : stockStyle.label
+    ? `Only ${product.stockCount} left!`
+    : (product.stock === 'In Stock' ? 'In stock and ready to ship' : product.stock)
 
   function handleAdd() {
     if (soldOut || !variant) return
@@ -44,136 +44,124 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
   }
 
   return (
-    <LiquidGlassBox
-      modal
-      size="lg"
-      onBackdropClick={onClose}
-      className="overflow-hidden"
-      style={{ background: 'var(--card)', maxHeight: '92dvh', overflowY: 'auto' }}
-    >
-      {/* Image — full width, fixed height */}
-      <div className="relative w-full bg-slate-100" style={{ aspectRatio: '4/3' }}>
-        <Image
-          src={product.image || PLACEHOLDER}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 100vw, 560px"
-          className="object-cover"
-          placeholder="blur"
-          blurDataURL={BLUR_DATA}
-          onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER }}
-          priority={false}
-        />
-        {/* Close button */}
-        <Button
-          onClick={onClose}
-          variant="glass-dark"
-          size="icon-sm"
-          className="absolute top-3 right-3 rounded-full bg-black/40 backdrop-blur-sm"
-          aria-label="Close"
-        >
-          <X className="size-4" />
-        </Button>
-        {/* Origin badge */}
-        <span className="absolute left-3 bottom-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
-          {ORIGIN_FLAG[product.origin] ?? '🌍'} {td(product.origin)}
-        </span>
-        {product.bestseller && (
-          <span className="absolute right-3 bottom-3 flex items-center gap-1 rounded-full bg-orange-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm uppercase">
-            <Star className="size-3 fill-current" /> Bestseller
-          </span>
-        )}
-      </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose}>
+      <div 
+        className="relative w-full max-w-[55rem] bg-white dark:bg-slate-900 shadow-2xl rounded-sm overflow-hidden flex flex-col md:flex-row max-h-[95vh]"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10 transition-colors bg-white/50 backdrop-blur-md rounded-sm p-1 md:bg-transparent md:backdrop-blur-none">
+           <X className="size-6" />
+        </button>
 
-      {/* Content */}
-      <div className="p-5">
-        {/* Stock + diet tags */}
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${stockStyle.pill}`}>
-            {stockLabel}
-          </span>
-          {product.diet?.map(d => (
-            <span key={d} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-              {td(d)}
-            </span>
-          ))}
+        {/* Right side (Image) - shown on right on desktop, top on mobile */}
+        <div className="w-full md:w-[45%] bg-slate-50 dark:bg-slate-800/50 p-6 md:p-10 flex items-center justify-center order-1 md:order-2">
+           <div className="relative w-full aspect-[4/5] md:aspect-square max-w-sm mx-auto">
+              <Image 
+                src={product.image || PLACEHOLDER} 
+                alt={product.name} 
+                fill 
+                className="object-contain drop-shadow-lg" 
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+           </div>
         </div>
 
-        {/* Name */}
-        <h2 className="font-sans text-xl font-bold leading-snug" style={{ color: 'var(--foreground)' }}>
-          {td(product.name)}
-        </h2>
-        {product.brand && (
-          <p className="mt-0.5 text-sm font-medium text-orange-500">{product.brand}</p>
-        )}
-        <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-          {td(product.tagline)}
-        </p>
+        {/* Left side (Content) */}
+        <div className="w-full md:w-[55%] p-6 md:p-10 lg:p-12 overflow-y-auto order-2 md:order-1 flex flex-col custom-scrollbar">
+           {/* Breadcrumbs */}
+           <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 font-medium">
+              <span>{td(product.origin)}</span>
+              <span className="text-gray-300">/</span>
+              <span>{product.brand || 'Store'}</span>
+           </div>
 
-        {/* Variant selector */}
-        {(product.variants?.length ?? 0) > 1 && (
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">Choose Size</p>
-            <div className="flex flex-wrap gap-2">
-              {product.variants!.map((v, i) => (
-                <Button
-                  key={v.label}
-                  onClick={() => setVariantIndex(i)}
-                  variant={variantIndex === i ? 'default' : 'glass-light'}
-                  size="sm"
-                  className="rounded-full"
-                >
-                  {td(v.label)} — €{v.price.toFixed(2)}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
+           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-3">
+             {td(product.name)}
+           </h2>
+           
+           <div className="flex items-center flex-wrap gap-4 mb-5">
+              <span className="text-2xl font-semibold text-gray-900 dark:text-white">€{(variant?.price ?? product.price ?? 0).toFixed(2)}</span>
+              <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block" />
+              <div className="flex items-center gap-1 text-yellow-400">
+                 <Star className="size-4 fill-current" />
+                 <Star className="size-4 fill-current" />
+                 <Star className="size-4 fill-current" />
+                 <Star className="size-4 fill-current" />
+                 <Star className="size-4 text-gray-200 dark:text-gray-600" />
+                 <span className="text-sm font-medium text-gray-500 hover:text-gray-700 cursor-pointer ml-2">1624 reviews</span>
+              </div>
+           </div>
 
-        {/* Price + qty + add */}
-        <div className="mt-5 flex items-center gap-3">
-          {/* Qty stepper */}
-          <div
-            className="flex items-center rounded-xl border overflow-hidden"
-            style={{ borderColor: 'var(--border)', background: 'var(--secondary)' }}
-          >
-            <Button
-              onClick={() => setQty(q => Math.max(1, q - 1))}
-              disabled={soldOut}
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Decrease quantity"
-            >
-              <Minus className="size-4" />
-            </Button>
-            <span className="w-8 text-center text-sm font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>{qty}</span>
-            <Button
-              onClick={() => setQty(q => q + 1)}
-              disabled={soldOut}
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Increase quantity"
-            >
-              <Plus className="size-4" />
-            </Button>
-          </div>
+           <p className="text-base text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+             {td(product.tagline)}
+           </p>
 
-          {/* Add to cart */}
-          <Button
-            onClick={handleAdd}
-            disabled={soldOut}
-            variant={added ? 'emerald' : soldOut ? 'secondary' : 'default'}
-            size="xl"
-            className="flex-1"
-          >
-            {soldOut ? 'Sold Out'
-              : added ? <><Check className="size-4" /> Added to Basket!</>
-              : <><ShoppingBag className="size-4" /> Add to Basket — €{((variant?.price ?? 0) * qty).toFixed(2)}</>
-            }
-          </Button>
+           <div className={`flex items-center gap-2 text-sm font-medium mb-8 ${soldOut ? 'text-rose-500' : 'text-emerald-600'}`}>
+              {!soldOut && <Check className="size-5" />}
+              {soldOut && <AlertTriangle className="size-5" />}
+              <span>{stockLabel}</span>
+           </div>
+
+           {/* Variants */}
+           {(product.variants?.length ?? 0) > 0 && (
+             <div className="mb-8">
+               <div className="flex items-center justify-between mb-4">
+                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Size</span>
+                 <a href="#" className="text-sm text-orange-600 hover:text-orange-500 font-medium flex items-center gap-1">
+                    What size should I buy? <HelpCircle className="size-4 text-gray-400" />
+                 </a>
+               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                 {product.variants!.map((v, i) => (
+                   <div 
+                     key={v.label} 
+                     onClick={() => setVariantIndex(i)}
+                     className={`cursor-pointer rounded-sm border p-4 transition-all ${variantIndex === i ? 'border-orange-500 ring-1 ring-orange-500 bg-orange-50/50 dark:bg-orange-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}
+                   >
+                      <div className="flex justify-between items-center mb-1">
+                         <span className={`font-semibold ${variantIndex === i ? 'text-orange-700 dark:text-orange-400' : 'text-gray-900 dark:text-white'}`}>{td(v.label)}</span>
+                         {variantIndex === i && <CheckCircle2 className="size-5 text-orange-500" />}
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        €{v.price.toFixed(2)} — Perfect size.
+                      </p>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           )}
+
+           {/* Add Action Row */}
+           <div className="mt-auto flex items-center gap-4 mb-6 pt-4">
+             {/* Keep Qty stepper to keep functionality working */}
+             <div className="flex items-center rounded-sm border border-gray-200 dark:border-gray-700 h-12 bg-white dark:bg-slate-900">
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 h-full flex items-center justify-center transition-colors">
+                  <Minus className="size-4" />
+                </button>
+                <span className="w-8 text-center font-bold text-gray-900 dark:text-white">{qty}</span>
+                <button onClick={() => setQty(q => q + 1)} className="px-4 text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 h-full flex items-center justify-center transition-colors">
+                  <Plus className="size-4" />
+                </button>
+             </div>
+
+             <Button
+               onClick={handleAdd}
+               disabled={soldOut}
+               variant={added ? 'emerald' : soldOut ? 'secondary' : 'default'}
+               className="flex-1 h-12 text-base shadow-sm"
+             >
+               {soldOut ? 'Sold Out' : added ? 'Added to bag' : 'Add to bag'}
+             </Button>
+           </div>
+
+           <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+             <Shield className="size-4" />
+             <span>Lifetime Guarantee</span>
+           </div>
         </div>
       </div>
-    </LiquidGlassBox>
+    </div>
   )
 }
 
