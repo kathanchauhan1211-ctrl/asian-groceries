@@ -19,7 +19,6 @@ const NAV_ITEMS = [
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/collections', label: 'Collections', icon: Layers },
   { href: '/admin/slides', label: 'Slides', icon: MonitorPlay },
-  { href: '/admin/offers', label: 'Offers', icon: Tag },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
@@ -31,7 +30,6 @@ const PAGE_LABELS: Record<string, string> = {
   '/admin/products': 'Products',
   '/admin/collections': 'Collections',
   '/admin/slides': 'Slides',
-  '/admin/offers': 'Offers',
   '/admin/analytics': 'Analytics',
   '/admin/settings': 'Settings',
 }

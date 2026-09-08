@@ -38,7 +38,7 @@ const SOCIAL_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative border-t-4 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] mt-auto" style={{ backgroundColor: 'var(--im-green-mid, #047857)', borderColor: 'var(--im-orange, #F97316)' }}>
+    <footer className="relative border-t-4 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] mt-auto backdrop-blur-xl" style={{ backgroundColor: 'rgba(62, 15, 58, 0.85)', borderColor: 'var(--im-orange, #F97316)' }}>
       <div className="relative mx-auto max-w-7xl px-4 py-8 md:px-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 md:gap-8">
 
@@ -133,7 +133,7 @@ export function SiteFooter() {
       </div>
 
       {/* Bottom bar */}
-      <div style={{ backgroundColor: 'var(--im-green, #064E3B)' }}>
+      <div style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
         <div className="mx-auto max-w-7xl px-4 md:px-6 pt-3 pb-28 lg:pb-3 flex flex-col items-center justify-between gap-1 text-[11px] text-white/60 sm:flex-row">
           <p>© {new Date().getFullYear()} Asian Groceries Vilnius. All rights reserved.</p>
           <p>Made with care in Vilnius, Lithuania 🇱🇹</p>

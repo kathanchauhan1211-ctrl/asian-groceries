@@ -16,12 +16,13 @@ import type { FeaturedCollectionDoc, AutoRule } from '@/lib/use-featured-collect
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
-  bg:      '#080C14',
-  surface: '#0D1117',
-  card:    '#111827',
-  border:  'rgba(255,255,255,0.07)',
-  muted:   '#374151',
-  subtle:  '#1F2937',
+  bg:      'transparent',
+  surface: 'rgba(23, 37, 84, 0.4)', // bg-blue-950/40
+  card:    'rgba(23, 37, 84, 0.4)',
+  border:  'rgba(255,255,255,0.1)',
+  muted:   '#9CA3AF',
+  subtle:  'rgba(255,255,255,0.05)',
+  glassFilter: 'blur(16px)',
 }
 
 // ─── Auto-rule options ────────────────────────────────────────────────────────
@@ -253,7 +254,7 @@ function CollectionDrawer({
       {/* Drawer */}
       <div
         className="relative ml-auto flex h-full w-full flex-col overflow-hidden"
-        style={{ background: C.surface, borderLeft: `1px solid ${C.border}` }}
+        style={{ background: C.surface, backdropFilter: C.glassFilter, borderLeft: `1px solid ${C.border}` }}
       >
         {/* Header */}
         <div
@@ -653,7 +654,7 @@ export default function AdminCollectionsPage() {
       {loading ? (
         <div
           className="flex items-center justify-center gap-3 rounded-xl py-20"
-          style={{ background: C.surface, border: `1px solid ${C.border}` }}
+          style={{ background: C.surface, backdropFilter: C.glassFilter, border: `1px solid ${C.border}` }}
         >
           <Loader2 className="size-5 animate-spin" style={{ color: '#F97316' }} />
           <span className="text-[13px]" style={{ color: '#4B5563' }}>Loading collections…</span>
@@ -661,7 +662,7 @@ export default function AdminCollectionsPage() {
       ) : sorted.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center gap-4 rounded-xl py-20"
-          style={{ background: C.surface, border: `1px solid ${C.border}` }}
+          style={{ background: C.surface, backdropFilter: C.glassFilter, border: `1px solid ${C.border}` }}
         >
           <div className="flex size-14 items-center justify-center rounded-2xl" style={{ background: 'rgba(249,115,22,0.08)' }}>
             <Layers className="size-7" style={{ color: '#F97316' }} />
@@ -699,7 +700,7 @@ export default function AdminCollectionsPage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-xl overflow-hidden" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+        <div className="rounded-xl overflow-hidden" style={{ background: C.surface, backdropFilter: C.glassFilter, border: `1px solid ${C.border}` }}>
           {sorted.map((col, i) => (
             <CollectionRow
               key={col.id}

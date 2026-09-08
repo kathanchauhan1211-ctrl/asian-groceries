@@ -86,13 +86,13 @@ export function SiteHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 shadow-xl transition-colors duration-300"
-      style={{ backgroundColor: 'var(--im-green, #064E3B)' }}
+      className="sticky top-0 z-40 shadow-xl transition-colors duration-300 backdrop-blur-xl border-b"
+      style={{ backgroundColor: 'rgba(62, 15, 58, 0.85)', borderColor: 'rgba(255,255,255,0.1)' }}
     >
       {/* ── Top accent bar + announcement ticker ────────────────────────────── */}
       <div
         className="border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(0,0,0,0.2)' }}
+        style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(0,0,0,0.25)' }}
       >
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 sm:px-4 md:px-6 py-1.5">
           {/* Store info — left */}
@@ -192,7 +192,7 @@ export function SiteHeader() {
                 <div className="absolute right-0 top-12 z-50 w-44 overflow-hidden">
                   <LiquidGlassBox
                     className="rounded-xl"
-                    style={{ backgroundColor: 'rgba(6,78,59,0.95)' }}
+                    style={{ backgroundColor: 'rgba(62, 15, 58, 0.95)' }}
                   >
                     {LANGUAGES.map(lang => (
                       <button
@@ -284,7 +284,7 @@ export function SiteHeader() {
                     <div className="absolute right-0 top-12 z-50 min-w-[210px] overflow-hidden">
                       <LiquidGlassBox
                         className="rounded-xl"
-                        style={{ backgroundColor: 'rgba(6,78,59,0.95)' }}
+                        style={{ backgroundColor: 'rgba(62, 15, 58, 0.95)' }}
                       >
                         {/* User info */}
                         <div className="border-b border-white/10 px-4 py-3.5">
