@@ -214,8 +214,9 @@ export const ProductCard = memo(function ProductCard({ product, index = 0 }: { p
   return (
     <>
       {/* ── Card ── */}
-      <div className={`group relative flex flex-col ${animClass}`}>
-        <div className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-200 dark:bg-gray-800 lg:aspect-auto lg:h-80">
+      <div className={`group relative flex flex-col h-full ${animClass}`}>
+        {/* Image Container - Enforce perfect square with exact corner rounding matching the reference */}
+        <div className="relative w-full aspect-square overflow-hidden rounded-md bg-gray-200 dark:bg-gray-800">
           <Image
             src={product.image || PLACEHOLDER}
             alt={product.name}
@@ -228,19 +229,21 @@ export const ProductCard = memo(function ProductCard({ product, index = 0 }: { p
           />
         </div>
         
-        <div className="mt-4 flex justify-between gap-4">
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">
+        {/* Text Details - Flex grow to push button down, truncate texts to prevent uneven heights */}
+        <div className="mt-4 flex justify-between gap-4 flex-1">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
               <button 
                 onClick={() => setModalOpen(true)}
-                className="focus:outline-none text-left"
+                className="focus:outline-none text-left w-full truncate"
+                title={td(product.name)}
                 aria-label={`View details for ${td(product.name)}`}
               >
                 <span aria-hidden="true" className="absolute inset-0 z-0" />
                 {td(product.name)}
               </button>
             </h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 truncate">
               {variant?.label ? td(variant.label) : td(product.tagline)}
             </p>
           </div>
@@ -249,14 +252,14 @@ export const ProductCard = memo(function ProductCard({ product, index = 0 }: { p
           </p>
         </div>
 
-        {/* Add button - high z-index to stay clickable over the absolute inset */}
-        <div className="mt-3 relative z-10">
+        {/* Add button - Aligned cleanly at the bottom */}
+        <div className="mt-4 relative z-10">
           <Button
             onClick={handleAdd}
             disabled={soldOut}
             variant={added ? 'emerald' : soldOut ? 'secondary' : inCart ? 'glass-light' : 'default'}
             size="sm"
-            className="w-full rounded-xl"
+            className="w-full rounded-md"
           >
             {soldOut ? 'Sold Out'
               : added ? <><Check className="size-3" /> Added!</>
