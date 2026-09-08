@@ -34,24 +34,16 @@ const CSS = `
     to   { opacity: 1; transform: scaleX(1) scaleY(1); }
   }
   @keyframes cart-ripple {
-    0%   { box-shadow: 0 0 0 0 rgba(249,115,22,0.8), 0 8px 32px rgba(15,32,68,0.55); }
-    60%  { box-shadow: 0 0 0 14px rgba(249,115,22,0), 0 8px 32px rgba(15,32,68,0.55); }
-    100% { box-shadow: 0 0 0 0 rgba(249,115,22,0), 0 8px 32px rgba(15,32,68,0.55); }
+    0%   { box-shadow: 0 0 0 0 rgba(249,115,22,0.8), 0 12px 40px rgba(0,0,0,0.4); }
+    60%  { box-shadow: 0 0 0 14px rgba(249,115,22,0), 0 12px 40px rgba(0,0,0,0.4); }
+    100% { box-shadow: 0 0 0 0 rgba(249,115,22,0), 0 12px 40px rgba(0,0,0,0.4); }
   }
   .island-wrap {
-    box-shadow:
-      0 8px 32px rgba(15,32,68,0.55),
-      0 20px 56px rgba(9,18,40,0.4),
-      inset 0 1.5px 0 rgba(255,255,255,0.1),
-      inset 0 -1px 0 rgba(0,0,0,0.25);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
     transition: box-shadow 0.3s ease;
   }
   .island-wrap.cart-has-items {
-    box-shadow:
-      0 8px 32px rgba(249,115,22,0.3),
-      0 20px 56px rgba(9,18,40,0.4),
-      inset 0 1.5px 0 rgba(255,255,255,0.1),
-      inset 0 -1px 0 rgba(0,0,0,0.25);
+    box-shadow: 0 12px 40px rgba(249,115,22,0.25);
   }
   .nav-item-btn {
     -webkit-tap-highlight-color: transparent;
@@ -79,16 +71,21 @@ function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: It
       className="nav-item-btn relative flex flex-col items-center justify-center gap-[5px] px-3"
       style={{ minWidth: 64, minHeight: 64 }}
     >
-      {/* Active orange pill background */}
+      {/* Active orange pill background (Glassy iOS style) */}
       {active && (
         <span
-          className="absolute inset-1 rounded-2xl"
+          className="absolute inset-1 rounded-full overflow-hidden"
           style={{
-            background: 'linear-gradient(145deg, #F97316, #EA580C)',
-            boxShadow: '0 4px 14px rgba(249,115,22,0.45), inset 0 1px 0 rgba(255,255,255,0.2)',
             animation: 'active-pill-in 0.22s cubic-bezier(0.34,1.4,0.64,1) both',
           }}
-        />
+        >
+          {/* Base Orange Background */}
+          <span className="absolute inset-0 bg-gradient-to-b from-[#ff8c00] to-[#e64d00]" />
+          {/* Top White Gel Reflection */}
+          <span className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/60 to-white/0" />
+          {/* Inner 3D Shadow */}
+          <span className="absolute inset-0 rounded-full shadow-[inset_0_2px_1px_rgba(255,255,255,0.6),inset_0_-3px_5px_rgba(0,0,0,0.3)] pointer-events-none" />
+        </span>
       )}
 
       {/* Icon */}
@@ -96,7 +93,7 @@ function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: It
         <Icon
           className="size-[22px]"
           strokeWidth={active ? 2.3 : 1.7}
-          style={{ color: '#fff', opacity: active ? 1 : 0.5 }}
+          style={{ color: '#fff', opacity: active ? 1 : 0.5, filter: active ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' : 'none' }}
         />
         {badge !== undefined && badge > 0 && (
           <span
@@ -105,9 +102,9 @@ function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: It
             style={{
               minWidth: 18, height: 18, padding: '0 4px',
               fontSize: 9,
-              background: 'linear-gradient(135deg,#F97316,#C2410C)',
-              border: '1.5px solid rgba(255,255,255,0.25)',
-              boxShadow: '0 2px 6px rgba(249,115,22,0.55)',
+              background: 'linear-gradient(to bottom, #ff8c00, #e64d00)',
+              border: '1px solid rgba(255,255,255,0.4)',
+              boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.3)',
             }}
           >
             {badge > 9 ? '9+' : badge}
@@ -131,18 +128,7 @@ function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: It
   return <Link href={href!} aria-label={label}>{inner}</Link>
 }
 
-// The island background: deep navy with a hint of blue warmth
-const BG: React.CSSProperties = {
-  background: 'linear-gradient(160deg, #0D1E3D 0%, #0F2647 45%, #122B52 100%)',
-  border: '1.5px solid rgba(249,115,22,0.35)',
-  // Thin orange gradient line at top — the brand signature
-  backgroundImage: [
-    // Top orange accent stripe (via pseudo simulation via border)
-    'linear-gradient(160deg, #0D1E3D 0%, #0F2647 45%, #122B52 100%)',
-  ].join(','),
-}
-
-// Orange top-edge decorative line simulated with a wrapper
+// Dark Blue Glassy iOS style base
 function IslandShell({ children, className, style, cartHasItems }: {
   children: React.ReactNode
   className?: string
@@ -154,26 +140,15 @@ function IslandShell({ children, className, style, cartHasItems }: {
       className={`relative overflow-hidden ${className ?? ''}`}
       style={style}
     >
-      {/* Orange accent stripe across top */}
+      {/* Dark blue glassy gradient body */}
       <div
-        className="absolute left-4 right-4 top-0 h-[2.5px] rounded-full"
-        style={{ background: 'linear-gradient(90deg, transparent, #F97316, #EA580C, transparent)' }}
+        className="absolute inset-0 bg-gradient-to-b from-[#1c2c4d] to-[#0c162c]"
       />
-      {/* Blue-to-navy gradient body */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(160deg, #0D1E3D 0%, #0F2647 50%, #122B52 100%)',
-          opacity: 1,
-        }}
-      />
-      {/* Subtle warm top reflection */}
-      <div
-        className="pointer-events-none absolute left-0 right-0 top-0 h-[40%]"
-        style={{
-          background: 'linear-gradient(to bottom, rgba(249,115,22,0.06) 0%, transparent 100%)',
-        }}
-      />
+      {/* iOS style strong top white gradient shine for the island */}
+      <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+      {/* Inner shadow for sharp 3D gel effect on the island */}
+      <div className="absolute inset-0 rounded-[inherit] shadow-[inset_0_2px_1px_rgba(255,255,255,0.15),inset_0_-3px_5px_rgba(0,0,0,0.4)] pointer-events-none" />
+      
       <div className="relative z-10 flex items-center">
         {children}
       </div>
@@ -214,7 +189,7 @@ export function FloatingNavigation() {
         }}
       >
         <IslandShell
-          className={`${baseClass} flex-row px-2 py-2 rounded-[26px]`}
+          className={`${baseClass} flex-row px-2 py-2 rounded-full`}
           style={{ display: 'flex', flexDirection: 'row' }}
           cartHasItems={count > 0}
         >
@@ -251,25 +226,13 @@ export function FloatingNavigation() {
         style={{ animation: 'island-float-v 7s ease-in-out infinite' }}
       >
         <div
-          className={`${baseClass} relative overflow-hidden rounded-[26px]`}
-          style={{ border: '1.5px solid rgba(249,115,22,0.35)' }}
+          className={`${baseClass} relative overflow-hidden rounded-full`}
         >
-          {/* Orange left-edge accent line for vertical */}
-          <div
-            className="absolute left-0 top-6 bottom-6 w-[2.5px] rounded-full"
-            style={{ background: 'linear-gradient(to bottom, transparent, #F97316, #EA580C, transparent)' }}
-          />
-          {/* Top warm glow */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background: 'linear-gradient(160deg, #0D1E3D 0%, #0F2647 50%, #122B52 100%)',
-            }}
-          />
-          <div
-            className="pointer-events-none absolute left-0 right-0 top-0 h-[35%]"
-            style={{ background: 'linear-gradient(to bottom, rgba(249,115,22,0.07) 0%, transparent 100%)' }}
-          />
+          {/* Dark blue glassy gradient body */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1c2c4d] to-[#0c162c]" />
+          <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 rounded-[inherit] shadow-[inset_0_2px_1px_rgba(255,255,255,0.15),inset_0_-3px_5px_rgba(0,0,0,0.4)] pointer-events-none" />
+          
           <nav className="relative z-10 flex flex-col items-center gap-0 px-2 py-3">
             {NAV_ITEMS.map(item => (
               <Item
