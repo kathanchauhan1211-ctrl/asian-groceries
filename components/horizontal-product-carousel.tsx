@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ProductCard } from '@/components/product-card'
 import type { Product } from '@/lib/products'
 import { useTranslation } from '@/lib/translation-context'
+import { Button } from '@/components/ui/button'
 
 export function HorizontalProductCarousel({ 
   title, 
@@ -37,31 +38,36 @@ export function HorizontalProductCarousel({
         
         <div className="flex items-center gap-4">
           {viewAllLink && (
-            <Link 
-              href={viewAllLink} 
-              className="hidden md:flex items-center gap-1 text-sm font-semibold hover:underline"
+            <Button
+              href={viewAllLink}
+              variant="transparent"
+              size="sm"
+              className="hidden md:flex gap-1"
               style={{ color: 'var(--primary)' }}
             >
               {td('View All')} <ArrowRight className="size-4" />
-            </Link>
+            </Button>
           )}
           
-          {/* Desktop Arrows */}
           <div className="hidden md:flex items-center gap-2">
-            <button 
+            <Button
               onClick={() => scroll('left')}
-              className="flex size-8 items-center justify-center rounded-full border bg-card shadow-sm hover:bg-secondary transition-colors"
+              variant="glass-light"
+              size="icon"
+              className="rounded-full"
               aria-label="Scroll left"
             >
               <ChevronLeft className="size-4" />
-            </button>
-            <button 
+            </Button>
+            <Button
               onClick={() => scroll('right')}
-              className="flex size-8 items-center justify-center rounded-full border bg-card shadow-sm hover:bg-secondary transition-colors"
+              variant="glass-light"
+              size="icon"
+              className="rounded-full"
               aria-label="Scroll right"
             >
               <ChevronRight className="size-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -69,13 +75,15 @@ export function HorizontalProductCarousel({
       {/* View All Mobile */}
       {viewAllLink && (
         <div className="md:hidden px-4 mb-4">
-           <Link 
-            href={viewAllLink} 
-            className="flex items-center gap-1 text-sm font-semibold"
+          <Button
+            href={viewAllLink}
+            variant="transparent"
+            size="sm"
+            className="gap-1 px-0"
             style={{ color: 'var(--primary)' }}
           >
             {td('View All')} <ArrowRight className="size-4" />
-          </Link>
+          </Button>
         </div>
       )}
 

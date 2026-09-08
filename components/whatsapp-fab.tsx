@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { MessageCircle, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function WhatsAppFab() {
   const [open, setOpen] = useState(false)
@@ -20,38 +21,44 @@ export function WhatsAppFab() {
                 <p className="text-xs text-muted-foreground">Typically replies in minutes</p>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => setOpen(false)}
               aria-label="Close support"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              variant="ghost"
+              size="icon-sm"
+              className="text-muted-foreground"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
           <p className="mt-3 rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2.5 text-sm text-foreground">
             Labas! 👋 Questions about an order or bus delivery? Message us on WhatsApp.
           </p>
-          <a
+          <Button
             href="https://wa.me/37060000000"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-shimmer mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all duration-300 hover:bg-primary/90"
+            variant="emerald"
+            size="lg"
+            className="btn-shimmer mt-3 w-full rounded-full gap-2"
           >
             <MessageCircle className="size-4" /> Chat on WhatsApp
-          </a>
+          </Button>
         </div>
       )}
 
-      <button
+      <Button
         onClick={() => setOpen((o) => !o)}
         aria-label="Open WhatsApp support"
-        className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+        variant="emerald"
+        size="icon-lg"
+        className="relative rounded-full shadow-xl"
       >
         {open ? <X className="size-6" /> : <MessageCircle className="size-6" />}
         {!open && (
           <span className="absolute inline-flex size-14 rounded-full bg-primary/40" style={{ animation: 'pin-pulse 2.5s ease-out infinite' }} />
         )}
-      </button>
+      </Button>
     </div>
   )
 }

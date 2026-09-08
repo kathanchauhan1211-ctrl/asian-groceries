@@ -427,9 +427,10 @@ export function BusTracker({ initialTicket = '' }: { initialTicket?: string }) {
           </div>
           <Button
             type="submit"
+            variant="default"
             size="lg"
             disabled={loading}
-            className="h-12 rounded-md bg-accent px-6 text-sm font-semibold text-white shadow-sm hover:bg-accent/90 transition-all duration-300"
+            className="h-12 rounded-md px-6 shadow-sm"
           >
             {loading ? <Loader2 className="size-4 animate-spin" /> : 'Track Transit'}
           </Button>

@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { LogoSVG } from '@/components/logo-svg'
 import { Switch } from '@/components/ui/switch-button'
 import { useActiveOrder } from '@/lib/use-active-order'
+import { Button } from '@/components/ui/button'
+import { LiquidGlassBox } from '@/components/ui/liquid-glass-box'
 
 export type Tab = 'shop' | 'checkout' | 'track' | 'dashboard' | 'community'
 
@@ -173,61 +175,64 @@ export function SiteHeader() {
 
             {/* Language selector */}
             <div className="relative" ref={langRef}>
-              <button
+              <Button
                 type="button"
+                variant="glass-dark"
+                size="default"
                 onClick={() => setLangOpen(!langOpen)}
-                className="flex h-10 items-center gap-1.5 rounded-xl border border-white/15 bg-white/8 hover:bg-white/15 px-3 text-xs font-semibold text-white transition-all duration-200"
-                style={{ background: 'rgba(255,255,255,0.08)' }}
                 aria-label="Select Language"
+                className="gap-1.5 px-3"
               >
                 <Globe className="size-4" />
-                <span className="hidden sm:inline">{activeLangData.code}</span>
+                <span className="hidden sm:inline text-xs font-semibold">{activeLangData.code}</span>
                 <ChevronDown className={`size-3 text-white/50 transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`} />
-              </button>
+              </Button>
+
               {langOpen && (
-                <div className="absolute right-0 top-12 z-50 w-44 rounded-xl border border-white/10 shadow-2xl overflow-hidden" style={{ backgroundColor: 'var(--im-green, #064E3B)' }}>
-                  {LANGUAGES.map(lang => (
-                    <button
-                      key={lang.name}
-                      onClick={() => { setActiveLang(lang.name); setLangOpen(false) }}
-                      className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                        activeLang === lang.name
-                          ? 'bg-orange-500/20 text-orange-300 font-semibold'
-                          : 'text-white/80 hover:bg-white/10'
-                      }`}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      {lang.name}
-                      {activeLang === lang.name && <span className="ml-auto text-orange-400">✓</span>}
-                    </button>
-                  ))}
+                <div className="absolute right-0 top-12 z-50 w-44 overflow-hidden">
+                  <LiquidGlassBox
+                    className="rounded-xl"
+                    style={{ backgroundColor: 'rgba(6,78,59,0.95)' }}
+                  >
+                    {LANGUAGES.map(lang => (
+                      <button
+                        key={lang.name}
+                        onClick={() => { setActiveLang(lang.name); setLangOpen(false) }}
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                          activeLang === lang.name
+                            ? 'bg-orange-500/20 text-orange-300 font-semibold'
+                            : 'text-white/80 hover:bg-white/10'
+                        }`}
+                      >
+                        <span className="text-base">{lang.flag}</span>
+                        {lang.name}
+                        {activeLang === lang.name && <span className="ml-auto text-orange-400">✓</span>}
+                      </button>
+                    ))}
+                  </LiquidGlassBox>
                 </div>
               )}
             </div>
 
             {/* Active Order Tracking Pill */}
             {activeOrder && (
-              <Link
+              <Button
                 href={`/track?ticket=${activeOrder.ticketNumber}`}
-                className="hidden md:flex items-center gap-1.5 rounded-full border border-orange-400/50 bg-orange-500/15 pl-2.5 pr-3.5 py-2 text-xs font-semibold text-orange-300 hover:bg-orange-500 hover:text-white transition-all duration-300"
+                variant="amber"
+                size="sm"
+                className="hidden md:flex rounded-full pl-2.5 pr-3.5"
               >
                 <span className="text-sm leading-none">🚌</span>
                 <span>{activeOrder.ticketNumber}: <span className="opacity-80">{activeOrder.status}</span></span>
-              </Link>
+              </Button>
             )}
 
             {/* Cart */}
-            <button
+            <Button
               onClick={() => setOpen(true)}
-              style={{
-                backgroundColor: (isMounted && count > 0) ? 'var(--im-orange, #F97316)' : undefined,
-                color: (isMounted && count > 0) ? '#fff' : undefined,
-              }}
-              className={`relative flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold transition-all duration-200 shadow-sm ${
-                (isMounted && count > 0)
-                  ? 'hover:bg-orange-600 hover:shadow-md hover:shadow-orange-500/30'
-                  : 'bg-white/10 border border-white/15 text-white hover:bg-white/20'
-              }`}
+              variant={isMounted && count > 0 ? 'orange' : 'glass-dark'}
+              size="default"
+              className="gap-2 px-4"
               aria-label={`Open cart, ${isMounted ? count : 0} items`}
             >
               <ShoppingBag className="size-5" />
@@ -237,26 +242,30 @@ export function SiteHeader() {
                   {count}
                 </span>
               )}
-            </button>
+            </Button>
 
             {/* Auth */}
             <div>
               {!user ? (
-                <Link
+                <Button
                   href="/auth"
                   id="btn-header-login"
-                  className="flex h-10 items-center gap-2 rounded-xl border border-orange-400/60 bg-orange-500/20 px-4 text-sm font-semibold text-orange-300 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-200 shadow-sm shadow-orange-500/10"
+                  variant="orange"
+                  size="default"
+                  className="gap-2 px-4"
                 >
                   <User className="size-5" />
                   <span className="hidden lg:inline">{t('nav.login') || 'Log In'}</span>
-                </Link>
+                </Button>
               ) : (
                 <div className="relative" ref={profileRef}>
-                  <button
+                  <Button
                     id="btn-header-profile"
                     type="button"
+                    variant="glass-dark"
+                    size="default"
                     onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 pl-2 pr-3 transition-all duration-200"
+                    className="pl-2 pr-3 gap-2"
                     aria-label="Account menu"
                   >
                     <span
@@ -269,43 +278,49 @@ export function SiteHeader() {
                       {user.displayName?.split(' ')[0] ?? user.email?.split('@')[0]}
                     </span>
                     <ChevronDown className={`size-3.5 text-white/50 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
-                  </button>
+                  </Button>
+
                   {profileOpen && (
-                    <div className="absolute right-0 top-12 z-50 min-w-[210px] rounded-xl border border-white/10 shadow-2xl overflow-hidden" style={{ backgroundColor: 'var(--im-green, #064E3B)' }}>
-                      {/* User info */}
-                      <div className="border-b border-white/10 px-4 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="flex size-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
-                            style={{ background: 'linear-gradient(135deg, var(--im-orange, #F97316), #ea580c)' }}
-                          >
-                            {(user.displayName ?? user.email ?? '?').charAt(0).toUpperCase()}
-                          </span>
-                          <div className="min-w-0">
-                            {user.displayName && (
-                              <p className="text-sm font-bold text-white leading-tight truncate">{user.displayName}</p>
-                            )}
-                            <p className="text-xs text-white/50 truncate mt-0.5">{user.email}</p>
+                    <div className="absolute right-0 top-12 z-50 min-w-[210px] overflow-hidden">
+                      <LiquidGlassBox
+                        className="rounded-xl"
+                        style={{ backgroundColor: 'rgba(6,78,59,0.95)' }}
+                      >
+                        {/* User info */}
+                        <div className="border-b border-white/10 px-4 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="flex size-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
+                              style={{ background: 'linear-gradient(135deg, var(--im-orange, #F97316), #ea580c)' }}
+                            >
+                              {(user.displayName ?? user.email ?? '?').charAt(0).toUpperCase()}
+                            </span>
+                            <div className="min-w-0">
+                              {user.displayName && (
+                                <p className="text-sm font-bold text-white leading-tight truncate">{user.displayName}</p>
+                              )}
+                              <p className="text-xs text-white/50 truncate mt-0.5">{user.email}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-orange-300 transition-colors"
-                        >
-                          <User className="size-4" /> My Account
-                        </Link>
-                        <button
-                          id="btn-sign-out"
-                          type="button"
-                          onClick={() => { signOut(); setProfileOpen(false) }}
-                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                        >
-                          <LogOut className="size-4" /> Sign Out
-                        </button>
-                      </div>
+                        <div className="py-1">
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-orange-300 transition-colors"
+                          >
+                            <User className="size-4" /> My Account
+                          </Link>
+                          <button
+                            id="btn-sign-out"
+                            type="button"
+                            onClick={() => { signOut(); setProfileOpen(false) }}
+                            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <LogOut className="size-4" /> Sign Out
+                          </button>
+                        </div>
+                      </LiquidGlassBox>
                     </div>
                   )}
                 </div>

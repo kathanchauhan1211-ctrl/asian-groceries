@@ -12,6 +12,7 @@ import {
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Order } from '@/app/lib/order-types'
+import { Button } from '@/components/ui/button'
 
 const STATUSES = ['Pending Payment', 'Accepted', 'Preparing', 'Dispatched', 'Delivered'] as const
 
@@ -81,10 +82,12 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
           {nextStatus && (
-            <button
+            <Button
               onClick={advance}
               disabled={loading}
-              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-bold text-white transition-all disabled:opacity-50 ${NEXT_COLOR[order.status as Status]}`}
+              variant="default"
+              size="sm"
+              className="rounded-xl gap-1.5"
             >
               {loading ? (
                 <span className="size-3 border border-white/40 border-t-white rounded-full animate-spin" />
@@ -92,14 +95,16 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
                 <ArrowRight className="size-3" />
               )}
               <span className="hidden sm:inline">{NEXT_LABEL[order.status as Status]}</span>
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             onClick={() => setOpen(v => !v)}
-            className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-all"
+            variant="glass-dark"
+            size="icon"
+            className="rounded-xl"
           >
             {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-          </button>
+          </Button>
         </div>
       </div>
 

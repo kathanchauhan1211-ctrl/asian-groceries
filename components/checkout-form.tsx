@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
 import { useCart } from '@/lib/cart-context'
 import { Button } from '@/components/ui/button'
+import { LiquidGlassBox } from '@/components/ui/liquid-glass-box'
 import {
   Bus,
   Phone,
@@ -175,37 +176,37 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
 
   if (orderCreated) {
     return (
-      <div className="mx-auto max-w-xl rounded-xl border border-slate-200 bg-white p-6 text-center shadow-lg">
+      <LiquidGlassBox size="xl" className="mx-auto p-6 text-center" style={{ background: 'rgba(15,20,35,0.85)' }}>
         <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-950 text-emerald-500 border border-emerald-800/40">
           <CheckCircle2 className="size-10" />
         </span>
-        <h2 className="mt-4 text-2xl font-bold font-sans text-slate-900">Order Dispatched to Courier!</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          We prepared your parcel from <strong>Šaltinių g. 22, Vilnius</strong>. It will go on the next bus dispatch.
+        <h2 className="mt-4 text-2xl font-bold font-sans text-white">Order Dispatched to Courier!</h2>
+        <p className="mt-2 text-sm text-white/60">
+          We prepared your parcel from <strong className="text-white">Šaltinių g. 22, Vilnius</strong>. It will go on the next bus dispatch.
         </p>
 
-        <div className="mt-6 rounded-xl bg-slate-50 p-4 text-left border border-slate-200">
-          <div className="flex justify-between border-b border-slate-200 pb-2.5 text-xs text-slate-500">
+        <div className="mt-6 rounded-xl bg-white/5 border border-white/10 p-4 text-left">
+          <div className="flex justify-between border-b border-white/10 pb-2.5 text-xs text-white/50">
             <span>Ticket Number</span>
             <span className="font-bold text-accent">{ticketNumber}</span>
           </div>
-          <div className="flex justify-between py-2 text-xs text-slate-500">
+          <div className="flex justify-between py-2 text-xs text-white/50">
             <span>Customer</span>
-            <span className="font-bold text-slate-900">{customerName}</span>
+            <span className="font-bold text-white">{customerName}</span>
           </div>
-          <div className="flex justify-between py-2 text-xs text-slate-500">
+          <div className="flex justify-between py-2 text-xs text-white/50">
             <span>Destination Hub</span>
-            <span className="font-bold text-slate-900">{selectedTransit.label.split(' - ')[0]}</span>
+            <span className="font-bold text-white">{selectedTransit.label.split(' - ')[0]}</span>
           </div>
-          <div className="flex justify-between py-2 text-xs text-slate-500">
+          <div className="flex justify-between py-2 text-xs text-white/50">
             <span>Bus Station Dispatch (excl.)</span>
-            <span className="font-bold text-slate-900">€{deliveryPrice.toFixed(2)}</span>
+            <span className="font-bold text-white">€{deliveryPrice.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between py-2 text-xs text-slate-500">
+          <div className="flex justify-between py-2 text-xs text-white/50">
             <span>Payment Status</span>
-            <span className="font-bold text-amber-600">{finalStatus}</span>
+            <span className="font-bold text-amber-400">{finalStatus}</span>
           </div>
-          <div className="flex justify-between pt-2.5 border-t border-slate-200 text-xs font-bold text-slate-900">
+          <div className="flex justify-between pt-2.5 border-t border-white/10 text-xs font-bold text-white">
             <span>Amount Due (EUR)</span>
             <span>€{grandTotal.toFixed(2)}</span>
           </div>
@@ -266,42 +267,43 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
 
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
           <Button
-            variant="outline"
+            variant="glass-dark"
             onClick={handleDownloadInvoice}
-            className="flex-1 rounded-full border-slate-300 font-bold hover:bg-slate-50"
+            className="flex-1 rounded-full"
           >
-            <Download className="size-4 mr-2" /> Save Invoice
+            <Download className="size-4" /> Save Invoice
           </Button>
           <Button
             onClick={() => onComplete(ticketNumber)}
-            className="flex-1 rounded-full bg-accent text-accent-foreground font-bold hover:bg-accent/90 transition-all duration-300"
+            variant="emerald"
+            className="flex-1 rounded-full"
           >
             Track Delivery
           </Button>
         </div>
-      </div>
+      </LiquidGlassBox>
     )
   }
 
   if (lines.length === 0) {
     return (
-      <div className="mx-auto max-w-xl text-center p-8 bg-white border border-slate-200 rounded-xl shadow-sm">
+      <LiquidGlassBox size="xl" className="mx-auto p-8 text-center" style={{ background: 'rgba(15,20,35,0.85)' }}>
         <span className="text-4xl">🛒</span>
-        <h3 className="mt-4 text-lg font-bold text-slate-900">Your Basket is Empty</h3>
-        <p className="text-sm text-slate-500 mt-1">
+        <h3 className="mt-4 text-lg font-bold text-white">Your Basket is Empty</h3>
+        <p className="text-sm text-white/50 mt-1">
           Please add products to your basket before checking out.
         </p>
-      </div>
+      </LiquidGlassBox>
     )
   }
 
   return (
-    <div className="mx-auto max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
+    <LiquidGlassBox size="xl" className="mx-auto p-6" style={{ background: 'rgba(15,20,35,0.85)' }}>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-sans text-xl font-bold text-slate-900 flex items-center gap-2">
+        <h2 className="font-sans text-xl font-bold text-white flex items-center gap-2">
           <Bus className="size-5 text-accent" /> Checkout
         </h2>
-        <span className="text-xs font-semibold text-slate-500">Step {step} of 3</span>
+        <span className="text-xs font-semibold text-white/40">Step {step} of 3</span>
       </div>
 
       <div className="mb-8 flex gap-2">
@@ -392,11 +394,13 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
 
             <Button
               type="button"
+              variant="default"
+              size="xl"
               disabled={phone.length < 13}
               onClick={() => setStep(2)}
-              className="w-full h-11 rounded-full bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-all duration-300"
+              className="w-full rounded-full"
             >
-              Continue to Payment <ChevronRight className="size-4 ml-1" />
+              Continue to Payment <ChevronRight className="size-4" />
             </Button>
           </div>
         )}
@@ -412,18 +416,21 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
             <div className="flex gap-3 pt-2">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
+                size="xl"
                 onClick={() => setStep(1)}
-                className="rounded-full border-slate-300 font-semibold w-1/3"
+                className="rounded-full w-1/3 text-white/70"
               >
-                <ArrowLeft className="size-4 mr-1" /> Back
+                <ArrowLeft className="size-4" /> Back
               </Button>
               <Button
                 type="button"
+                variant="default"
+                size="xl"
                 onClick={() => setStep(3)}
-                className="flex-1 rounded-full bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-all duration-300"
+                className="flex-1 rounded-full"
               >
-                Continue to Review <ChevronRight className="size-4 ml-1" />
+                Continue to Review <ChevronRight className="size-4" />
               </Button>
             </div>
           </div>
@@ -483,24 +490,28 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
             <div className="flex gap-3">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
+                size="icon-lg"
                 onClick={() => setStep(2)}
-                className="rounded-full border-slate-300 font-semibold px-4"
+                className="rounded-full text-white/70"
               >
                 <ArrowLeft className="size-4" />
               </Button>
               <Button
                 type="button"
-                variant="secondary"
+                variant="glass-dark"
+                size="lg"
                 onClick={handlePrintBill}
-                className="rounded-full bg-slate-100 font-bold hover:bg-slate-200 text-slate-700 whitespace-nowrap px-4"
+                className="rounded-full whitespace-nowrap"
               >
-                <Download className="size-4 mr-1.5" /> Save Bill
+                <Download className="size-4" /> Save Bill
               </Button>
               <Button
                 type="submit"
+                variant="emerald"
+                size="xl"
                 disabled={isSubmitting}
-                className="flex-1 rounded-full bg-accent text-accent-foreground font-semibold hover:bg-accent/90 shadow-md shadow-accent/15 transition-all duration-300"
+                className="flex-1 rounded-full"
               >
                 {isSubmitting ? 'Processing...' : 'Confirm Order'}
               </Button>
@@ -508,6 +519,6 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
           </div>
         )}
       </form>
-    </div>
+    </LiquidGlassBox>
   )
 }

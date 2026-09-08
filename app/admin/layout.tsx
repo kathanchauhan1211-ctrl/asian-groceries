@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { LogoSVG } from '@/components/logo-svg'
 import { ADMIN_EMAIL } from '@/lib/admin-config'
+import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -138,23 +139,26 @@ function SidebarContent({
             <p className="truncate text-[10px]" style={{ color: '#4B5563' }}>{user?.email}</p>
           </div>
         </div>
-        <Link
+        <Button
           href="/"
           target="_blank"
-          className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium mb-0.5"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 mb-0.5 text-[12px]"
           style={{ color: '#6B7280' }}
         >
           <ExternalLink className="size-[13px]" />
           View Store
-        </Link>
-        <button
+        </Button>
+        <Button
           onClick={signOut}
-          className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium"
-          style={{ color: '#EF4444' }}
+          variant="danger"
+          size="sm"
+          className="w-full justify-start gap-2 text-[12px]"
         >
           <LogOut className="size-[13px]" />
           Sign Out
-        </button>
+        </Button>
       </div>
     </aside>
   )
@@ -234,13 +238,15 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           style={{ background: '#080C14', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         >
           <div className="flex items-center gap-3">
-            <button
-              className="flex size-8 items-center justify-center rounded-md lg:hidden"
-              style={{ background: 'rgba(255,255,255,0.05)', color: '#9CA3AF' }}
+            <Button
+              variant="glass-dark"
+              size="icon-sm"
+              className="lg:hidden"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open sidebar"
             >
               <Menu className="size-4" />
-            </button>
+            </Button>
             <nav className="flex items-center gap-1.5 text-[12px]">
               <span style={{ color: '#4B5563' }}>Portal</span>
               <ChevronRight className="size-3" style={{ color: '#374151' }} />

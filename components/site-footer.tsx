@@ -1,6 +1,7 @@
 import { Mail, MapPin, Phone } from 'lucide-react'
 import Link from 'next/link'
 import { LogoSVG } from '@/components/logo-svg'
+import { Button } from '@/components/ui/button'
 
 // Category → query param mapping for functional footer links
 const SHOP_LINKS = [
@@ -59,16 +60,18 @@ export function SiteFooter() {
             {/* Social media icons */}
             <div className="mt-4 flex items-center gap-3">
               {SOCIAL_LINKS.map((s) => (
-                <a
+                <Button
                   key={s.label}
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className={`flex size-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition-all hover:bg-white/20 hover:scale-110 ${s.color}`}
+                  variant="glass-dark"
+                  size="icon"
+                  className={`rounded-full text-white/70 ${s.color}`}
                 >
                   {s.icon}
-                </a>
+                </Button>
               ))}
             </div>
           </div>
@@ -109,16 +112,18 @@ export function SiteFooter() {
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2">Follow Us</h3>
                 <div className="flex items-center gap-3">
                   {SOCIAL_LINKS.map((s) => (
-                    <a
+                    <Button
                       key={s.label}
                       href={s.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`text-xs text-white/60 flex items-center gap-1 transition-colors ${s.color}`}
+                      variant="ghost"
+                      size="sm"
+                      className={`text-xs text-white/60 flex items-center gap-1 px-1 hover:text-white transition-colors ${s.color}`}
                     >
                       {s.icon}
                       {s.label}
-                    </a>
+                    </Button>
                   ))}
                 </div>
               </div>

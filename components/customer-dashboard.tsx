@@ -164,15 +164,14 @@ function Sidebar({
         {nav.map((item) => {
           const active = section === item.id
           return (
-            <button
+            <Button
               key={item.id}
               onClick={() => { onSection(item.id); onClose() }}
-              className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
-                active
-                  ? 'text-white shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              variant={active ? 'orange' : 'ghost'}
+              size="sm"
+              className={`w-full justify-between gap-3 px-3 py-2.5 h-auto ${
+                active ? 'text-white' : 'text-muted-foreground hover:text-foreground'
               }`}
-              style={active ? { background: 'var(--im-orange)' } : {}}
             >
               <span className="flex items-center gap-2.5">{item.icon}{item.label}</span>
               {item.count !== undefined && item.count > 0 && (
@@ -180,19 +179,21 @@ function Sidebar({
                   {item.count}
                 </span>
               )}
-            </button>
+            </Button>
           )
         })}
       </nav>
 
       {/* Sign out */}
       <div className="shrink-0 p-3 border-t border-border">
-        <button
+        <Button
           onClick={onSignOut}
-          className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors"
+          variant="danger"
+          size="sm"
+          className="w-full gap-2.5 justify-start px-3"
         >
           <LogOut className="size-4" /> Sign Out
-        </button>
+        </Button>
       </div>
     </aside>
   )
@@ -266,17 +267,19 @@ function OverviewSection({ orders, user, onSection }: {
           { label: 'Edit Profile', icon: <Settings className="size-4" />,     section: 'profile' as DashboardSection },
           { label: 'View Basket',  icon: <ShoppingCart className="size-4" />, section: 'basket'  as DashboardSection },
         ].map(link => (
-          <button
+          <Button
             key={link.label}
             onClick={() => onSection(link.section)}
-            className={`${card} flex items-center gap-3 p-4 text-sm font-semibold text-foreground hover:border-primary/40 hover:shadow-md transition-all duration-200 group`}
+            variant="glass-light"
+            size="lg"
+            className={`${card} justify-start gap-3 p-4 h-auto text-foreground hover:border-primary/40 hover:shadow-md group w-full`}
           >
-            <span className="flex size-8 items-center justify-center rounded-lg transition-colors" style={{ background: 'rgba(249,115,22,0.1)', color: 'var(--im-orange)' }}>
+            <span className="flex size-8 items-center justify-center rounded-lg" style={{ background: 'rgba(249,115,22,0.1)', color: 'var(--im-orange)' }}>
               {link.icon}
             </span>
             {link.label}
             <ChevronRight className="size-4 ml-auto text-muted-foreground group-hover:text-primary transition-colors" />
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -286,7 +289,7 @@ function OverviewSection({ orders, user, onSection }: {
           <h3 className="font-bold text-foreground flex items-center gap-2">
             <SectionIcon icon={<Clock className="size-3.5" />} /> Recent Orders
           </h3>
-          <button onClick={() => onSection('orders')} className="text-xs font-semibold hover:underline" style={{ color: 'var(--im-orange)' }}>View all →</button>
+          <Button onClick={() => onSection('orders')} variant="transparent" size="sm" className="text-xs font-semibold px-0" style={{ color: 'var(--im-orange)' }}>View all →</Button>
         </div>
         {recentOrders.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">No orders yet</div>
@@ -381,15 +384,15 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
           <SectionIcon icon={<User className="size-4" />} /> Profile Settings
         </h2>
         {!isEditing ? (
-          <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} className="gap-1.5">
+          <Button size="sm" variant="glass-light" onClick={() => setIsEditing(true)} className="gap-1.5">
             <Edit3 className="size-3.5" /> Edit
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} className="gap-1.5">
+            <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="gap-1.5">
               <X className="size-3.5" /> Cancel
             </Button>
-            <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button size="sm" variant="default" onClick={handleSave} disabled={saving} className="gap-1.5">
               {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} Save
             </Button>
           </div>
@@ -425,7 +428,7 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
           <div>
             <p className="font-semibold text-foreground">Upload a profile photo</p>
             <p className="text-xs text-muted-foreground mt-1">JPG, PNG or GIF · Max 2MB</p>
-            <Button size="sm" variant="outline" className="mt-3 gap-1.5" onClick={() => fileRef.current?.click()} disabled={uploading}>
+            <Button size="sm" variant="glass-light" className="mt-3 gap-1.5" onClick={() => fileRef.current?.click()} disabled={uploading}>
               {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
               {uploading ? 'Uploading…' : 'Change Photo'}
             </Button>
@@ -532,11 +535,11 @@ function AddressSection({ user }: { user: { uid: string } }) {
             </div>
           </div>
           {!isEditing ? (
-            <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} className="gap-1.5"><Edit3 className="size-3.5" /> Change</Button>
+            <Button size="sm" variant="glass-light" onClick={() => setIsEditing(true)} className="gap-1.5"><Edit3 className="size-3.5" /> Change</Button>
           ) : (
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}><X className="size-3.5" /></Button>
-              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5">
+              <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}><X className="size-3.5" /></Button>
+              <Button size="sm" variant="default" onClick={handleSave} disabled={saving} className="gap-1.5">
                 {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} Save
               </Button>
             </div>
@@ -613,9 +616,9 @@ function OrdersSection({ orders, loading }: { orders: LiveOrder[]; loading: bool
         <div className={`${card} py-16 text-center`}>
           <Package className="size-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="font-semibold text-muted-foreground">No orders yet</p>
-          <Link href="/" className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white hover:opacity-90 transition-opacity" style={{ background: 'var(--im-orange)' }}>
+          <Button href="/" variant="orange" size="lg" className="mt-4 rounded-full">
             <ShoppingBag className="size-4" /> Start Shopping
-          </Link>
+          </Button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -658,12 +661,12 @@ function OrdersSection({ orders, loading }: { orders: LiveOrder[]; loading: bool
                   <div className="text-base font-bold text-foreground">Total (EUR): €{(order.grandTotal || 0).toFixed(2)}</div>
                 </div>
                 <div className="flex gap-2">
-                  <Link href={`/track?ticket=${order.id}`} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity" style={{ background: 'var(--im-green-mid)' }}>
+                  <Button href={`/track?ticket=${order.id}`} variant="amber" size="sm" className="rounded-full gap-1.5">
                     <Truck className="size-3" /> Track
-                  </Link>
-                  <button className="flex items-center gap-1.5 rounded-full bg-muted border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/80 transition-colors">
+                  </Button>
+                  <Button variant="glass-light" size="sm" className="rounded-full gap-1.5">
                     <Download className="size-3" /> Invoice
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -687,9 +690,9 @@ function BasketSection() {
         <div className={`${card} py-16 text-center`}>
           <ShoppingCart className="size-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="font-semibold text-muted-foreground">Your basket is empty</p>
-          <Link href="/" className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white hover:opacity-90 transition-opacity" style={{ background: 'var(--im-orange)' }}>
+          <Button href="/" variant="orange" size="lg" className="mt-4 rounded-full">
             <ShoppingBag className="size-4" /> Shop Now
-          </Link>
+          </Button>
         </div>
       </div>
     )
@@ -717,7 +720,7 @@ function BasketSection() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-sm font-bold text-foreground">€{(line.variant.price * line.quantity).toFixed(2)}</p>
-                <button onClick={() => removeItem(line.key)} className="text-[11px] font-semibold text-destructive hover:text-destructive/80 mt-0.5 transition-colors">Remove</button>
+                <Button onClick={() => removeItem(line.key)} variant="ghost" size="sm" className="text-[11px] font-semibold text-destructive hover:text-destructive/80 px-0 h-auto mt-0.5">Remove</Button>
               </div>
             </div>
           ))}
@@ -733,9 +736,9 @@ function BasketSection() {
         </div>
       </div>
 
-      <Link href="/checkout" className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold text-white shadow-md hover:opacity-90 active:scale-[0.98] transition-all duration-200" style={{ background: 'var(--im-orange)' }}>
+      <Button href="/checkout" variant="emerald" size="xxl" className="w-full rounded-2xl gap-2">
         <Zap className="size-4" /> Proceed to Checkout
-      </Link>
+      </Button>
     </div>
   )
 }
@@ -858,12 +861,14 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
       <div className="flex-1 min-w-0 flex flex-col bg-background">
         {/* Mobile top bar */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card md:hidden">
-          <button
+          <Button
             onClick={() => setSidebarOpen(true)}
-            className="flex size-8 items-center justify-center rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+            variant="glass-light"
+            size="icon-sm"
+            aria-label="Open navigation"
           >
-            <Menu className="size-4 text-foreground" />
-          </button>
+            <Menu className="size-4" />
+          </Button>
           <h1 className="font-bold text-foreground">{sectionNames[section]}</h1>
         </div>
 

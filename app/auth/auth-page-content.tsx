@@ -10,6 +10,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { LogoSVG } from '@/components/logo-svg'
+import { Button } from '@/components/ui/button'
+import { LiquidGlassBox } from '@/components/ui/liquid-glass-box'
 import type { User as FirebaseUser } from 'firebase/auth'
 
 // ─── Google Icon SVG ─────────────────────────────────────────────────────────
@@ -377,15 +379,15 @@ function CompleteProfileStep({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+    <LiquidGlassBox
+      modal
+      size="md"
+      onBackdropClick={onCancel}
+      style={{ background: 'rgba(10,15,30,0.92)' }}
+    >
+      <div className="h-[3px] bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
 
-      {/* Card */}
-      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 shadow-2xl overflow-hidden">
-        <div className="h-[3px] bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
-
-        <div className="p-7">
+      <div className="p-7">
           {/* Header */}
           <div className="mb-6 flex items-start justify-between">
             <div>
@@ -394,13 +396,15 @@ function CompleteProfileStep({
                 We need a few more details to finish setting up your account.
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={onCancel}
-              className="ml-4 shrink-0 rounded-lg p-1.5 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+              className="ml-4 shrink-0 text-white/40 hover:text-white"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Google account info */}
@@ -465,18 +469,19 @@ function CompleteProfileStep({
               errorMsg={phoneError}
             />
 
-            <button
+            <Button
               type="submit"
+              variant="orange"
+              size="xl"
               disabled={saving}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-2 w-full rounded-xl"
             >
               {saving ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
               {saving ? 'Saving…' : 'Complete Setup & Continue'}
-            </button>
+            </Button>
           </form>
         </div>
-      </div>
-    </div>
+      </LiquidGlassBox>
   )
 }
 
@@ -763,22 +768,20 @@ export default function AuthPageContent() {
                 </div>
 
                 {/* Google button */}
-                <button
+                <Button
                   id="btn-google-auth"
                   type="button"
+                  variant="glass-dark"
+                  size="lg"
                   onClick={handleGoogleSignIn}
                   disabled={googleLoading || loading}
-                  className="mb-5 flex w-full items-center justify-center gap-3 rounded-xl py-2.5 text-sm font-semibold text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:brightness-110"
-                  style={{
-                    background: 'rgba(255,255,255,0.07)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                  }}
+                  className="mb-5 w-full gap-3"
                 >
                   {googleLoading
                     ? <Loader2 className="size-5 animate-spin text-orange-400" />
                     : <GoogleIcon />}
                   {googleLoading ? 'Signing in…' : 'Continue with Google'}
-                </button>
+                </Button>
 
                 {/* Divider */}
                 <div className="mb-5 flex items-center gap-3">
@@ -934,15 +937,13 @@ export default function AuthPageContent() {
                   )}
 
                   {/* Submit */}
-                  <button
+                  <Button
                     id="btn-submit-auth"
                     type="submit"
+                    variant="orange"
+                    size="xl"
                     disabled={loading || googleLoading}
-                    className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white shadow-lg active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{
-                      background: 'linear-gradient(135deg, #f97316, #f59e0b)',
-                      boxShadow: '0 8px 24px rgba(249,115,22,0.35)',
-                    }}
+                    className="mt-1 w-full rounded-xl"
                   >
                     {loading
                       ? <Loader2 className="size-4 animate-spin" />
@@ -950,30 +951,34 @@ export default function AuthPageContent() {
                     {loading
                       ? (tab === 'signup' ? 'Creating account…' : 'Signing in…')
                       : (tab === 'signup' ? 'Create Account' : 'Log In')}
-                  </button>
+                  </Button>
                 </form>
 
                 {/* Switch tab footer */}
                 <p className="mt-6 text-center text-sm text-white/40">
                   {tab === 'login' ? (
                     <>Don&apos;t have an account?{' '}
-                      <button
+                      <Button
                         type="button"
+                        variant="transparent"
+                        size="sm"
                         onClick={() => switchTab('signup')}
-                        className="font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+                        className="px-1 font-semibold text-orange-400 hover:text-orange-300"
                       >
                         Sign up free
-                      </button>
+                      </Button>
                     </>
                   ) : (
                     <>Already have an account?{' '}
-                      <button
+                      <Button
                         type="button"
+                        variant="transparent"
+                        size="sm"
                         onClick={() => switchTab('login')}
-                        className="font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+                        className="px-1 font-semibold text-orange-400 hover:text-orange-300"
                       >
                         Log in
-                      </button>
+                      </Button>
                     </>
                   )}
                 </p>

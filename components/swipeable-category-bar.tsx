@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CATEGORY_GROUPS, type CategoryGroup } from '@/lib/products'
 import { useTranslation } from '@/lib/translation-context'
+import { Button } from '@/components/ui/button'
 
 /**
  * SwipeableCategoryBar
@@ -83,13 +84,15 @@ export function SwipeableCategoryBar({
 
       {/* Desktop Scroll Left */}
       {canScrollLeft && (
-        <button
+        <Button
           onClick={() => scrollBy(-300)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-40 hidden md:flex items-center justify-center size-9 rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 text-gray-700 hover:text-orange-500 hover:scale-110 transition-all opacity-0 group-hover/bar:opacity-100"
+          variant="glass-light"
+          size="icon"
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-40 hidden md:flex rounded-full opacity-0 group-hover/bar:opacity-100 shadow-md"
           aria-label="Scroll left"
         >
           <ChevronLeft className="size-5" />
-        </button>
+        </Button>
       )}
 
       <div
@@ -104,49 +107,43 @@ export function SwipeableCategoryBar({
         )}
 
         {/* All button */}
-        <button
+        <Button
           onClick={() => selectGroup(null)}
-          className="snap-start shrink-0 flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-bold transition-all border hover:-translate-y-0.5 active:scale-95"
-          style={{
-            background:  activeGroup === null ? 'var(--primary)' : 'var(--card)',
-            color:       activeGroup === null ? '#fff'           : 'var(--foreground)',
-            borderColor: activeGroup === null ? 'var(--primary)' : 'var(--border)',
-            boxShadow:   activeGroup === null ? '0 4px 12px rgba(249,115,22,0.25)' : '0 1px 3px rgba(0,0,0,0.05)',
-          }}
+          variant={activeGroup === null ? 'default' : 'glass-light'}
+          size="sm"
+          className="snap-start shrink-0 rounded-full px-4 py-2 text-[14px] font-bold hover:-translate-y-0.5 active:scale-95"
         >
           {td('All')}
-        </button>
+        </Button>
 
-        {categories.map(grp => {
-          const active = grp.match.some(m => selectedCategories.includes(m))
-          return (
-            <button
-              key={grp.label}
-              onClick={() => selectGroup(grp)}
-              className="snap-start shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-[14px] font-bold transition-all border hover:-translate-y-0.5 active:scale-95"
-              style={{
-                background:  active ? 'var(--primary)' : 'var(--card)',
-                color:       active ? '#fff'           : 'var(--foreground)',
-                borderColor: active ? 'var(--primary)' : 'var(--border)',
-                boxShadow:   active ? '0 4px 12px rgba(249,115,22,0.25)' : '0 1px 3px rgba(0,0,0,0.05)',
-              }}
-            >
-              <span className="text-base leading-none">{grp.icon}</span>
-              {td(grp.label)}
-            </button>
-          )
-        })}
+          {categories.map(grp => {
+            const active = grp.match.some(m => selectedCategories.includes(m))
+            return (
+              <Button
+                key={grp.label}
+                onClick={() => selectGroup(grp)}
+                variant={active ? 'default' : 'glass-light'}
+                size="sm"
+                className="snap-start shrink-0 rounded-full px-4 py-2 text-[14px] font-bold gap-2 hover:-translate-y-0.5 active:scale-95"
+              >
+                <span className="text-base leading-none">{grp.icon}</span>
+                {td(grp.label)}
+              </Button>
+            )
+          })}
       </div>
 
       {/* Desktop Scroll Right */}
       {canScrollRight && (
-        <button
+        <Button
           onClick={() => scrollBy(300)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-40 hidden md:flex items-center justify-center size-9 rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 text-gray-700 hover:text-orange-500 hover:scale-110 transition-all opacity-0 group-hover/bar:opacity-100"
+          variant="glass-light"
+          size="icon"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-40 hidden md:flex rounded-full opacity-0 group-hover/bar:opacity-100 shadow-md"
           aria-label="Scroll right"
         >
           <ChevronRight className="size-5" />
-        </button>
+        </Button>
       )}
     </div>
   )
