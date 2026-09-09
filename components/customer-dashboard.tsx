@@ -825,6 +825,7 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
           transitHub:  data.transitHub || '',
           paymentMethod: data.paymentMethod || '',
           customerPhone: data.customerPhone || '',
+          dpdParcelNumber: data.dpdParcelNumber || undefined,
         }
       }))
       setLoading(false)

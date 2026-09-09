@@ -47,7 +47,15 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
   const cfg = STATUS_CONFIG[order.status as Status] ?? STATUS_CONFIG['Pending Payment']
   const Icon = cfg.icon
   const nextStatus = cfg.next
-  const date = order.createdAt ? new Date(order.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+  
+  let date = '—'
+  if (order.createdAt) {
+    if (typeof (order.createdAt as any).toDate === 'function') {
+      date = (order.createdAt as any).toDate().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    } else if (typeof order.createdAt === 'string') {
+      date = new Date(order.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    }
+  }
 
   async function advance() {
     if (!nextStatus) return
