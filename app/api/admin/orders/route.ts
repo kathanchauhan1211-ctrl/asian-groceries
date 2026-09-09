@@ -35,7 +35,11 @@ export async function PATCH(req: NextRequest) {
 
     // 2. Parse & validate body
     const body = await req.json()
-    const { orderId, status } = body as { orderId: string; status: string }
+    const { orderId, status, dpdParcelNumber } = body as {
+      orderId: string
+      status: string
+      dpdParcelNumber?: string
+    }
 
     if (!orderId || typeof orderId !== 'string') {
       return NextResponse.json({ error: 'Missing orderId' }, { status: 400 })
@@ -45,7 +49,11 @@ export async function PATCH(req: NextRequest) {
     }
 
     // 3. Update via Admin SDK (bypasses client security rules)
-    await db.collection('orders').doc(orderId).update({ status })
+    const updatePayload: Record<string, unknown> = { status }
+    if (dpdParcelNumber && typeof dpdParcelNumber === 'string' && dpdParcelNumber.trim()) {
+      updatePayload.dpdParcelNumber = dpdParcelNumber.trim()
+    }
+    await db.collection('orders').doc(orderId).update(updatePayload)
 
     // 4. Non-blocking customer status-change email
     ;(async () => {

@@ -1,66 +1,53 @@
 /**
  * lib/destinations.ts
  *
- * Single source of truth for all bus courier transit hubs.
+ * Single source of truth for all delivery transit hubs (used by checkout and customer dashboard).
  *
- * Previously this data was duplicated in three separate files:
- *   - components/checkout-form.tsx    (price only)
- *   - components/bus-tracker.tsx      (map coords + ETA)
- *   - components/customer-dashboard.tsx (label + price)
+ * Previously this data was duplicated across:
+ *   - components/checkout-form.tsx       (price only)
+ *   - components/customer-dashboard.tsx  (label + price)
  *
- * Now all components import from here. To add/rename/reprice a destination,
- * edit this file only.
+ * Parcel tracking is now handled by the DPD Interconnector API via /api/dpd/track.
+ * To add/rename/reprice a destination, edit this file only.
  */
 
 export type Destination = {
   id: string
-  name: string           // short city name for map labels
-  label: string          // full label shown in dropdowns
-  price: number          // delivery fee in EUR
-  mapX: number           // SVG map X coordinate (viewBox 0 0 500 420)
-  mapY: number           // SVG map Y coordinate
+  name: string    // short city name
+  label: string   // full label shown in dropdowns
+  price: number   // delivery fee in EUR
 }
 
 export const DESTINATIONS: Destination[] = [
   {
     id: 'kaunas',
     name: 'Kaunas',
-    label: 'Kaunas Bus Station - Via Autobusų Stotis Courier',
+    label: 'Kaunas - Via DPD Courier',
     price: 4.5,
-    mapX: 220,
-    mapY: 270,
   },
   {
     id: 'klaipeda',
     name: 'Klaipėda',
-    label: 'Klaipėda Bus Station - Via Autobusų Stotis Courier',
+    label: 'Klaipėda - Via DPD Courier',
     price: 6.0,
-    mapX: 55,
-    mapY: 195,
   },
   {
     id: 'siauliai',
     name: 'Šiauliai',
-    label: 'Šiauliai Bus Station - Via Autobusų Stotis Courier',
+    label: 'Šiauliai - Via DPD Courier',
     price: 5.0,
-    mapX: 160,
-    mapY: 115,
   },
   {
     id: 'panevezys',
     name: 'Panevėžys',
-    label: 'Panevėžys Bus Station - Via Autobusų Stotis Courier',
+    label: 'Panevėžys - Via DPD Courier',
     price: 4.5,
-    mapX: 255,
-    mapY: 145,
   },
   {
     id: 'alytus',
     name: 'Alytus',
-    label: 'Alytus Bus Station - Via Autobusų Stotis Courier',
+    label: 'Alytus - Via DPD Courier',
     price: 4.0,
-    mapX: 255,
-    mapY: 340,
   },
 ]
 

@@ -46,4 +46,6 @@ export interface Order {
   subtotal?: number;
   deliveryFee?: number;
   totalWeight?: number;
+  /** DPD parcel number assigned by admin when order is dispatched */
+  dpdParcelNumber?: string;
 }
