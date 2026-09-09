@@ -17,6 +17,7 @@ import {
   Navigation,
   Building2,
 } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 
 // ─── Types (mirrored from API route) ─────────────────────────────────────────
@@ -158,116 +159,24 @@ const STATUS_PALETTE: Record<
   },
 }
 
-// ─── Lithuania SVG Map ────────────────────────────────────────────────────────
-// Accurate geographic outline, tricolor flag fill clipped to country shape.
-// Clean, flat, minimalist — no labels, no grid, no animation dots.
+// ─── Lithuania 3D Rendered Map ──────────────────────────────────────────────────
 
-const LT_PATH = `
-  M 188 42
-  C 196 36 210 34 228 33
-  C 248 32 268 33 288 36
-  C 308 39 326 44 348 50
-  C 368 56 385 64 402 76
-  C 418 88 430 104 438 122
-  C 446 140 448 160 446 180
-  C 444 198 438 216 432 232
-  C 426 248 418 263 410 278
-  C 402 293 394 308 385 322
-  C 376 336 364 348 350 358
-  C 336 368 320 374 302 376
-  C 284 378 266 376 250 370
-  C 234 364 220 354 207 342
-  C 194 330 183 316 170 303
-  C 158 291 144 280 130 268
-  C 116 256 103 242 92 227
-  C 81 212 72 195 66 178
-  C 60 161 56 143 55 125
-  C 54 108 56 91 62 76
-  C 68 62 77 50 90 42
-  C 103 34 118 30 136 30
-  C 154 30 170 33 188 42
-  Z
-`
-
-function LithuaniaFlagMap({ cityDot }: { cityDot?: { x: number; y: number; label: string } | null }) {
+function LithuaniaFlagMap() {
   return (
-    <div className="relative w-full flex items-center justify-center bg-white dark:bg-slate-950 rounded-xl overflow-hidden">
-      <svg
-        viewBox="50 25 400 360"
-        className="w-full max-w-sm mx-auto drop-shadow-md"
-        aria-label="Map of Lithuania with flag colors"
-        role="img"
-      >
-        <defs>
-          <clipPath id="lt-clip">
-            <path d={LT_PATH} />
-          </clipPath>
-          {/* Subtle glow for destination dot */}
-          <filter id="dot-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* ── Lithuanian flag tricolor — clipped to country outline ── */}
-        {/* Top third: Yellow/Gold */}
-        <rect x="0" y="0" width="600" height="160" fill="#FDB913" clipPath="url(#lt-clip)" />
-        {/* Middle third: Forest Green */}
-        <rect x="0" y="160" width="600" height="120" fill="#006A44" clipPath="url(#lt-clip)" />
-        {/* Bottom third: Deep Red */}
-        <rect x="0" y="280" width="600" height="200" fill="#C1272D" clipPath="url(#lt-clip)" />
-
-        {/* ── Country outline border ── */}
-        <path
-          d={LT_PATH}
-          fill="none"
-          stroke="rgba(0,0,0,0.18)"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-
-        {/* ── Destination city dot (if known) ── */}
-        {cityDot && (
-          <g filter="url(#dot-glow)">
-            {/* Pulse ring */}
-            <circle cx={cityDot.x} cy={cityDot.y} r="14" fill="white" opacity="0.3">
-              <animate attributeName="r" values="8;18;8" dur="2.5s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite" />
-            </circle>
-            {/* Dot */}
-            <circle cx={cityDot.x} cy={cityDot.y} r="7" fill="white" stroke="#DC2626" strokeWidth="2.5" />
-            <circle cx={cityDot.x} cy={cityDot.y} r="3.5" fill="#DC2626" />
-          </g>
-        )}
-      </svg>
+    <div className="relative w-full max-w-[280px] sm:max-w-xs mx-auto flex items-center justify-center pointer-events-none group">
+      {/* Soft spotlight behind the map for dark mode so the multiply blend works without a hard box */}
+      <div className="absolute inset-4 hidden dark:block bg-white rounded-[40%] blur-[40px] opacity-80"></div>
+      
+      <Image
+        src="/lithuania-3d-map.png"
+        alt="3D Map of Lithuania"
+        width={600}
+        height={480}
+        className="w-full h-auto object-contain mix-blend-multiply relative z-10 transition-transform duration-700 ease-out group-hover:scale-105"
+        priority
+      />
     </div>
   )
-}
-
-// ─── City coordinate map (SVG viewBox 50 25 400 360) ─────────────────────────
-
-const CITY_DOTS: Record<string, { x: number; y: number; label: string }> = {
-  vilnius:    { x: 370, y: 295, label: 'Vilnius' },
-  kaunas:     { x: 220, y: 270, label: 'Kaunas' },
-  klaipeda:   { x: 68,  y: 195, label: 'Klaipėda' },
-  siauliai:   { x: 160, y: 115, label: 'Šiauliai' },
-  panevezys:  { x: 253, y: 145, label: 'Panevėžys' },
-  alytus:     { x: 253, y: 338, label: 'Alytus' },
-}
-
-function getCityDot(destinationCity?: string | null) {
-  if (!destinationCity) return null
-  const lower = destinationCity.toLowerCase()
-  for (const [key, val] of Object.entries(CITY_DOTS)) {
-    if (lower.includes(key.replace('ė', 'e').replace('š', 's').replace('ž', 'z')) ||
-        lower.includes(val.label.toLowerCase().substring(0, 4))) {
-      return val
-    }
-  }
-  return null
 }
 
 // ─── Formatting helpers ───────────────────────────────────────────────────────
@@ -616,14 +525,17 @@ function EventTimeline({ events }: { events: DpdEvent[] }) {
 
 function EmptyState() {
   return (
-    <div className="mt-10 flex flex-col items-center justify-center text-center py-16 px-4">
+    <div className="mt-8 flex flex-col items-center justify-center text-center">
+      <div className="w-full max-w-sm mb-4">
+        <LithuaniaFlagMap />
+      </div>
       <div className="flex size-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
         <Package className="size-8 text-slate-400" />
       </div>
       <h3 className="text-base font-bold text-slate-700 dark:text-slate-200">
         Track your DPD parcel
       </h3>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-xs">
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-8">
         Enter your DPD parcel number or Asian Groceries order ticket (AG-XXXX-XXXX) above to see live tracking information.
       </p>
     </div>
@@ -734,8 +646,6 @@ export function DpdTracker({ initialTicket = '' }: { initialTicket?: string }) {
     doSearch(inputValue)
   }
 
-  const cityDot = data ? getCityDot(data.destinationCity) : null
-
   return (
     <section className="relative px-4 pb-16 pt-2 md:px-6">
       <div className="mx-auto max-w-4xl">
@@ -792,20 +702,9 @@ export function DpdTracker({ initialTicket = '' }: { initialTicket?: string }) {
 
             {/* Map + Events side by side on large screens */}
             <div className="grid gap-4 lg:grid-cols-5">
-              {/* Lithuania map */}
-              <div className="lg:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm flex flex-col">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
-                  Delivery Region — Lithuania
-                </p>
-                <div className="flex-1 flex items-center">
-                  <LithuaniaFlagMap cityDot={cityDot} />
-                </div>
-                {cityDot && (
-                  <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">
-                    <MapPin className="size-3 text-red-500" />
-                    Delivering to <span className="font-semibold text-slate-700 dark:text-slate-200 ml-1">{cityDot.label}</span>
-                  </p>
-                )}
+              {/* Lithuania 3D Map */}
+              <div className="lg:col-span-2 flex flex-col items-center justify-center pt-8">
+                <LithuaniaFlagMap />
               </div>
 
               {/* Event timeline */}
