@@ -42,7 +42,7 @@ export async function updateProduct(productId: string, fields: Record<string, an
  * This function gets the admin's current Firebase ID token and sends it to the
  * server-side PATCH route which uses the Admin SDK to bypass the rules.
  */
-export async function updateOrderStatus(orderId: string, status: string) {
+export async function updateOrderStatus(orderId: string, status: string, dpdParcelNumber?: string) {
   try {
     const currentUser = adminPortalAuth.currentUser
     if (!currentUser) {
@@ -58,7 +58,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`,
       },
-      body: JSON.stringify({ orderId, status }),
+      body: JSON.stringify({ orderId, status, dpdParcelNumber }),
     })
 
     if (!res.ok) {

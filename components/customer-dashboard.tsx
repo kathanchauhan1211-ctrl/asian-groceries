@@ -60,6 +60,7 @@ type LiveOrder = {
   transitHub: string
   paymentMethod: string
   customerPhone: string
+  dpdParcelNumber?: string
 }
 
 type DashboardSection = 'overview' | 'profile' | 'address' | 'orders' | 'basket' | 'activity'
@@ -660,7 +661,12 @@ function OrdersSection({ orders, loading }: { orders: LiveOrder[]; loading: bool
                   <div>Bus dispatch (excl.): <strong className="text-foreground">€{(order.deliveryFee || 0).toFixed(2)}</strong></div>
                   <div className="text-base font-bold text-foreground">Total (EUR): €{(order.grandTotal || 0).toFixed(2)}</div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  {order.dpdParcelNumber && (
+                    <span className="text-[11px] font-mono font-bold text-slate-500 mr-2 hidden sm:inline-block border border-border bg-card px-2 py-1 rounded">
+                      DPD: {order.dpdParcelNumber}
+                    </span>
+                  )}
                   <Button href={`/track?ticket=${order.id}`} variant="amber" size="sm" className="rounded-full gap-1.5">
                     <Truck className="size-3" /> Track
                   </Button>

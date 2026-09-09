@@ -66,10 +66,14 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
           if (data.phone && phone === '+370 ') setPhone(data.phone)
           if (data.displayName) setProfileName(data.displayName)
           else if (data.firstName) setProfileName(`${data.firstName} ${data.surname || ''}`.trim())
+          
+          if (data.preferredTerminal) {
+            setTransitHub(data.preferredTerminal)
+          }
         }
       }).catch(console.error)
     }
-  }, [user])
+  }, [user, phone])
 
   const customerName = user ? (profileName || user.displayName || 'Customer') : guestName
 

@@ -40,9 +40,10 @@ const NEXT_COLOR: Partial<Record<Status, string>> = {
   'Dispatched':      'bg-emerald-500 hover:bg-emerald-400',
 }
 
-function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s: string) => void }) {
+function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s: string, dpd?: string) => void }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [dpdId, setDpdId] = useState(order.dpdParcelNumber || '')
   const cfg = STATUS_CONFIG[order.status as Status] ?? STATUS_CONFIG['Pending Payment']
   const Icon = cfg.icon
   const nextStatus = cfg.next
@@ -51,7 +52,7 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
   async function advance() {
     if (!nextStatus) return
     setLoading(true)
-    await onStatus(order.id, nextStatus)
+    await onStatus(order.id, nextStatus, dpdId)
     setLoading(false)
   }
 
@@ -155,6 +156,28 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
                   &ldquo;{order.orderNotes}&rdquo;
                 </div>
               )}
+              <div className="mt-4">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Truck className="size-3" /> Shipping (DPD)
+                </p>
+                <div className="flex items-center gap-2">
+                  <input 
+                    value={dpdId} 
+                    onChange={e => setDpdId(e.target.value)}
+                    placeholder="DPD Parcel Number"
+                    className="bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white w-full outline-none focus:border-orange-500"
+                  />
+                  <Button
+                    size="sm"
+                    variant="glass-light"
+                    disabled={loading || dpdId === (order.dpdParcelNumber || '')}
+                    onClick={async () => { setLoading(true); await onStatus(order.id, order.status, dpdId); setLoading(false) }}
+                    className="h-[34px]"
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -211,7 +234,7 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
                   <button
                     key={s}
                     disabled={loading || s === order.status}
-                    onClick={async () => { setLoading(true); await onStatus(order.id, s); setLoading(false) }}
+                    onClick={async () => { setLoading(true); await onStatus(order.id, s, dpdId); setLoading(false) }}
                     className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all disabled:cursor-default
                       ${isCurrent ? scfg.pill + ' ring-2 ring-offset-1 ring-offset-slate-900 ring-current/30 scale-105' : ''}
                       ${isPast ? 'border-white/5 text-slate-600 bg-transparent' : ''}
@@ -255,8 +278,8 @@ function AdminOrdersContent() {
     return () => unsub()
   }, [])
 
-  async function handleStatus(id: string, status: string) {
-    await updateOrderStatus(id, status)
+  async function handleStatus(id: string, status: string, dpd?: string) {
+    await updateOrderStatus(id, status, dpd)
   }
 
   const filtered = orders.filter(o => {
