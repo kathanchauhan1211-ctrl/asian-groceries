@@ -34,30 +34,39 @@ export default function PageContent() {
     if (hasActiveFilter) return null
     if (!allProducts.length) return null
 
-    let title = 'Recommended for You'
-    let items = [...allProducts].sort(() => 0.5 - Math.random()).slice(0, 36) // Random default
+    const random = [...allProducts].sort(() => 0.5 - Math.random())
+    const row1 = { title: 'Recommended for You', items: random.slice(0, 12) }
+    const row2 = { title: 'Trending Now', items: random.slice(12, 24) }
+    const row3 = { title: 'Weekly Deals', items: [...allProducts].sort((a, b) => (a.price || 0) - (b.price || 0)).slice(0, 12) }
+    
+    return { row1, row2, row3 }
+  }, [allProducts, hasActiveFilter])
+
+  // Derive products for the popup category
+  const popupData = useMemo(() => {
+    if (!activeCategory || !allProducts.length) return null
+
+    let title = ''
+    let items: typeof allProducts = []
 
     if (activeCategory === 'new-arrivals') {
       title = 'New Arrivals'
-      // Simple mock for "recent" - just reverse the list
-      items = [...allProducts].reverse().slice(0, 36)
+      items = [...allProducts].reverse().slice(0, 12)
     } else if (activeCategory === 'sale') {
       title = 'Sale'
-      // Mock sale items (e.g. cheapest items)
-      items = [...allProducts].sort((a, b) => (a.price || 0) - (b.price || 0)).slice(0, 36)
+      items = [...allProducts].sort((a, b) => (a.price || 0) - (b.price || 0)).slice(0, 12)
     } else if (activeCategory === 'best-offer') {
       title = "Today's Best Offer"
-      // Mock best offers
-      items = [...allProducts].filter(p => p.price < 5).slice(0, 36)
+      items = [...allProducts].filter(p => p.price < 5).slice(0, 12)
     } else if (activeCategory === 'bestsellers') {
       title = 'Bestsellers'
-      items = [...allProducts].filter(p => p.bestseller).slice(0, 36)
+      items = [...allProducts].filter(p => p.bestseller).slice(0, 12)
     }
 
-    if (items.length === 0) items = [...allProducts].slice(0, 36) // Fallback
+    if (items.length === 0) items = [...allProducts].slice(0, 12)
 
     return { title, items }
-  }, [allProducts, activeCategory, hasActiveFilter])
+  }, [allProducts, activeCategory])
 
   return (
     <>
@@ -74,7 +83,7 @@ export default function PageContent() {
       )}
 
       {/* ═══ Swipeable Category Bar — reads/writes URL params ═══ */}
-      <div className="mx-auto max-w-7xl px-4 md:px-6 pt-2 pb-6">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 pt-2 pb-2">
         <SwipeableCategoryBar
           prependFilterButton={
             <a
@@ -93,20 +102,56 @@ export default function PageContent() {
         />
       </div>
 
-      {/* ═══ Active Collection Row (Swipeable Grid) ═══ */}
+      {/* ═══ Full product catalog (Search & Grid) ═══ */}
+      {/* Placed here so Search is below Swipeable Categories but above Recommended rows */}
+      <ProductCatalog hideGridWhenUnfiltered={!hasActiveFilter} />
+
+      {/* ═══ 3 Separate Recommended Rows ═══ */}
       {!hasActiveFilter && activeRowData && (
-        <div className="mx-auto max-w-7xl px-4 md:px-6 mb-8">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 mb-8 flex flex-col gap-2">
           <HorizontalRow
-            title={activeRowData.title}
-            items={activeRowData.items}
-            viewAllHref={`/?sort=${activeCategory === 'new-arrivals' ? 'newest' : 'default'}`}
-            rows={3}
+            title={activeRowData.row1.title}
+            items={activeRowData.row1.items}
+            viewAllHref="/?sort=default"
+          />
+          <HorizontalRow
+            title={activeRowData.row2.title}
+            items={activeRowData.row2.items}
+            viewAllHref="/?sort=bestseller"
+          />
+          <HorizontalRow
+            title={activeRowData.row3.title}
+            items={activeRowData.row3.items}
+            viewAllHref="/?sort=price-asc"
           />
         </div>
       )}
 
-      {/* ═══ Full product catalog + filter grid — filter bar is always visible, grid only when active ═══ */}
-      <ProductCatalog hideGridWhenUnfiltered={!hasActiveFilter} />
+      {/* ═══ Category Popup (Modal) ═══ */}
+      {activeCategory && popupData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div 
+            className="relative w-full max-w-5xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button 
+              onClick={() => setActiveCategory(null)}
+              className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            
+            <div className="px-4 py-8 md:px-8">
+              <HorizontalRow
+                title={popupData.title}
+                items={popupData.items}
+                viewAllHref={`/?sort=${activeCategory === 'new-arrivals' ? 'newest' : 'default'}`}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
