@@ -35,26 +35,26 @@ export default function PageContent() {
     if (!allProducts.length) return null
 
     let title = 'Recommended for You'
-    let items = [...allProducts].sort(() => 0.5 - Math.random()).slice(0, 12) // Random default
+    let items = [...allProducts].sort(() => 0.5 - Math.random()).slice(0, 36) // Random default
 
     if (activeCategory === 'new-arrivals') {
       title = 'New Arrivals'
       // Simple mock for "recent" - just reverse the list
-      items = [...allProducts].reverse().slice(0, 12)
+      items = [...allProducts].reverse().slice(0, 36)
     } else if (activeCategory === 'sale') {
       title = 'Sale'
       // Mock sale items (e.g. cheapest items)
-      items = [...allProducts].sort((a, b) => (a.price || 0) - (b.price || 0)).slice(0, 12)
+      items = [...allProducts].sort((a, b) => (a.price || 0) - (b.price || 0)).slice(0, 36)
     } else if (activeCategory === 'best-offer') {
       title = "Today's Best Offer"
       // Mock best offers
-      items = [...allProducts].filter(p => p.price < 5).slice(0, 12)
+      items = [...allProducts].filter(p => p.price < 5).slice(0, 36)
     } else if (activeCategory === 'bestsellers') {
       title = 'Bestsellers'
-      items = [...allProducts].filter(p => p.bestseller).slice(0, 12)
+      items = [...allProducts].filter(p => p.bestseller).slice(0, 36)
     }
 
-    if (items.length === 0) items = [...allProducts].slice(0, 12) // Fallback
+    if (items.length === 0) items = [...allProducts].slice(0, 36) // Fallback
 
     return { title, items }
   }, [allProducts, activeCategory, hasActiveFilter])
@@ -73,19 +73,8 @@ export default function PageContent() {
         />
       )}
 
-      {/* ═══ Active Collection Row (Swipeable) ═══ */}
-      {!hasActiveFilter && activeRowData && (
-        <div className="mx-auto max-w-7xl px-4 md:px-6 mb-8">
-          <HorizontalRow
-            title={activeRowData.title}
-            items={activeRowData.items}
-            viewAllHref={`/?sort=${activeCategory === 'new-arrivals' ? 'newest' : 'default'}`}
-          />
-        </div>
-      )}
-
       {/* ═══ Swipeable Category Bar — reads/writes URL params ═══ */}
-      <div className="mx-auto max-w-7xl px-4 md:px-6">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 pt-2 pb-6">
         <SwipeableCategoryBar
           prependFilterButton={
             <a
@@ -103,6 +92,18 @@ export default function PageContent() {
           }
         />
       </div>
+
+      {/* ═══ Active Collection Row (Swipeable Grid) ═══ */}
+      {!hasActiveFilter && activeRowData && (
+        <div className="mx-auto max-w-7xl px-4 md:px-6 mb-8">
+          <HorizontalRow
+            title={activeRowData.title}
+            items={activeRowData.items}
+            viewAllHref={`/?sort=${activeCategory === 'new-arrivals' ? 'newest' : 'default'}`}
+            rows={3}
+          />
+        </div>
+      )}
 
       {/* ═══ Full product catalog + filter grid — filter bar is always visible, grid only when active ═══ */}
       <ProductCatalog hideGridWhenUnfiltered={!hasActiveFilter} />

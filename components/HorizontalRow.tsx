@@ -10,14 +10,15 @@ type HorizontalRowProps = {
   title: string
   items: Product[]
   viewAllHref: string
+  rows?: number
 }
 
 /**
  * Reusable horizontally scrollable carousel used on the homepage.
- * Displays a row of ProductCard components with native scroll-snap behaviour,
+ * Displays a row (or multiple rows) of ProductCard components with native scroll-snap behaviour,
  * left/right navigation arrows for desktop, and a View All link.
  */
-export function HorizontalRow({ title, items, viewAllHref }: HorizontalRowProps) {
+export function HorizontalRow({ title, items, viewAllHref, rows = 1 }: HorizontalRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: number) => {
@@ -27,12 +28,14 @@ export function HorizontalRow({ title, items, viewAllHref }: HorizontalRowProps)
     }
   }
 
+  const isMultiRow = rows > 1
+
   return (
     <section className="my-8">
       {/* Header – title + View All */}
       <header className="flex items-center justify-between mb-4 px-2">
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{title}</h2>
-        <Link href={viewAllHref} className="text-sm font-medium text-primary hover:underline">
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{title}</h2>
+        <Link href={viewAllHref} className="text-sm font-semibold text-primary hover:text-primary/80 hover:underline transition-colors">
           View All
         </Link>
       </header>
@@ -41,21 +44,30 @@ export function HorizontalRow({ title, items, viewAllHref }: HorizontalRowProps)
         {/* Left arrow – hidden on mobile */}
         <button
           onClick={() => scroll(-1)}
-          className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200 shadow-md hover:bg-white dark:hover:bg-gray-700 transition opacity-0 group-hover:opacity-100"
+          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-gray-200 shadow-xl hover:bg-white dark:hover:bg-slate-700 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 border border-black/5 dark:border-white/10"
           aria-label="Scroll left"
         >
-          <ChevronLeft className="size-5" />
+          <ChevronLeft className="size-6" />
         </button>
 
         {/* Scroll container – native scrolling with snap */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-2 py-4 -mx-2"
+          className={`overflow-x-auto scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-2 py-4 -mx-2 ${
+            isMultiRow ? 'grid gap-4 md:gap-5' : 'flex gap-4 md:gap-5'
+          }`}
+          style={isMultiRow ? {
+            gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+            gridAutoFlow: 'column',
+            gridAutoColumns: 'min-content'
+          } : undefined}
         >
           {items.map((product, idx) => (
             <div
               key={product.id}
-              className="snap-start flex-shrink-0 flex flex-col w-[47vw] min-w-[47vw] sm:w-[32vw] sm:min-w-[32vw] md:w-[260px] md:min-w-[260px] lg:w-[280px] lg:min-w-[280px]"
+              className={`snap-start flex-shrink-0 flex flex-col w-[60vw] min-w-[60vw] sm:w-[32vw] sm:min-w-[32vw] md:w-[260px] md:min-w-[260px] lg:w-[280px] lg:min-w-[280px] ${
+                isMultiRow ? 'h-full' : ''
+              }`}
             >
               <ProductCard product={product} index={idx} />
             </div>
@@ -65,10 +77,10 @@ export function HorizontalRow({ title, items, viewAllHref }: HorizontalRowProps)
         {/* Right arrow – hidden on mobile */}
         <button
           onClick={() => scroll(1)}
-          className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200 shadow-md hover:bg-white dark:hover:bg-gray-700 transition opacity-0 group-hover:opacity-100"
+          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-gray-200 shadow-xl hover:bg-white dark:hover:bg-slate-700 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 border border-black/5 dark:border-white/10"
           aria-label="Scroll right"
         >
-          <ChevronRight className="size-5" />
+          <ChevronRight className="size-6" />
         </button>
       </div>
     </section>
