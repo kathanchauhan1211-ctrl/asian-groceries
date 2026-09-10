@@ -186,12 +186,12 @@ function Sidebar({
       </nav>
 
       {/* Sign out */}
-      <div className="shrink-0 p-3 border-t border-border">
+      <div className="shrink-0 p-3 border-t border-border pb-24 md:pb-3">
         <Button
           onClick={onSignOut}
-          variant="danger"
+          variant="ghost"
           size="sm"
-          className="w-full gap-2.5 justify-start px-3"
+          className="w-full gap-2.5 justify-start px-3 text-foreground hover:bg-destructive/10 hover:text-destructive transition-colors font-medium"
         >
           <LogOut className="size-4" /> Sign Out
         </Button>
@@ -408,8 +408,8 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
 
       {/* Photo */}
       <div className={`${card} p-6`}>
-        <h3 className="text-sm font-bold text-foreground mb-5">Profile Picture</h3>
-        <div className="flex items-center gap-5">
+        <h3 className="text-sm font-bold text-foreground mb-5 text-center sm:text-left">Profile Picture</h3>
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
           <div className="relative group shrink-0">
             {photoURL ? (
               <img src={photoURL} alt="Profile" className="size-24 rounded-2xl object-cover border border-border shadow-sm" />
@@ -467,7 +467,7 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
 
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">Email Address</label>
-            <div className={`${displayRow} opacity-70`}><Mail className="size-4 text-muted-foreground shrink-0" /><span>{user.email || '—'}</span><span className="ml-auto text-[10px] font-bold text-muted-foreground">FIXED</span></div>
+            <div className={`${displayRow} opacity-70 min-w-0`}><Mail className="size-4 text-muted-foreground shrink-0" /><span className="truncate flex-1">{user.email || '—'}</span><span className="ml-auto text-[10px] font-bold text-muted-foreground shrink-0">FIXED</span></div>
           </div>
 
           <div>
@@ -477,7 +477,7 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
                 <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={inputCls} placeholder="+370 XXXXXXXX" />
               </div>
             ) : (
-              <div className={displayRow}><Phone className="size-4 text-muted-foreground shrink-0" /><span className="font-mono font-medium">{phone || '—'}</span></div>
+              <div className={`${displayRow} min-w-0`}><Phone className="size-4 text-muted-foreground shrink-0" /><span className="font-mono font-medium truncate flex-1">{phone || '—'}</span></div>
             )}
           </div>
 
