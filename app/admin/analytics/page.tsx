@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { collection, onSnapshot } from 'firebase/firestore'
-import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
-import { useProducts } from '@/lib/use-products'
+import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { TrendingUp, ShoppingCart, Package, Users } from 'lucide-react'
 import type { Order } from '@/app/lib/order-types'
 
@@ -11,14 +10,38 @@ type AnalyticsOrder = Pick<Order, 'id' | 'grandTotal' | 'status' | 'createdAt'>
 
 export default function AdminAnalyticsPage() {
   const [orders, setOrders] = useState<AnalyticsOrder[]>([])
-  const { products } = useProducts()
+  const [products, setProducts] = useState<any[]>([])
 
+  // Real-time products from adminPortalDb (admin auth context, no pagination cap)
   useEffect(() => {
-    const unsub = onSnapshot(collection(clientDb, 'orders'), snap => {
-      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })) as AnalyticsOrder[])
-    })
+    const unsub = onSnapshot(
+      collection(adminPortalDb, 'products'),
+      snap => setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      () => {}
+    )
     return () => unsub()
   }, [])
+
+  // Orders: fetched via Admin SDK API route (bypasses Firestore security rules)
+  const fetchOrders = useCallback(async () => {
+    try {
+      const currentUser = adminPortalAuth.currentUser
+      if (!currentUser) return
+      const token = await currentUser.getIdToken()
+      const res = await fetch('/api/admin/orders', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) return
+      const { orders: data } = await res.json()
+      setOrders((data ?? []) as AnalyticsOrder[])
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    fetchOrders()
+    const id = setInterval(fetchOrders, 30_000)
+    return () => clearInterval(id)
+  }, [fetchOrders])
 
   const revenue = orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.grandTotal || 0), 0)
   const pending = orders.filter(o => o.status !== 'Delivered').length

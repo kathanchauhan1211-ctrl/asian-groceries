@@ -6,7 +6,6 @@ import {
   addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
 } from 'firebase/firestore'
 import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
-import { useProducts } from '@/lib/use-products'
 import {
   Plus, Trash2, X, Save, ChevronUp, ChevronDown,
   Loader2, Check, Eye, EyeOff, Layers, Search,
@@ -517,7 +516,17 @@ function CollectionRow({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminCollectionsPage() {
-  const { products: allProducts } = useProducts()
+  const [allProducts, setAllProducts] = useState<any[]>([])
+
+  // Real-time products from adminPortalDb (admin auth context, no pagination cap)
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(clientDb, 'products'),
+      snap => setAllProducts(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      () => {}
+    )
+    return () => unsub()
+  }, [])
 
   const [cols, setCols]       = useState<FeaturedCollectionDoc[]>([])
   const [loading, setLoading] = useState(true)

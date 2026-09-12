@@ -48,6 +48,21 @@ env:
       - BUILD
       - RUNTIME
 
+  # ── Admin portal ──────────────────────────────────────────────────────────────
+  # Must match the Firebase Auth account email AND the isAdmin() check in firestore.rules
+  - variable: NEXT_PUBLIC_ADMIN_EMAIL
+    value: indianmarket@test.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Firestore named database — must match the name created in Firebase Console
+  - variable: NEXT_PUBLIC_FIREBASE_DB_NAME
+    value: indianmarket
+    availability:
+      - BUILD
+      - RUNTIME
+
   # ── Firebase Admin SDK (server-side only — RUNTIME only, never BUILD) ────────
   # FIREBASE_PROJECT_ID is enough; FIREBASE_PRIVATE_KEY is NOT needed here
   # because the runtime uses Application Default Credentials (ADC) via the

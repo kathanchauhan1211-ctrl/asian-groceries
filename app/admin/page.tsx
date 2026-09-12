@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore'
-import { adminPortalDb } from '@/lib/firebase-admin-client'
-import { useProducts } from '@/lib/use-products'
+import { useState, useEffect, useCallback } from 'react'
+import { collection, onSnapshot } from 'firebase/firestore'
+import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { TrendingUp, Package, AlertTriangle, ShoppingCart, Users, ArrowUpRight, Clock } from 'lucide-react'
 import { updateOrderStatus } from '@/lib/admin-actions'
 import type { Order } from '@/app/lib/order-types'
@@ -26,19 +25,47 @@ function StatCard({ label, value, sub, icon: Icon, color }: { label: string; val
 }
 
 export default function AdminDashboard() {
-  const { products, loading: productsLoading } = useProducts()
+  const [products, setProducts] = useState<any[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
 
+  // Products: publicly readable, onSnapshot is fine
   useEffect(() => {
-    const q = query(collection(adminPortalDb, 'orders'), orderBy('createdAt', 'desc'), limit(10))
-    const unsub = onSnapshot(q, (snap) => {
-      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Order[])
-      setOrdersLoading(false)
-    }, () => setOrdersLoading(false))
+    const unsub = onSnapshot(
+      collection(adminPortalDb, 'products'),
+      (snap) => setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      () => {}
+    )
     return () => unsub()
   }, [])
+
+  // Orders: fetched via Admin SDK API route (bypasses Firestore security rules)
+  const fetchOrders = useCallback(async () => {
+    try {
+      const currentUser = adminPortalAuth.currentUser
+      if (!currentUser) return
+      const token = await currentUser.getIdToken()
+      const res = await fetch('/api/admin/orders', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const { orders: data } = await res.json()
+      setOrders((data ?? []) as Order[])
+    } catch (err) {
+      console.error('[AdminDashboard] Failed to fetch orders:', err)
+    } finally {
+      setOrdersLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchOrders()
+    const id = setInterval(fetchOrders, 30_000)
+    return () => clearInterval(id)
+  }, [fetchOrders])
+
+
 
   const totalTurnover = orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.grandTotal || 0), 0)
   const activeOrders = orders.filter(o => o.status !== 'Delivered').length

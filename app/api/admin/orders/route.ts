@@ -4,6 +4,33 @@ import { getAdminEmail } from '@/lib/admin-config'
 import { Resend } from 'resend'
 
 /**
+ * GET /api/admin/orders
+ * Returns all orders ordered by createdAt desc.
+ * Caller must supply a valid admin Firebase ID token in Authorization header.
+ * Uses Admin SDK — bypasses Firestore security rules.
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get('authorization') ?? ''
+    const idToken = authHeader.replace('Bearer ', '').trim()
+    if (!idToken) return NextResponse.json({ error: 'Unauthorised — missing token' }, { status: 401 })
+
+    const { auth, db } = getFirebaseAdmin()
+    const decoded = await auth.verifyIdToken(idToken)
+    if (decoded.email !== getAdminEmail()) {
+      return NextResponse.json({ error: 'Forbidden — admin only' }, { status: 403 })
+    }
+
+    const snap = await db.collection('orders').orderBy('createdAt', 'desc').get()
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    return NextResponse.json({ orders })
+  } catch (err: any) {
+    console.error('[GET /api/admin/orders] Error:', err)
+    return NextResponse.json({ error: err.message ?? 'Unexpected error' }, { status: 500 })
+  }
+}
+
+/**
  * PATCH /api/admin/orders
  * Body: { orderId: string; status: string }
  *

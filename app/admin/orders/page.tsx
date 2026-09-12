@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
-import { adminPortalDb } from '@/lib/firebase-admin-client'
+import { useState, useEffect, useCallback } from 'react'
+import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { updateOrderStatus } from '@/lib/admin-actions'
 import {
   Package, Truck, CheckCircle, Clock, Search, ChevronDown,
@@ -271,23 +270,34 @@ function AdminOrdersContent() {
   const [filter, setFilter] = useState<string>('all')
   const [search, setSearch] = useState(searchParams.get('search') || '')
 
-  useEffect(() => {
-    const q = query(collection(adminPortalDb, 'orders'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q,
-      (snap) => {
-        setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Order[])
-        setLoading(false)
-      },
-      (err) => {
-        console.error('Orders snapshot error:', err)
-        setLoading(false)
-      }
-    )
-    return () => unsub()
+  const fetchOrders = useCallback(async () => {
+    try {
+      const currentUser = adminPortalAuth.currentUser
+      if (!currentUser) return
+      const token = await currentUser.getIdToken()
+      const res = await fetch('/api/admin/orders', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const { orders: data } = await res.json()
+      setOrders((data ?? []) as Order[])
+    } catch (err) {
+      console.error('[AdminOrdersPage] Failed to fetch orders:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    fetchOrders()
+    const id = setInterval(fetchOrders, 30_000)
+    return () => clearInterval(id)
+  }, [fetchOrders])
 
   async function handleStatus(id: string, status: string, dpd?: string) {
     await updateOrderStatus(id, status, dpd)
+    // Refresh data after status change
+    setTimeout(fetchOrders, 500)
   }
 
   const filtered = orders.filter(o => {

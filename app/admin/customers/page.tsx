@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query } from 'firebase/firestore'
-import { adminPortalDb } from '@/lib/firebase-admin-client'
+import { useState, useEffect, useCallback } from 'react'
+import { adminPortalAuth } from '@/lib/firebase-admin-client'
 import { Search, User, Phone, MapPin, Mail, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 
@@ -11,20 +10,31 @@ export default function AdminCustomersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    const q = query(collection(adminPortalDb, 'users'))
-    const unsub = onSnapshot(q,
-      (snap) => {
-        setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-        setLoading(false)
-      },
-      (err) => {
-        console.error('Users snapshot error:', err)
-        setLoading(false)
-      }
-    )
-    return () => unsub()
+  const fetchUsers = useCallback(async () => {
+    try {
+      const currentUser = adminPortalAuth.currentUser
+      if (!currentUser) return
+      const token = await currentUser.getIdToken()
+      const res = await fetch('/api/admin/users', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const { users: data } = await res.json()
+      setUsers(data ?? [])
+    } catch (err) {
+      console.error('[AdminCustomersPage] Failed to fetch users:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  // Initial fetch + poll every 60s
+  useEffect(() => {
+    fetchUsers()
+    const id = setInterval(fetchUsers, 60_000)
+    return () => clearInterval(id)
+  }, [fetchUsers])
+
 
   const filtered = users.filter(u => {
     const s = search.toLowerCase()
