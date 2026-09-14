@@ -1,27 +1,33 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { updateOrderStatus } from '@/lib/admin-actions'
 import {
   Package, Truck, CheckCircle, Clock, Search, ChevronDown,
   ChevronUp, MapPin, Phone, Mail, ShoppingBag, ArrowRight,
-  CreditCard, User
+  CreditCard, User, MoreVertical, Pin, PinOff, Loader2,
+  Check, X, Flame, Star, Sparkles, Tag,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Order } from '@/app/lib/order-types'
 import { Button } from '@/components/ui/button'
+import {
+  useShopCategories,
+  SHOP_CATEGORY_DEFS,
+  type ShopCategoryKey,
+} from '@/lib/use-shop-categories'
 
+// ─── Status config ────────────────────────────────────────────────────────────
 const STATUSES = ['Pending Payment', 'Accepted', 'Preparing', 'Dispatched', 'Delivered'] as const
-
 type Status = typeof STATUSES[number]
 
 const STATUS_CONFIG: Record<Status, { icon: any; pill: string; label: string; next?: Status }> = {
-  'Pending Payment': { icon: Clock,       pill: 'text-amber-400 bg-amber-400/10 border-amber-400/30',   label: 'Pending Payment', next: 'Accepted' },
-  'Accepted':        { icon: CheckCircle, pill: 'text-blue-400 bg-blue-400/10 border-blue-400/30',     label: 'Accepted',        next: 'Preparing' },
-  'Preparing':       { icon: Package,     pill: 'text-purple-400 bg-purple-400/10 border-purple-400/30', label: 'Preparing',     next: 'Dispatched' },
-  'Dispatched':      { icon: Truck,       pill: 'text-orange-400 bg-orange-400/10 border-orange-400/30', label: 'Dispatched',    next: 'Delivered' },
+  'Pending Payment': { icon: Clock,       pill: 'text-amber-400 bg-amber-400/10 border-amber-400/30',      label: 'Pending Payment', next: 'Accepted' },
+  'Accepted':        { icon: CheckCircle, pill: 'text-blue-400 bg-blue-400/10 border-blue-400/30',         label: 'Accepted',        next: 'Preparing' },
+  'Preparing':       { icon: Package,     pill: 'text-purple-400 bg-purple-400/10 border-purple-400/30',   label: 'Preparing',       next: 'Dispatched' },
+  'Dispatched':      { icon: Truck,       pill: 'text-orange-400 bg-orange-400/10 border-orange-400/30',   label: 'Dispatched',      next: 'Delivered' },
   'Delivered':       { icon: CheckCircle, pill: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30', label: 'Delivered' },
 }
 
@@ -32,21 +38,220 @@ const NEXT_LABEL: Partial<Record<Status, string>> = {
   'Dispatched':      'Mark Delivered',
 }
 
-const NEXT_COLOR: Partial<Record<Status, string>> = {
-  'Pending Payment': 'bg-blue-500 hover:bg-blue-400',
-  'Accepted':        'bg-purple-500 hover:bg-purple-400',
-  'Preparing':       'bg-orange-500 hover:bg-orange-400',
-  'Dispatched':      'bg-emerald-500 hover:bg-emerald-400',
+// ─── Category assignment popover ──────────────────────────────────────────────
+const CAT_ICON: Record<ShopCategoryKey, any> = {
+  'best-offer':   Flame,
+  'bestsellers':  Star,
+  'new-arrivals': Sparkles,
+  'sale':         Tag,
 }
 
-function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s: string, dpd?: string) => void }) {
+function CategoryPopover({
+  productId,
+  productName,
+  onClose,
+  shopDocs,
+  togglePin,
+}: {
+  productId: string
+  productName: string
+  onClose: () => void
+  shopDocs: ReturnType<typeof useShopCategories>['docs']
+  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+}) {
+  const [saving, setSaving] = useState<ShopCategoryKey | null>(null)
+  const [localState, setLocalState] = useState<Record<ShopCategoryKey, boolean>>(() => ({
+    'best-offer':   shopDocs['best-offer'].pinnedProductIds.includes(productId),
+    'bestsellers':  shopDocs['bestsellers'].pinnedProductIds.includes(productId),
+    'new-arrivals': shopDocs['new-arrivals'].pinnedProductIds.includes(productId),
+    'sale':         shopDocs['sale'].pinnedProductIds.includes(productId),
+  }))
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onClose])
+
+  async function handleToggle(key: ShopCategoryKey) {
+    setSaving(key)
+    // Optimistic update
+    setLocalState(prev => ({ ...prev, [key]: !prev[key] }))
+    await togglePin(key, productId)
+    setSaving(null)
+  }
+
+  const anyPinned = Object.values(localState).some(Boolean)
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-8 z-50 rounded-2xl overflow-hidden shadow-2xl"
+      style={{
+        width: '240px',
+        background: 'rgba(15, 23, 42, 0.97)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
+    >
+      {/* Header */}
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#4B5563' }}>Assign to Category</p>
+            <p className="mt-0.5 text-[12px] font-semibold text-white truncate">{productName}</p>
+          </div>
+          <button onClick={onClose} className="shrink-0 size-5 flex items-center justify-center rounded-md" style={{ color: '#4B5563' }}>
+            <X className="size-3.5" />
+          </button>
+        </div>
+        {anyPinned && (
+          <div
+            className="mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1"
+            style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.15)' }}
+          >
+            <Pin className="size-3 shrink-0" style={{ color: '#F97316' }} />
+            <p className="text-[10px] font-semibold" style={{ color: '#F97316' }}>
+              Pinned — product appears in selected feeds
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Category list */}
+      <div className="p-2 space-y-1">
+        {SHOP_CATEGORY_DEFS.map(def => {
+          const pinned = localState[def.key]
+          const isLoading = saving === def.key
+          const CatIcon = CAT_ICON[def.key]
+
+          return (
+            <button
+              key={def.key}
+              onClick={() => handleToggle(def.key)}
+              disabled={!!saving}
+              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all disabled:opacity-70"
+              style={{
+                background: pinned ? `${def.color}12` : 'rgba(255,255,255,0.03)',
+                border: pinned ? `1px solid ${def.color}30` : '1px solid transparent',
+              }}
+              onMouseEnter={e => {
+                if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+              }}
+              onMouseLeave={e => {
+                if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+              }}
+            >
+              {/* Emoji / icon */}
+              <span className="text-base">{def.emoji}</span>
+
+              {/* Label */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-white">{def.label}</p>
+                <p className="text-[10px] truncate" style={{ color: '#4B5563' }}>
+                  {shopDocs[def.key].pinnedProductIds.length} pinned
+                </p>
+              </div>
+
+              {/* Checkbox / spinner */}
+              {isLoading ? (
+                <Loader2 className="size-4 animate-spin shrink-0" style={{ color: def.color }} />
+              ) : (
+                <div
+                  className="shrink-0 flex size-5 items-center justify-center rounded-md transition-all"
+                  style={{
+                    background: pinned ? `${def.color}25` : 'rgba(255,255,255,0.06)',
+                    border: pinned ? `1.5px solid ${def.color}` : '1.5px solid rgba(255,255,255,0.12)',
+                  }}
+                >
+                  {pinned && <Check className="size-3" style={{ color: def.color }} />}
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Footer hint */}
+      <div className="px-4 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <p className="text-[10px]" style={{ color: '#374151' }}>
+          Pinned products appear first in the storefront category popup. Changes are live instantly.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── 3-dot menu button for an order item ─────────────────────────────────────
+function ItemCategoryButton({
+  productId,
+  productName,
+  shopDocs,
+  togglePin,
+}: {
+  productId: string
+  productName: string
+  shopDocs: ReturnType<typeof useShopCategories>['docs']
+  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+}) {
+  const [open, setOpen] = useState(false)
+
+  // Count how many categories this product is pinned to
+  const pinCount = SHOP_CATEGORY_DEFS.filter(d =>
+    shopDocs[d.key].pinnedProductIds.includes(productId)
+  ).length
+
+  return (
+    <div className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        className="flex size-7 items-center justify-center rounded-lg transition-all"
+        style={{
+          background: pinCount > 0 ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
+          border: pinCount > 0 ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.08)',
+          color: pinCount > 0 ? '#F97316' : '#4B5563',
+        }}
+        title={pinCount > 0 ? `Pinned to ${pinCount} categor${pinCount === 1 ? 'y' : 'ies'}` : 'Assign to category feed'}
+      >
+        {pinCount > 0 ? <Pin className="size-3.5" /> : <MoreVertical className="size-3.5" />}
+      </button>
+
+      {open && (
+        <CategoryPopover
+          productId={productId}
+          productName={productName}
+          onClose={() => setOpen(false)}
+          shopDocs={shopDocs}
+          togglePin={togglePin}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── Order Card ───────────────────────────────────────────────────────────────
+function OrderCard({
+  order,
+  onStatus,
+  shopDocs,
+  togglePin,
+}: {
+  order: Order
+  onStatus: (id: string, s: string, dpd?: string) => void
+  shopDocs: ReturnType<typeof useShopCategories>['docs']
+  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+}) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [dpdId, setDpdId] = useState(order.dpdParcelNumber || '')
   const cfg = STATUS_CONFIG[order.status as Status] ?? STATUS_CONFIG['Pending Payment']
   const Icon = cfg.icon
   const nextStatus = cfg.next
-  
+
   let date = '—'
   if (order.createdAt) {
     if (typeof (order.createdAt as any).toDate === 'function') {
@@ -65,14 +270,12 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
 
   return (
     <div className="rounded-2xl border border-white/5 bg-slate-900 overflow-hidden transition-all">
-      {/* Card header — always visible */}
+      {/* Card header */}
       <div className="flex items-center gap-3 px-5 py-4">
-        {/* Status icon */}
         <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${cfg.pill}`}>
           <Icon className="size-5" />
         </div>
 
-        {/* Customer + order info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-white text-sm">{order.customerName || 'Guest'}</span>
@@ -87,39 +290,26 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
           {nextStatus && (
-            <Button
-              onClick={advance}
-              disabled={loading}
-              variant="default"
-              size="sm"
-              className="rounded-xl gap-1.5"
-            >
-              {loading ? (
-                <span className="size-3 border border-white/40 border-t-white rounded-full animate-spin" />
-              ) : (
-                <ArrowRight className="size-3" />
-              )}
+            <Button onClick={advance} disabled={loading} variant="default" size="sm" className="rounded-xl gap-1.5">
+              {loading
+                ? <span className="size-3 border border-white/40 border-t-white rounded-full animate-spin" />
+                : <ArrowRight className="size-3" />
+              }
               <span className="hidden sm:inline">{NEXT_LABEL[order.status as Status]}</span>
             </Button>
           )}
-          <Button
-            onClick={() => setOpen(v => !v)}
-            variant="glass-dark"
-            size="icon"
-            className="rounded-xl"
-          >
+          <Button onClick={() => setOpen(v => !v)} variant="glass-dark" size="icon" className="rounded-xl">
             {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </Button>
         </div>
       </div>
 
-      {/* Expandable detail panel */}
+      {/* Expanded detail */}
       {open && (
         <div className="border-t border-white/5 px-5 py-4 space-y-5">
-          {/* Customer details */}
+          {/* Customer + Payment */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -168,8 +358,8 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
                   <Truck className="size-3" /> Shipping (DPD)
                 </p>
                 <div className="flex items-center gap-2">
-                  <input 
-                    value={dpdId} 
+                  <input
+                    value={dpdId}
                     onChange={e => setDpdId(e.target.value)}
                     placeholder="DPD Parcel Number"
                     className="bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white w-full outline-none focus:border-orange-500"
@@ -188,10 +378,23 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
             </div>
           </div>
 
-          {/* Items */}
+          {/* Items table with 3-dot category buttons */}
           {order.items && order.items.length > 0 ? (
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Items ({order.items.length})</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Items ({order.items.length})
+                </p>
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1"
+                  style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.12)' }}
+                >
+                  <Pin className="size-3" style={{ color: '#F97316' }} />
+                  <p className="text-[10px] font-semibold" style={{ color: '#F97316' }}>
+                    Click ⋮ on any item to pin it to category feeds
+                  </p>
+                </div>
+              </div>
               <div className="rounded-xl border border-white/5 overflow-hidden">
                 <table className="w-full text-xs">
                   <thead>
@@ -200,23 +403,68 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
                       <th className="px-4 py-2 text-right text-slate-500 font-semibold">Qty</th>
                       <th className="px-4 py-2 text-right text-slate-500 font-semibold">Price</th>
                       <th className="px-4 py-2 text-right text-slate-500 font-semibold">Total</th>
+                      <th className="px-4 py-2 text-center text-slate-500 font-semibold" title="Assign to category feed">Feed</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {order.items.map((item, i) => (
-                      <tr key={i}>
-                        <td className="px-4 py-2.5 text-slate-300">
-                          {item.productName}
-                          {item.variantLabel && <span className="text-slate-500 ml-1">({item.variantLabel})</span>}
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-slate-400">{item.quantity}</td>
-                        <td className="px-4 py-2.5 text-right text-slate-400">€{item.price.toFixed(2)}</td>
-                        <td className="px-4 py-2.5 text-right font-semibold text-white">€{item.lineTotal.toFixed(2)}</td>
-                      </tr>
-                    ))}
+                    {order.items.map((item, i) => {
+                      // Count how many categories this product is pinned to (for indicator)
+                      const pinCount = item.productId
+                        ? SHOP_CATEGORY_DEFS.filter(d =>
+                            shopDocs[d.key].pinnedProductIds.includes(item.productId)
+                          ).length
+                        : 0
+
+                      return (
+                        <tr key={i} className={pinCount > 0 ? 'bg-orange-500/3' : ''}>
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-300">
+                                {item.productName}
+                                {item.variantLabel && <span className="text-slate-500 ml-1">({item.variantLabel})</span>}
+                              </span>
+                              {/* Pin indicators — show which categories this product is in */}
+                              {pinCount > 0 && (
+                                <div className="flex items-center gap-0.5">
+                                  {SHOP_CATEGORY_DEFS.filter(d =>
+                                    shopDocs[d.key].pinnedProductIds.includes(item.productId)
+                                  ).map(d => (
+                                    <span
+                                      key={d.key}
+                                      className="text-[8px] rounded-full px-1.5 py-0.5 font-bold"
+                                      style={{ background: `${d.color}20`, color: d.color, border: `1px solid ${d.color}30` }}
+                                    >
+                                      {d.emoji}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-400">{item.quantity}</td>
+                          <td className="px-4 py-2.5 text-right text-slate-400">€{item.price.toFixed(2)}</td>
+                          <td className="px-4 py-2.5 text-right font-semibold text-white">€{item.lineTotal.toFixed(2)}</td>
+                          <td className="px-4 py-2.5">
+                            <div className="flex justify-center">
+                              {item.productId ? (
+                                <ItemCategoryButton
+                                  productId={item.productId}
+                                  productName={item.productName}
+                                  shopDocs={shopDocs}
+                                  togglePin={togglePin}
+                                />
+                              ) : (
+                                <span className="text-slate-700 text-[10px]">—</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                     <tr className="bg-white/3">
                       <td colSpan={3} className="px-4 py-2.5 text-right text-slate-400 font-bold">Grand Total</td>
                       <td className="px-4 py-2.5 text-right font-bold text-orange-400">€{Number(order.grandTotal || 0).toFixed(2)}</td>
+                      <td />
                     </tr>
                   </tbody>
                 </table>
@@ -229,14 +477,14 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
             </div>
           )}
 
-          {/* Status pipeline buttons */}
+          {/* Status pipeline */}
           <div>
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Status Pipeline</p>
             <div className="flex items-center gap-1 flex-wrap">
               {STATUSES.map((s, i) => {
                 const isCurrent = order.status === s
-                const isPast = STATUSES.indexOf(order.status as Status) > i
-                const scfg = STATUS_CONFIG[s]
+                const isPast    = STATUSES.indexOf(order.status as Status) > i
+                const scfg      = STATUS_CONFIG[s]
                 return (
                   <button
                     key={s}
@@ -261,6 +509,7 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
   )
 }
 
+// ─── Main content ─────────────────────────────────────────────────────────────
 import { Suspense } from 'react'
 
 function AdminOrdersContent() {
@@ -269,6 +518,9 @@ function AdminOrdersContent() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const [search, setSearch] = useState(searchParams.get('search') || '')
+
+  // Shop categories hook (for real-time pin state)
+  const { docs: shopDocs, togglePin } = useShopCategories(adminPortalDb)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -296,14 +548,13 @@ function AdminOrdersContent() {
 
   async function handleStatus(id: string, status: string, dpd?: string) {
     await updateOrderStatus(id, status, dpd)
-    // Refresh data after status change
     setTimeout(fetchOrders, 500)
   }
 
   const filtered = orders.filter(o => {
-    const matchFilter = filter === 'all' || o.status === filter
-    const searchLower = search.toLowerCase()
-    const matchSearch = !search
+    const matchFilter   = filter === 'all' || o.status === filter
+    const searchLower   = search.toLowerCase()
+    const matchSearch   = !search
       || (o.ticketNumber || '').toLowerCase().includes(searchLower)
       || (o.customerEmail || '').toLowerCase().includes(searchLower)
       || (o.customerName || '').toLowerCase().includes(searchLower)
@@ -316,31 +567,49 @@ function AdminOrdersContent() {
     ...Object.fromEntries(STATUSES.map(s => [s, orders.filter(o => o.status === s).length])),
   }
 
+  // Count total pinned items across all orders currently visible
+  const totalPinned = Object.values(shopDocs).reduce((sum, d) => sum + (d.pinnedProductIds?.length ?? 0), 0)
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-xl font-bold text-white">Order Management</h2>
           <p className="mt-0.5 text-sm text-slate-400">
             {orders.length} total orders — click any card to expand and update status
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-slate-500">Revenue (Delivered)</p>
-          <p className="text-xl font-bold text-emerald-400">
-            €{orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.grandTotal || 0), 0).toFixed(2)}
-          </p>
+        <div className="flex items-start gap-4">
+          {totalPinned > 0 && (
+            <div
+              className="flex items-center gap-2 rounded-xl px-3 py-2"
+              style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)' }}
+            >
+              <Pin className="size-3.5" style={{ color: '#F97316' }} />
+              <span className="text-[12px] font-semibold" style={{ color: '#F97316' }}>
+                {totalPinned} products pinned to feeds
+              </span>
+            </div>
+          )}
+          <div className="text-right">
+            <p className="text-xs text-slate-500">Revenue (Delivered)</p>
+            <p className="text-xl font-bold text-emerald-400">
+              €{orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.grandTotal || 0), 0).toFixed(2)}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Filter tabs */}
+      {/* Filter tabs + Search */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-wrap gap-1 rounded-xl border border-white/10 bg-slate-900 p-1">
           {[{ key: 'all', label: 'All', count: counts.all },
             ...STATUSES.map(s => ({ key: s, label: STATUS_CONFIG[s as Status].label, count: counts[s] }))
           ].map(tab => (
-            <button key={tab.key} onClick={() => setFilter(tab.key)}
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                 filter === tab.key ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
@@ -364,10 +633,21 @@ function AdminOrdersContent() {
         </div>
       </div>
 
-      {/* Order cards */}
+      {/* Hint for the 3-dot menu */}
+      <div
+        className="flex items-center gap-3 rounded-xl px-4 py-2.5"
+        style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)' }}
+      >
+        <MoreVertical className="size-4 shrink-0" style={{ color: '#60A5FA' }} />
+        <p className="text-[12px]" style={{ color: '#93C5FD' }}>
+          <strong>New:</strong> Expand any order and click the <strong>⋮ Feed</strong> button on an item to instantly pin that product to storefront category feeds (Top Picks, Bestsellers, etc.). Changes go live immediately.
+        </p>
+      </div>
+
+      {/* Orders */}
       {loading ? (
         <div className="space-y-3">
-          {[1,2,3].map(i => (
+          {[1, 2, 3].map(i => (
             <div key={i} className="h-20 rounded-2xl bg-slate-900 animate-pulse border border-white/5" />
           ))}
         </div>
@@ -383,7 +663,13 @@ function AdminOrdersContent() {
       ) : (
         <div className="space-y-3">
           {filtered.map(order => (
-            <OrderCard key={order.id} order={order} onStatus={handleStatus} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              onStatus={handleStatus}
+              shopDocs={shopDocs}
+              togglePin={togglePin}
+            />
           ))}
         </div>
       )}

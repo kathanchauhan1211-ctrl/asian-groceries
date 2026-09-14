@@ -30,6 +30,7 @@ import {
   ChevronRight,
   Menu,
   ChevronLeft,
+  Copy,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import {
@@ -663,13 +664,34 @@ function OrdersSection({ orders, loading }: { orders: LiveOrder[]; loading: bool
                 </div>
                 <div className="flex gap-2 items-center">
                   {order.dpdParcelNumber && (
-                    <span className="text-[11px] font-mono font-bold text-slate-500 mr-2 hidden sm:inline-block border border-border bg-card px-2 py-1 rounded">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(order.dpdParcelNumber!);
+                        alert("DPD Tracking Number copied to clipboard!");
+                      }}
+                      className="group flex items-center text-[11px] font-mono font-bold text-slate-500 mr-2 hidden sm:flex border border-border bg-card px-2 py-1 rounded hover:bg-muted/80 transition-colors"
+                      title="Click to copy"
+                    >
                       DPD: {order.dpdParcelNumber}
-                    </span>
+                      <Copy className="size-3 ml-1.5 opacity-50 group-hover:opacity-100" />
+                    </button>
                   )}
-                  <Button href={`/track?ticket=${order.id}`} variant="amber" size="sm" className="rounded-full gap-1.5">
-                    <Truck className="size-3" /> Track
-                  </Button>
+                  {order.dpdParcelNumber ? (
+                    <Button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(order.dpdParcelNumber!);
+                        alert("Tracking number copied! Please paste it on the DPD website to track your parcel.");
+                        window.open("https://www.dpd.com/lt/en/track-parcel/", "_blank");
+                      }}
+                      variant="amber" size="sm" className="rounded-full gap-1.5"
+                    >
+                      <Truck className="size-3" /> Track on DPD
+                    </Button>
+                  ) : (
+                    <Button href={`/track?ticket=${order.id}`} variant="amber" size="sm" className="rounded-full gap-1.5">
+                      <Truck className="size-3" /> Track
+                    </Button>
+                  )}
                   <Button variant="glass-light" size="sm" className="rounded-full gap-1.5">
                     <Download className="size-3" /> Invoice
                   </Button>
