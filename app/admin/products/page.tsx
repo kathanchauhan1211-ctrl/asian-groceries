@@ -513,8 +513,11 @@ function ProductRow({
             </button>
           </div>
         </td>
-        {/* Empty feed column during edit */}
-        <td />
+        {/* Sticky Feed column — empty during edit */}
+        <td
+          className="sticky right-0"
+          style={{ background: 'rgba(249,115,22,0.03)', borderLeft: '1px solid rgba(255,255,255,0.06)', width: '52px', minWidth: '52px' }}
+        />
       </tr>
     )
   }
@@ -588,8 +591,16 @@ function ProductRow({
           </IconBtn>
         </div>
       </td>
-      {/* ── 3-dot Feed column ── */}
-      <td className="px-3 py-3">
+      {/* ── Feed column: sticky so it stays visible on horizontal scroll ── */}
+      <td
+        className="sticky right-0 py-3 px-2"
+        style={{
+          background: selected ? 'rgba(249,115,22,0.06)' : C.surface,
+          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          width: '52px',
+          minWidth: '52px',
+        }}
+      >
         <ProductCategoryButton
           product={product}
           shopDocs={shopDocs}
@@ -1145,15 +1156,28 @@ export default function AdminProductsPage() {
                     <table className="w-full" style={{ minWidth: '900px' }}>
                       <thead>
                         <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                          {['', 'Product', 'Category', 'Price', 'Unit', 'Status', 'Actions', 'Feed'].map(h => (
+                          {['', 'Product', 'Category', 'Price', 'Unit', 'Status', 'Actions'].map(h => (
                             <th
                               key={h}
                               className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider"
-                              style={{ color: h === 'Feed' ? '#F97316' : '#374151' }}
+                              style={{ color: '#374151' }}
                             >
-                              {h === 'Feed' ? '⋮ Feed' : h}
+                              {h}
                             </th>
                           ))}
+                          {/* Sticky Feed header */}
+                          <th
+                            className="sticky right-0 py-2.5 px-2 text-center text-[11px] font-bold uppercase tracking-wider"
+                            style={{
+                              background: C.surface,
+                              borderLeft: '1px solid rgba(255,255,255,0.06)',
+                              color: '#F97316',
+                              width: '52px',
+                              minWidth: '52px',
+                            }}
+                          >
+                            Feed
+                          </th>
                         </tr>
                       </thead>
                       <tbody>

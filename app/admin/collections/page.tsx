@@ -226,6 +226,7 @@ function ShopCategoryPanel({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminCollectionsPage() {
   const { docs: shopDocs, loading } = useShopCategories(clientDb)
+  const [clearing, setClearing] = useState(false)
 
   // We still need allProducts for the feed preview
   const [allProducts, setAllProducts] = useState<any[]>([])
@@ -237,6 +238,21 @@ export default function AdminCollectionsPage() {
     )
     return () => unsub()
   }, [])
+
+  async function handleClearAll() {
+    if (!confirm('Are you sure you want to clear all pinned products from all feeds? Auto-products will still show.')) return
+    setClearing(true)
+    try {
+      const res = await fetch('/api/admin/clear-feeds', { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to clear feeds')
+      // Optional: show toast here
+    } catch (err) {
+      console.error(err)
+      alert('Error clearing feeds')
+    } finally {
+      setClearing(false)
+    }
+  }
 
   const totalPinned = Object.values(shopDocs).reduce(
     (sum, d) => sum + (d.pinnedProductIds?.length ?? 0), 0
@@ -273,6 +289,15 @@ export default function AdminCollectionsPage() {
             <TrendingUp className="size-3.5" style={{ color: '#10B981' }} />
             <span className="text-[12px] font-semibold" style={{ color: '#10B981' }}>{allProducts.length} products</span>
           </div>
+          <button
+            onClick={handleClearAll}
+            disabled={clearing || totalPinned === 0}
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-semibold transition-all disabled:opacity-50 hover:bg-red-500/10 hover:text-red-400"
+            style={{ background: GLASS.innerSurface, border: `1px solid ${GLASS.innerBorder}`, color: '#EF4444' }}
+          >
+            {clearing ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+            Clear All
+          </button>
         </div>
       </div>
 
