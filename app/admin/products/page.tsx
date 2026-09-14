@@ -10,8 +10,12 @@ import { type Stock } from '@/lib/products'
 import {
   Plus, Trash2, Package, X, Check, Upload, Download,
   FileSpreadsheet, AlertCircle, Loader2, Pencil, Save,
-  ChevronDown, ChevronUp, Search, Filter, MoreHorizontal, CheckSquare, Square, Star
+  ChevronDown, ChevronUp, Search, Filter, MoreHorizontal,
+  CheckSquare, Square, Star, MoreVertical, Pin, Flame, Sparkles, Tag,
 } from 'lucide-react'
+import {
+  useShopCategories, SHOP_CATEGORY_DEFS, type ShopCategoryKey,
+} from '@/lib/use-shop-categories'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const STOCK_OPTIONS: Stock[] = ['In Stock', 'Low Stock', 'Sold Out']
@@ -237,12 +241,192 @@ function useAdminProducts() {
   return { products, loading, removeLocally, updateLocally }
 }
 
+// ─── Category Popover (3-dot on each product) ─────────────────────────────────
+const CAT_ICON: Record<ShopCategoryKey, any> = {
+  'best-offer':   Flame,
+  'bestsellers':  Star,
+  'new-arrivals': Sparkles,
+  'sale':         Tag,
+}
+
+function CategoryPopover({
+  productId,
+  productName,
+  onClose,
+  shopDocs,
+  togglePin,
+}: {
+  productId: string
+  productName: string
+  onClose: () => void
+  shopDocs: ReturnType<typeof useShopCategories>['docs']
+  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+}) {
+  const [saving, setSaving] = useState<ShopCategoryKey | null>(null)
+  const [localState, setLocalState] = useState<Record<ShopCategoryKey, boolean>>(() => ({
+    'best-offer':   shopDocs['best-offer'].pinnedProductIds.includes(productId),
+    'bestsellers':  shopDocs['bestsellers'].pinnedProductIds.includes(productId),
+    'new-arrivals': shopDocs['new-arrivals'].pinnedProductIds.includes(productId),
+    'sale':         shopDocs['sale'].pinnedProductIds.includes(productId),
+  }))
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    // small delay so the triggering click doesn't immediately close
+    const t = setTimeout(() => document.addEventListener('mousedown', handler), 100)
+    return () => { clearTimeout(t); document.removeEventListener('mousedown', handler) }
+  }, [onClose])
+
+  async function handleToggle(key: ShopCategoryKey) {
+    setSaving(key)
+    setLocalState(prev => ({ ...prev, [key]: !prev[key] }))
+    await togglePin(key, productId)
+    setSaving(null)
+  }
+
+  const anyPinned = Object.values(localState).some(Boolean)
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-9 z-[60] rounded-2xl overflow-hidden shadow-2xl"
+      style={{
+        width: '240px',
+        background: 'rgba(10, 15, 30, 0.97)',
+        backdropFilter: 'blur(24px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+      }}
+    >
+      {/* Header */}
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#4B5563' }}>Add to Feed</p>
+            <p className="mt-0.5 text-[12px] font-semibold text-white truncate">{productName}</p>
+          </div>
+          <button onClick={onClose} className="shrink-0 size-5 flex items-center justify-center rounded-md" style={{ color: '#4B5563' }}>
+            <X className="size-3.5" />
+          </button>
+        </div>
+        {anyPinned && (
+          <div
+            className="mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1"
+            style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.15)' }}
+          >
+            <Pin className="size-3 shrink-0" style={{ color: '#F97316' }} />
+            <p className="text-[10px] font-semibold" style={{ color: '#F97316' }}>Pinned — appears first in feed</p>
+          </div>
+        )}
+      </div>
+
+      {/* Category checkboxes */}
+      <div className="p-2 space-y-1">
+        {SHOP_CATEGORY_DEFS.map(def => {
+          const pinned = localState[def.key]
+          const isLoading = saving === def.key
+          const CatIcon = CAT_ICON[def.key]
+          return (
+            <button
+              key={def.key}
+              onClick={() => handleToggle(def.key)}
+              disabled={!!saving}
+              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all disabled:opacity-70"
+              style={{
+                background: pinned ? `${def.color}12` : 'rgba(255,255,255,0.03)',
+                border: pinned ? `1px solid ${def.color}30` : '1px solid transparent',
+              }}
+              onMouseEnter={e => { if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+              onMouseLeave={e => { if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+            >
+              <span className="text-base">{def.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-white">{def.label}</p>
+                <p className="text-[10px] truncate" style={{ color: '#4B5563' }}>
+                  {shopDocs[def.key].pinnedProductIds.length} pinned
+                </p>
+              </div>
+              {isLoading ? (
+                <Loader2 className="size-4 animate-spin shrink-0" style={{ color: def.color }} />
+              ) : (
+                <div
+                  className="shrink-0 flex size-5 items-center justify-center rounded-md transition-all"
+                  style={{
+                    background: pinned ? `${def.color}25` : 'rgba(255,255,255,0.06)',
+                    border: pinned ? `1.5px solid ${def.color}` : '1.5px solid rgba(255,255,255,0.12)',
+                  }}
+                >
+                  {pinned && <Check className="size-3" style={{ color: def.color }} />}
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="px-4 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <p className="text-[10px]" style={{ color: '#374151' }}>
+          Pinned products appear first in the storefront category popup. Live instantly.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function ProductCategoryButton({
+  product,
+  shopDocs,
+  togglePin,
+}: {
+  product: AdminProduct
+  shopDocs: ReturnType<typeof useShopCategories>['docs']
+  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+}) {
+  const [open, setOpen] = useState(false)
+
+  const pinCount = SHOP_CATEGORY_DEFS.filter(d =>
+    shopDocs[d.key].pinnedProductIds.includes(product.id)
+  ).length
+
+  return (
+    <div className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        className="flex size-7 items-center justify-center rounded-md transition-all"
+        style={{
+          background: pinCount > 0 ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
+          border: pinCount > 0 ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.08)',
+          color: pinCount > 0 ? '#F97316' : '#4B5563',
+        }}
+        title={pinCount > 0 ? `Pinned to ${pinCount} feed${pinCount > 1 ? 's' : ''}` : 'Add to category feed'}
+      >
+        {pinCount > 0 ? <Pin className="size-3.5" /> : <MoreVertical className="size-3.5" />}
+      </button>
+
+      {open && (
+        <CategoryPopover
+          productId={product.id}
+          productName={product.name || 'Product'}
+          onClose={() => setOpen(false)}
+          shopDocs={shopDocs}
+          togglePin={togglePin}
+        />
+      )}
+    </div>
+  )
+}
+
 // ─── Editable Table Row ───────────────────────────────────────────────────────
 function ProductRow({
-  product, selected, onSelect, onSaved, onDelete, index
+  product, selected, onSelect, onSaved, onDelete, index, shopDocs, togglePin,
 }: {
   product: AdminProduct; selected: boolean; onSelect: (v: boolean) => void
   onSaved: (fields: Record<string, any>) => void; onDelete: () => void; index: number
+  shopDocs: ReturnType<typeof useShopCategories>['docs']
+  togglePin: ReturnType<typeof useShopCategories>['togglePin']
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -280,6 +464,11 @@ function ProductRow({
     try { await serverDeleteProducts([product.id]) } catch (err: any) { console.error(err.message) }
   }
 
+  // Feed pin indicators
+  const pinnedFeeds = SHOP_CATEGORY_DEFS.filter(d =>
+    shopDocs[d.key].pinnedProductIds.includes(product.id)
+  )
+
   const rowBg = selected ? 'rgba(249,115,22,0.04)' : 'transparent'
 
   if (editing) {
@@ -298,7 +487,6 @@ function ProductRow({
         <td className="px-3 py-2.5 min-w-[200px]"><FInput value={form.image} onChange={v => setForm(f => ({ ...f, image: v }))} placeholder="https://…" /></td>
         <td className="px-4 py-2.5">
           <div className="flex items-center gap-1.5">
-            {/* Bestseller toggle in edit row */}
             <button
               type="button"
               onClick={() => setForm(f => ({ ...f, bestseller: !f.bestseller }))}
@@ -325,6 +513,8 @@ function ProductRow({
             </button>
           </div>
         </td>
+        {/* Empty feed column during edit */}
+        <td />
       </tr>
     )
   }
@@ -358,13 +548,27 @@ function ProductRow({
             </div>
           )}
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <p className="truncate text-[13px] font-semibold text-white max-w-[180px]">{product.name}</p>
               {product.bestseller && (
                 <Star className="size-3 shrink-0" style={{ color: '#F59E0B' }} fill="#F59E0B" />
               )}
             </div>
             {product.brand && <p className="text-[11px] mt-0.5" style={{ color: '#4B5563' }}>{product.brand}</p>}
+            {/* Feed pin badges */}
+            {pinnedFeeds.length > 0 && (
+              <div className="flex items-center gap-0.5 mt-0.5 flex-wrap">
+                {pinnedFeeds.map(d => (
+                  <span
+                    key={d.key}
+                    className="text-[8px] rounded-full px-1.5 py-0.5 font-bold"
+                    style={{ background: `${d.color}20`, color: d.color, border: `1px solid ${d.color}30` }}
+                  >
+                    {d.emoji}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </td>
@@ -383,6 +587,14 @@ function ProductRow({
             <Trash2 className="size-3.5" />
           </IconBtn>
         </div>
+      </td>
+      {/* ── 3-dot Feed column ── */}
+      <td className="px-3 py-3">
+        <ProductCategoryButton
+          product={product}
+          shopDocs={shopDocs}
+          togglePin={togglePin}
+        />
       </td>
     </tr>
   )
@@ -435,7 +647,6 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
         className="w-full max-w-2xl rounded-xl overflow-hidden"
         style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
           <div className="flex items-center gap-2.5">
             <FileSpreadsheet className="size-4" style={{ color: '#F97316' }} />
@@ -457,7 +668,6 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Info bar */}
           <div className="flex items-start gap-3 rounded-md p-3" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
             <AlertCircle className="size-4 mt-0.5 shrink-0" style={{ color: '#60A5FA' }} />
             <p className="text-[12px]" style={{ color: '#93C5FD' }}>
@@ -472,7 +682,6 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
             </div>
           )}
 
-          {/* Drop zone */}
           {(status === 'idle' || status === 'error') && (
             <div
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
@@ -516,7 +725,6 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
                 )}
               </div>
 
-              {/* Preview table */}
               <div className="max-h-48 overflow-auto rounded-lg" style={{ border: `1px solid ${C.border}` }}>
                 <table className="w-full text-[12px]">
                   <thead className="sticky top-0" style={{ background: C.subtle }}>
@@ -541,7 +749,6 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
                 </table>
               </div>
 
-              {/* Progress */}
               {status === 'importing' && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-[12px]">
@@ -589,7 +796,6 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
     tagline: '', bestseller: false,
   })
 
-
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setCreating(true)
@@ -624,7 +830,6 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
         className="relative ml-auto flex h-full w-full flex-col overflow-hidden"
         style={{ background: C.surface, borderLeft: `1px solid ${C.border}` }}
       >
-        {/* Drawer header */}
         <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
           <div>
             <p className="text-[14px] font-semibold text-white">Add Product</p>
@@ -635,7 +840,6 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
           </button>
         </div>
 
-        {/* Drawer form */}
         <form onSubmit={handleCreate} className="flex-1 overflow-y-auto px-6 py-5">
           <div className="grid grid-cols-2 gap-3">
             {fields.map(f => (
@@ -664,7 +868,6 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
               <FSelect value={form.stock} onChange={v => setForm(p => ({ ...p, stock: v }))} options={STOCK_OPTIONS} />
             </div>
 
-            {/* Bestseller toggle */}
             <div className="col-span-2">
               <button
                 type="button"
@@ -684,11 +887,10 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
                   <p className="text-[13px] font-semibold" style={{ color: form.bestseller ? '#F59E0B' : '#9CA3AF' }}>
                     {form.bestseller ? '⭐ Marked as Bestseller' : 'Mark as Bestseller'}
                   </p>
-                  <p className="text-[11px]" style={{ color: '#4B5563' }}>Appears in the Bestsellers carousel</p>
+                  <p className="text-[11px]" style={{ color: '#4B5563' }}>Appears in the Bestsellers feed</p>
                 </div>
               </button>
             </div>
-
           </div>
 
           <button
@@ -707,6 +909,7 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminProductsPage() {
   const { products, loading, removeLocally, updateLocally } = useAdminProducts()
+  const { docs: shopDocs, togglePin } = useShopCategories(adminPortalDb)
 
   const [showAddDrawer, setShowAddDrawer] = useState(false)
   const [showCSV, setShowCSV] = useState(false)
@@ -743,9 +946,7 @@ export default function AdminProductsPage() {
   const allIds = filtered.map(p => p.id)
   const allSelected = allIds.length > 0 && allIds.every(id => selected.has(id))
 
-  function toggleAll() {
-    setSelected(allSelected ? new Set() : new Set(allIds))
-  }
+  function toggleAll() { setSelected(allSelected ? new Set() : new Set(allIds)) }
   function toggleOne(id: string, v: boolean) {
     setSelected(s => { const n = new Set(s); v ? n.add(id) : n.delete(id); return n })
   }
@@ -796,7 +997,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-[18px] font-bold text-white">Products</h1>
           <p className="mt-0.5 text-[13px]" style={{ color: '#4B5563' }}>
-            {loading ? 'Loading…' : `${products.length} total products`}
+            {loading ? 'Loading…' : `${products.length} total products`} · Use ⋮ on each row to pin products to category feeds
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -839,7 +1040,6 @@ export default function AdminProductsPage() {
         className="flex flex-wrap items-center gap-2 rounded-lg p-2"
         style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
-        {/* Search */}
         <div className="flex flex-1 min-w-[200px] items-center gap-2 rounded-md px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}` }}>
           <Search className="size-3.5 shrink-0" style={{ color: '#4B5563' }} />
           <input
@@ -850,7 +1050,6 @@ export default function AdminProductsPage() {
           {search && <button onClick={() => setSearch('')}><X className="size-3 text-gray-600 hover:text-gray-400" /></button>}
         </div>
 
-        {/* Category filter */}
         <select
           value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
           className="cursor-pointer rounded-md px-3 py-1.5 text-[13px] outline-none"
@@ -861,7 +1060,6 @@ export default function AdminProductsPage() {
 
         <div className="h-5 w-px" style={{ background: C.border }} />
 
-        {/* Select all */}
         <button
           onClick={toggleAll}
           className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-all"
@@ -871,7 +1069,6 @@ export default function AdminProductsPage() {
           {allSelected ? 'Deselect all' : 'Select all'}
         </button>
 
-        {/* Bulk delete */}
         {selected.size > 0 && (
           <button
             onClick={handleDeleteSelected} disabled={bulkDeleting}
@@ -910,7 +1107,6 @@ export default function AdminProductsPage() {
                 className="overflow-hidden rounded-xl"
                 style={{ background: C.surface, border: `1px solid ${C.border}` }}
               >
-                {/* Category header */}
                 <div
                   className="flex items-center justify-between px-4 py-2.5"
                   style={{ borderBottom: isCollapsed ? 'none' : `1px solid ${C.border}`, background: 'rgba(255,255,255,0.01)' }}
@@ -944,19 +1140,18 @@ export default function AdminProductsPage() {
                   </button>
                 </div>
 
-                {/* Table */}
                 {!isCollapsed && (
                   <div className="overflow-x-auto">
-                    <table className="w-full" style={{ minWidth: '860px' }}>
+                    <table className="w-full" style={{ minWidth: '900px' }}>
                       <thead>
                         <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                          {['', 'Product', 'Category', 'Price', 'Unit', 'Status', 'Actions'].map(h => (
+                          {['', 'Product', 'Category', 'Price', 'Unit', 'Status', 'Actions', 'Feed'].map(h => (
                             <th
                               key={h}
                               className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider"
-                              style={{ color: '#374151' }}
+                              style={{ color: h === 'Feed' ? '#F97316' : '#374151' }}
                             >
-                              {h}
+                              {h === 'Feed' ? '⋮ Feed' : h}
                             </th>
                           ))}
                         </tr>
@@ -975,6 +1170,8 @@ export default function AdminProductsPage() {
                               setSelected(s => { const n = new Set(s); n.delete(product.id); return n })
                               showToast(`Product deleted`)
                             }}
+                            shopDocs={shopDocs}
+                            togglePin={togglePin}
                           />
                         ))}
                       </tbody>
