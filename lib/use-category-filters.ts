@@ -13,24 +13,17 @@
  */
 
 import { useEffect, useState } from 'react'
-import { doc, onSnapshot } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
 import { CATEGORY_GROUPS, type CategoryGroup } from '@/lib/products'
+import { fetchCategoryFilters } from '@/app/actions/get-categories'
 
 export type { CategoryGroup }
 
 export type CategoryFilterState = {
-  /** Live categories from Firestore (or static fallback while loading) */
   categories: CategoryGroup[]
-  /** True while waiting for the first Firestore snapshot */
   loading: boolean
-  /** Non-null if Firestore subscription errored */
   error: string | null
 }
 
-const SETTINGS_DOC = 'settings/categoryFilters'
-
-/** Shape of a single category stored inside the Firestore document */
 export type FirestoreCategory = {
   id: string
   label: string
@@ -41,7 +34,6 @@ export type FirestoreCategory = {
   createdAt?: any
 }
 
-/** Convert a Firestore category record to the CategoryGroup shape used by the storefront */
 function toGroup(fc: FirestoreCategory): CategoryGroup {
   return {
     label: fc.label,
@@ -56,16 +48,15 @@ export function useCategoryFilters(): CategoryFilterState {
   const [error,      setError]      = useState<string | null>(null)
 
   useEffect(() => {
-    const ref = doc(clientDb, SETTINGS_DOC)
-
-    const unsub = onSnapshot(
-      ref,
-      (snap) => {
-        if (snap.exists()) {
-          const data = snap.data()
-          const raw: FirestoreCategory[] = Array.isArray(data.categories) ? data.categories : []
-
-          // Only show active categories, sorted by order field
+    let mounted = true
+    
+    async function load() {
+      try {
+        const data = await fetchCategoryFilters()
+        if (!mounted) return
+        
+        if (data && Array.isArray(data.categories)) {
+          const raw: FirestoreCategory[] = data.categories
           const active = raw
             .filter((c) => c.active !== false && c.id && c.label && c.match?.length > 0)
             .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
@@ -73,28 +64,22 @@ export function useCategoryFilters(): CategoryFilterState {
 
           setCategories(active.length > 0 ? active : CATEGORY_GROUPS)
         } else {
-          // Document doesn't exist yet — use static fallback
           setCategories(CATEGORY_GROUPS)
         }
-        setLoading(false)
-        setError(null)
-      },
-      (err: any) => {
-        if (err.code === 'permission-denied') {
-          console.warn('[useCategoryFilters] Permission denied reading settings/categoryFilters. Deploy firestore.rules to fix. Falling back to static categories.')
+      } catch (err: any) {
+        if (mounted) {
+          console.error('[useCategoryFilters] Error:', err)
+          setError(err.message)
           setCategories(CATEGORY_GROUPS)
-          setLoading(false)
-          return
         }
-        
-        console.error('[useCategoryFilters] Firestore error:', err)
-        setError(err.message)
-        setCategories(CATEGORY_GROUPS) // fallback on error
-        setLoading(false)
-      },
-    )
-
-    return () => unsub()
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    
+    load()
+    
+    return () => { mounted = false }
   }, [])
 
   return { categories, loading, error }
