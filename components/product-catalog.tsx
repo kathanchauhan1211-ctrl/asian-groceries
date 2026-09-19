@@ -605,7 +605,7 @@ export function ProductCatalog({
       value:   grp.match[0],
       display: grp.label,
       count:   allProducts.filter(p => grp.match.includes(p.category)).length,
-    })).filter(o => o.count > 0),
+    })),
   [allProducts, liveCategoryGroups])
 
   const brandOptions = useMemo(() => {

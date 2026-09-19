@@ -149,14 +149,15 @@ export async function fixCategoryMatches() {
         order: 11,
         createdAt: 1789855566786,
       },
-      // Ganpati Idols: user-created, "Idols" doesn't exist in products yet
-      // Keep it but deactivate until products with category "Idols" are added
+      // Ganpati Idols: user-created category — active and visible on storefront
+      // Will show in filter dropdown; clicking it will return 0 results until
+      // admin adds products with category "Idols" via the Products page
       {
         id: 'ganpati-idols',
         label: 'Ganpati Idols',
         icon: '🪔',
         match: ['Idols'],
-        active: false,  // hidden until products with category "Idols" exist
+        active: true,  // visible — admin explicitly created this
         order: 12,
         createdAt: 1789855686483,
       },

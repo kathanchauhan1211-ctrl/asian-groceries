@@ -58,7 +58,7 @@ export function useCategoryFilters(): CategoryFilterState {
         if (data && Array.isArray(data.categories)) {
           const raw: FirestoreCategory[] = data.categories
           const active = raw
-            .filter((c) => c.active !== false && c.id && c.label && c.match?.length > 0)
+            .filter((c) => c.active !== false && c.id && c.label)
             .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
             .map(toGroup)
 

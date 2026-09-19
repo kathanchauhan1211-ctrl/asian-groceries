@@ -50,16 +50,17 @@ export type CategoryGroup = {
 }
 
 export const CATEGORY_GROUPS: CategoryGroup[] = [
-  { label: 'Wheat & Chapati Flour', icon: '🌾', match: ['Rice & Atta', 'Atta & Flour'] },
-  { label: 'Basmati Rice',          icon: '🍚', match: ['Rice & Grains', 'Basmati Rice'] },
-  { label: 'Lentils & Pulses',      icon: '🫘', match: ['Lentils & Pulses', 'Dal & Pulses'] },
-  { label: 'Spices & Masala',       icon: '🌶️', match: ['Spices', 'Masala', 'Condiments'] },
-  { label: 'Instant & Ready Meals', icon: '🍱', match: ['Ready Meals', 'Instant Food'] },
-  { label: 'Sweets',                icon: '🍮', match: ['Sweets', 'Mithai'] },
-  { label: 'Savoury Snacks',        icon: '🥨', match: ['Snacks', 'Savoury'] },
-  { label: 'Pickles & Sauces',      icon: '🫙', match: ['Pickles', 'Sauces', 'Condiments'] },
-  { label: 'Beverages & Tea',       icon: '🍵', match: ['Tea & Drinks', 'Beverages', 'Drinks'] },
-  { label: 'Frozen Foods',          icon: '❄️',  match: ['Frozen Foods', 'Frozen'] },
+  { label: 'Wheat & Chapati Flour', icon: '🌾', match: ['Atta', 'Rice & Atta'] },
+  { label: 'Basmati Rice',          icon: '🍚', match: ['Rice & Grains'] },
+  { label: 'Spices & Masala',       icon: '🌶️', match: ['Spices', 'Other Spices'] },
+  { label: 'Snacks',                icon: '🍿', match: ['Snacks', 'Namkeen & Snacks'] },
+  { label: 'Sweets',                icon: '🍮', match: ['Sweets'] },
+  { label: 'Frozen Foods',          icon: '🧊', match: ['Foods', 'Frozen Foods'] },
+  { label: 'Oils',                  icon: '🫙', match: ['Oils'] },
+  { label: 'Pickles',               icon: '🥒', match: ['Pickles'] },
+  { label: 'Tea & Drinks',          icon: '🍵', match: ['Tea & Drinks'] },
+  { label: 'Vegetables & Produce',  icon: '🥦', match: ['Vegetables & Produce'] },
+  { label: 'Personal Care',         icon: '🧴', match: ['Soaps & Personal Care'] },
 ]
 
 // Flat list of all raw DB categories (derived — do not edit manually)
