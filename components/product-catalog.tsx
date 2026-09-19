@@ -328,7 +328,7 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
 function MobileFilterDrawer({
   open, onClose,
   // filter state
-  categories, selectedCategories, onToggleCategory,
+  selectedCategories, onToggleCategory,
   brands, selectedBrands, onToggleBrand,
   origins, selectedOrigin, onSelectOrigin,
   diets, selectedDiets, onToggleDiet,
@@ -340,7 +340,6 @@ function MobileFilterDrawer({
   onClearAll,
 }: {
   open: boolean; onClose: () => void
-  categories: { value: string; display: string; count: number }[]
   selectedCategories: string[]; onToggleCategory: (v: string) => void
   brands: { value: string; display: string; count: number }[]
   selectedBrands: string[]; onToggleBrand: (v: string) => void
@@ -580,13 +579,6 @@ export function ProductCatalog({
   }
 
   // ── Dynamic options from loaded products ──────────────────────────────────
-  const categoryOptions = useMemo(() =>
-    liveCategoryGroups.map(grp => ({
-      value:   grp.match[0],
-      display: grp.label,
-      count:   allProducts.filter(p => grp.match.includes(p.category)).length,
-    })),
-  [allProducts, liveCategoryGroups])
 
   const brandOptions = useMemo(() => {
     const map = new Map<string, number>()
@@ -608,14 +600,9 @@ export function ProductCatalog({
       // Origin
       if (originParam !== 'All' && p.origin !== originParam) return false
 
-      // Category — selectedCategories holds raw match values (e.g. 'Rice & Atta')
+      // Category
       if (selectedCategories.length > 0) {
-        // For each selected category value, find its group and check if product belongs
-        const productMatchedAny = selectedCategories.some(sc => {
-          const grp = liveCategoryGroups.find(g => g.match.includes(sc))
-          return grp ? grp.match.includes(p.category) : p.category === sc
-        })
-        if (!productMatchedAny) return false
+        if (!selectedCategories.includes(p.category)) return false
       }
 
       // Brand
@@ -653,8 +640,7 @@ export function ProductCatalog({
     if (query) chips.push({ label: `"${query}"`, onRemove: () => setParam('q', null) })
     if (originParam !== 'All') chips.push({ label: `Origin: ${originParam}`, onRemove: () => setParam('origin', null) })
     selectedCategories.forEach(sc => {
-      const grp = liveCategoryGroups.find(g => g.match.includes(sc))
-      chips.push({ label: grp?.label ?? sc, onRemove: () => toggleListParam('category', selectedCategories, sc) })
+      chips.push({ label: sc, onRemove: () => toggleListParam('category', selectedCategories, sc) })
     })
     selectedBrands.forEach(b => chips.push({ label: b, onRemove: () => toggleListParam('brand', selectedBrands, b) }))
     selectedDiets.forEach(d => chips.push({ label: d, onRemove: () => toggleListParam('diet', selectedDiets, d) }))
@@ -819,7 +805,6 @@ export function ProductCatalog({
           onClose={() => { setMobileFilterOpen(false); onCloseExternalFilter?.() }}
           searchQuery={query}
           onSearchChange={v => setParam('q', v)}
-          categories={categoryOptions}
           selectedCategories={selectedCategories}
           onToggleCategory={v => toggleListParam('category', selectedCategories, v)}
           brands={brandOptions}

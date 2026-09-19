@@ -46,32 +46,24 @@ export const ORIGIN_FLAG = new Proxy(KNOWN_FLAGS, {
 export type CategoryGroup = {
   label:  string        // what the user sees in the UI
   icon:   string        // emoji icon
-  match:  Category[]    // raw DB category strings that belong to this group
 }
 
 export const CATEGORY_GROUPS: CategoryGroup[] = [
-  { label: 'Wheat & Chapati Flour', icon: '🌾', match: ['Atta', 'Rice & Atta'] },
-  { label: 'Basmati Rice',          icon: '🍚', match: ['Rice & Grains'] },
-  { label: 'Spices & Masala',       icon: '🌶️', match: ['Spices', 'Other Spices'] },
-  { label: 'Snacks',                icon: '🍿', match: ['Snacks', 'Namkeen & Snacks'] },
-  { label: 'Sweets',                icon: '🍮', match: ['Sweets'] },
-  { label: 'Frozen Foods',          icon: '🧊', match: ['Foods', 'Frozen Foods'] },
-  { label: 'Oils',                  icon: '🫙', match: ['Oils'] },
-  { label: 'Pickles',               icon: '🥒', match: ['Pickles'] },
-  { label: 'Tea & Drinks',          icon: '🍵', match: ['Tea & Drinks'] },
-  { label: 'Vegetables & Produce',  icon: '🥦', match: ['Vegetables & Produce'] },
-  { label: 'Personal Care',         icon: '🧴', match: ['Soaps & Personal Care'] },
+  { label: 'Wheat & Chapati Flour', icon: '🌾' },
+  { label: 'Basmati Rice',          icon: '🍚' },
+  { label: 'Spices & Masala',       icon: '🌶️' },
+  { label: 'Snacks',                icon: '🍿' },
+  { label: 'Sweets',                icon: '🍮' },
+  { label: 'Frozen Foods',          icon: '🧊' },
+  { label: 'Oils',                  icon: '🫙' },
+  { label: 'Pickles',               icon: '🥒' },
+  { label: 'Tea & Drinks',          icon: '🍵' },
+  { label: 'Vegetables & Produce',  icon: '🥦' },
+  { label: 'Personal Care',         icon: '🧴' },
 ]
 
-// Flat list of all raw DB categories (derived — do not edit manually)
-export const CATEGORIES: Category[] = Array.from(
-  new Set(CATEGORY_GROUPS.flatMap(g => g.match))
-)
-
-// Find which group a raw product category belongs to
-export function getCategoryGroup(rawCategory: Category): CategoryGroup | undefined {
-  return CATEGORY_GROUPS.find(g => g.match.includes(rawCategory))
-}
+// Flat list of all default categories
+export const CATEGORIES: Category[] = CATEGORY_GROUPS.map(g => g.label)
 
 // ─── Canonical origin + dietary filter options ────────────────────────────────
 export const ORIGINS = [

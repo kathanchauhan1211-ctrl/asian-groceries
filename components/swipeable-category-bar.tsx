@@ -38,23 +38,21 @@ export function SwipeableCategoryBar({
   const categoryParam = searchParams.get('category') || ''
   const selectedCategories = categoryParam ? categoryParam.split(',').filter(Boolean) : []
 
-  // Which group is active? (first selected category determines the active group)
-  const activeGroup = categories.find(g =>
-    g.match.some(m => selectedCategories.includes(m))
-  ) ?? null
+  // Which group is active?
+  const activeGroup = categories.find(g => selectedCategories.includes(g.label)) ?? null
 
   // Write category change to URL
-  const selectGroup = useCallback((grp: CategoryGroup | null) => {
+  const selectGroup = useCallback((grp: { label: string } | null) => {
     const params = new URLSearchParams(searchParams.toString())
     if (!grp) {
       params.delete('category')
     } else {
       // If this group is already active, deselect it
-      const isActive = grp.match.some(m => selectedCategories.includes(m))
+      const isActive = selectedCategories.includes(grp.label)
       if (isActive) {
         params.delete('category')
       } else {
-        params.set('category', grp.match[0])
+        params.set('category', grp.label)
       }
     }
     const queryString = params.toString()
@@ -116,7 +114,7 @@ export function SwipeableCategoryBar({
         </Button>
 
           {categories.map(grp => {
-            const active = grp.match.some(m => selectedCategories.includes(m))
+            const active = selectedCategories.includes(grp.label)
             return (
               <Button
                 key={grp.label}

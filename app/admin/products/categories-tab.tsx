@@ -15,7 +15,7 @@
  * - Category IDs are derived from the label (slug), never random
  */
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Fragment } from 'react'
 import {
   collection, doc, onSnapshot, setDoc, getDoc,
 } from 'firebase/firestore'
@@ -31,7 +31,6 @@ type Category = {
   id: string
   label: string
   icon: string
-  match: string[]   // raw Firestore product.category values
   active: boolean
   order: number
   createdAt?: number
@@ -53,16 +52,13 @@ function slugify(label: string): string {
   return label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
-function validateCategory(label: string, icon: string, matchRaw: string): string | null {
+function validateCategory(label: string, icon: string): string | null {
   const trimLabel = label.trim()
   const trimIcon  = icon.trim()
-  const matches   = matchRaw.split(',').map(s => s.trim()).filter(Boolean)
 
   if (trimLabel.length < 2)  return 'Label must be at least 2 characters.'
   if (trimLabel.length > 60) return 'Label must be under 60 characters.'
   if (trimIcon.length === 0) return 'Please enter an icon (emoji or letter).'
-  if (matches.length === 0)  return 'At least one match value is required.'
-  if (matches.some(m => m.length < 2)) return 'Each match value must be at least 2 characters.'
   return null
 }
 
@@ -76,23 +72,21 @@ function CategoryForm({
   saving,
 }: {
   initial?: Partial<Category>
-  onSave: (label: string, icon: string, match: string[]) => void
+  onSave: (label: string, icon: string) => void
   onCancel: () => void
   saving: boolean
 }) {
   const [label,    setLabel]    = useState(initial?.label ?? '')
   const [icon,     setIcon]     = useState(initial?.icon  ?? '📦')
-  const [matchRaw, setMatchRaw] = useState(initial?.match?.join(', ') ?? '')
   const [err,      setErr]      = useState<string | null>(null)
   const labelRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { labelRef.current?.focus() }, [])
 
   function handleSave() {
-    const validErr = validateCategory(label, icon, matchRaw)
+    const validErr = validateCategory(label, icon)
     if (validErr) { setErr(validErr); return }
-    const matches = matchRaw.split(',').map(s => s.trim()).filter(Boolean)
-    onSave(label.trim(), icon.trim(), matches)
+    onSave(label.trim(), icon.trim())
   }
 
   const inputCls = 'w-full rounded-lg border px-3 py-2 text-sm text-white bg-transparent outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/20 transition-all'
@@ -126,24 +120,6 @@ function CategoryForm({
             onKeyDown={e => e.key === 'Enter' && handleSave()}
           />
         </div>
-      </div>
-
-      {/* Match values */}
-      <div>
-        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-          Match Values * <span className="normal-case font-normal text-slate-600">(comma-separated product category names from Firestore)</span>
-        </label>
-        <input
-          value={matchRaw}
-          onChange={e => setMatchRaw(e.target.value)}
-          className={inputCls}
-          style={inputStyle}
-          placeholder="e.g. Spices, Masala, Condiments"
-          onKeyDown={e => e.key === 'Enter' && handleSave()}
-        />
-        <p className="mt-1.5 text-[11px]" style={{ color: C.muted }}>
-          These must exactly match the <code className="text-orange-400">category</code> field values on your products in Firestore.
-        </p>
       </div>
 
       {/* Error */}
@@ -228,7 +204,7 @@ export function CategoriesTab() {
   }
 
   // ── Add / Edit save handler ───────────────────────────────────────────────
-  async function handleSave(label: string, icon: string, match: string[]) {
+  async function handleSave(label: string, icon: string) {
     const id = editId ?? slugify(label)
 
     // Check duplicate ID (only for new categories)
@@ -243,7 +219,6 @@ export function CategoriesTab() {
       id,
       label,
       icon,
-      match,
       active:    existing?.active ?? true,
       order:     existing?.order  ?? categories.length,
       createdAt: existing?.createdAt ?? Date.now(),
@@ -291,7 +266,6 @@ export function CategoriesTab() {
       id:        slugify(g.label),
       label:     g.label,
       icon:      g.icon,
-      match:     [...g.match],
       active:    true,
       order:     i,
       createdAt: Date.now(),
@@ -393,16 +367,14 @@ export function CategoriesTab() {
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>Order</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>Icon</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>Label</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: C.muted }}>Matches</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>Active</th>
                 <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {categories.map((cat, idx) => (
-                <>
+                <Fragment key={cat.id}>
                   <tr
-                    key={cat.id}
                     style={{
                       background: idx % 2 === 0 ? C.surface : C.bg,
                       borderBottom: `1px solid ${C.border}`,
@@ -438,21 +410,6 @@ export function CategoriesTab() {
                     <td className="px-4 py-3">
                       <span className="font-semibold text-white">{cat.label}</span>
                       <span className="ml-2 text-[10px] font-mono" style={{ color: C.muted }}>#{cat.id}</span>
-                    </td>
-
-                    {/* Match values */}
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <div className="flex flex-wrap gap-1">
-                        {cat.match.map(m => (
-                          <span
-                            key={m}
-                            className="rounded-md px-1.5 py-0.5 text-[11px] font-medium"
-                            style={{ background: 'rgba(249,115,22,0.1)', color: '#F97316' }}
-                          >
-                            {m}
-                          </span>
-                        ))}
-                      </div>
                     </td>
 
                     {/* Active toggle */}
@@ -495,7 +452,7 @@ export function CategoriesTab() {
                   {/* Inline edit row */}
                   {editId === cat.id && showForm && (
                     <tr key={`${cat.id}-edit`} style={{ background: C.surface }}>
-                      <td colSpan={6} className="px-4 py-4">
+                      <td colSpan={5} className="px-4 py-4">
                         <CategoryForm
                           initial={cat}
                           onSave={handleSave}
@@ -509,7 +466,7 @@ export function CategoriesTab() {
                   {/* Delete confirm row */}
                   {deleteId === cat.id && (
                     <tr key={`${cat.id}-delete`} style={{ background: 'rgba(239,68,68,0.05)' }}>
-                      <td colSpan={6} className="px-4 py-3">
+                      <td colSpan={5} className="px-4 py-3">
                         <div className="flex items-center gap-3 text-sm">
                           <AlertCircle className="size-4 text-red-400 shrink-0" />
                           <span style={{ color: C.muted }}>
@@ -534,7 +491,7 @@ export function CategoriesTab() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -547,7 +504,6 @@ export function CategoriesTab() {
         <ul className="space-y-1 list-disc pl-4" style={{ color: C.muted }}>
           <li>Every category you create or edit is saved to <code className="text-orange-400">settings/categoryFilters</code> in Firestore.</li>
           <li>The storefront subscribes to this in real-time — changes appear instantly, no redeploy needed.</li>
-          <li><strong className="text-white">Match values</strong> must exactly match the <code className="text-orange-400">category</code> field on your products (e.g. <code>"Spices"</code>).</li>
           <li>Inactive categories are hidden from the storefront but kept in Firestore.</li>
         </ul>
       </div>

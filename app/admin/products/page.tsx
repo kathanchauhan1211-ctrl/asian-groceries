@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import {
   collection, onSnapshot, query, orderBy,
-  doc, addDoc, updateDoc
+  doc, addDoc, updateDoc, getDoc, setDoc
 } from 'firebase/firestore'
 import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { type Stock } from '@/lib/products'
@@ -20,7 +20,6 @@ import { CategoriesTab } from './categories-tab'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const STOCK_OPTIONS: Stock[] = ['In Stock', 'Low Stock', 'Sold Out']
-const CATEGORIES = ['Rice & Atta', 'Spices', 'Lentils & Pulses', 'Frozen Foods', 'Sweets', 'Tea & Drinks', 'Condiments', 'Snacks', 'Other']
 const CSV_COLUMNS = ['name', 'brand', 'category', 'origin', 'price', 'unit', 'stock', 'dietary', 'image', 'description']
 const CSV_EXAMPLE_ROWS = [
   ['Royal Basmati Rice', 'Royal', 'Rice & Atta', 'India', '8.99', '5kg', 'In Stock', 'Halal', 'https://example.com/basmati.jpg', 'Premium aged basmati rice'],
@@ -144,6 +143,48 @@ function FSelect({ value, onChange, options }: { value: string; onChange: (v: st
   )
 }
 
+function FCatInput({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [focused, setFocused] = useState(false)
+  const listId = "category-list-options"
+  return (
+    <>
+      <input
+        type="text"
+        list={listId}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="Type or select..."
+        className={inputCls}
+        style={focused ? { ...inputFocus } : { ...inputStyle }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+      <datalist id={listId}>
+        {options.map(o => <option key={o} value={o} />)}
+      </datalist>
+    </>
+  )
+}
+
+async function ensureCategoryExists(categoryLabel: string) {
+  if (!categoryLabel || categoryLabel.trim() === '') return
+  const trimLabel = categoryLabel.trim()
+  const ref = doc(adminPortalDb, 'settings', 'categoryFilters')
+  const snap = await getDoc(ref)
+  const cats = snap.data()?.categories || []
+  if (!cats.find((c: any) => c.label.toLowerCase() === trimLabel.toLowerCase())) {
+    const newCat = {
+      id: trimLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      label: trimLabel,
+      icon: '📦',
+      active: true,
+      order: cats.length,
+      createdAt: Date.now()
+    }
+    await setDoc(ref, { categories: [...cats, newCat] }, { merge: true })
+  }
+}
+
 // ─── Server delete helper ────────────────────────────────────────────────────
 async function serverDeleteProducts(ids: string[]): Promise<void> {
   const user = adminPortalAuth.currentUser
@@ -240,6 +281,22 @@ function useAdminProducts() {
   }, [])
 
   return { products, loading, removeLocally, updateLocally }
+}
+
+function useAdminFilterCategories() {
+  const [categories, setCategories] = useState<{ id: string, label: string }[]>([])
+  useEffect(() => {
+    const unsub = onSnapshot(doc(adminPortalDb, 'settings', 'categoryFilters'), snap => {
+      if (snap.exists()) {
+        const raw = snap.data().categories ?? []
+        setCategories(raw.filter((c: any) => c.active !== false).map((c: any) => ({ id: c.id, label: c.label })))
+      } else {
+        setCategories([])
+      }
+    })
+    return () => unsub()
+  }, [])
+  return categories
 }
 
 // ─── Category Popover (3-dot on each product) ─────────────────────────────────
@@ -422,12 +479,13 @@ function ProductCategoryButton({
 
 // ─── Editable Table Row ───────────────────────────────────────────────────────
 function ProductRow({
-  product, selected, onSelect, onSaved, onDelete, index, shopDocs, togglePin,
+  product, selected, onSelect, onSaved, onDelete, index, shopDocs, togglePin, categoryOptions,
 }: {
   product: AdminProduct; selected: boolean; onSelect: (v: boolean) => void
   onSaved: (fields: Record<string, any>) => void; onDelete: () => void; index: number
   shopDocs: ReturnType<typeof useShopCategories>['docs']
   togglePin: ReturnType<typeof useShopCategories>['togglePin']
+  categoryOptions: string[]
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -451,6 +509,7 @@ function ProductRow({
     setSaving(true)
     const fields = buildProductDoc({ ...form })
     try {
+      await ensureCategoryExists(form.category)
       await updateDoc(doc(adminPortalDb, 'products', product.id), fields)
       onSaved(fields)
       setEditing(false)
@@ -481,7 +540,7 @@ function ProductRow({
         </td>
         <td className="px-3 py-2.5 min-w-[160px]"><FInput value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} placeholder="Product name" /></td>
         <td className="px-3 py-2.5 min-w-[110px]"><FInput value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} placeholder="Brand" /></td>
-        <td className="px-3 py-2.5 min-w-[150px]"><FSelect value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} options={CATEGORIES} /></td>
+        <td className="px-3 py-2.5 min-w-[150px]"><FCatInput value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} options={categoryOptions} /></td>
         <td className="px-3 py-2.5 min-w-[90px]"><FInput value={form.price} onChange={v => setForm(f => ({ ...f, price: v }))} type="number" step="0.01" placeholder="0.00" /></td>
         <td className="px-3 py-2.5 min-w-[90px]"><FInput value={form.unit} onChange={v => setForm(f => ({ ...f, unit: v }))} placeholder="5kg" /></td>
         <td className="px-3 py-2.5 min-w-[130px]"><FSelect value={form.stock} onChange={v => setForm(f => ({ ...f, stock: v }))} options={STOCK_OPTIONS} /></td>
@@ -636,6 +695,12 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
     setStatus('importing'); setProgress(0)
     const { writeBatch, doc: firestoreDoc } = await import('firebase/firestore')
     const BATCH_SIZE = 400
+
+    const uniqueCategories = new Set(preview.map(row => row.category).filter(Boolean))
+    for (const cat of Array.from(uniqueCategories)) {
+      await ensureCategoryExists(cat as string)
+    }
+
     let done = 0
     for (let i = 0; i < preview.length; i += BATCH_SIZE) {
       const batch = writeBatch(adminPortalDb)
@@ -800,10 +865,10 @@ function CSVImportPanel({ onDone, onClose }: { onDone: (n: number) => void; onCl
 }
 
 // ─── Add Product Drawer ───────────────────────────────────────────────────────
-function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: (msg: string) => void }) {
+function AddProductDrawer({ onClose, onAdded, categoryOptions }: { onClose: () => void; onAdded: (msg: string) => void; categoryOptions: string[] }) {
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({
-    name: '', brand: '', category: 'Rice & Atta', origin: 'India',
+    name: '', brand: '', category: categoryOptions[0] || 'Other', origin: 'India',
     price: '', unit: '', stock: 'In Stock', dietary: '', image: '', description: '',
     tagline: '', bestseller: false,
   })
@@ -812,6 +877,7 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
     e.preventDefault()
     setCreating(true)
     try {
+      await ensureCategoryExists(form.category)
       await addDoc(collection(adminPortalDb, 'products'), buildProductDoc(form))
       onAdded(`"${form.name}" added successfully`)
       onClose()
@@ -872,7 +938,7 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
 
             <div>
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#4B5563' }}>Category</label>
-              <FSelect value={form.category} onChange={v => setForm(p => ({ ...p, category: v }))} options={CATEGORIES} />
+              <FCatInput value={form.category} onChange={v => setForm(p => ({ ...p, category: v }))} options={categoryOptions} />
             </div>
 
             <div>
@@ -921,6 +987,8 @@ function AddProductDrawer({ onClose, onAdded }: { onClose: () => void; onAdded: 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminProductsPage() {
   const { products, loading, removeLocally, updateLocally } = useAdminProducts()
+  const liveCategories = useAdminFilterCategories()
+  const categoryOptions = useMemo(() => liveCategories.map(c => c.label), [liveCategories])
   const { docs: shopDocs, togglePin } = useShopCategories(adminPortalDb)
 
   const [showAddDrawer, setShowAddDrawer] = useState(false)
@@ -1223,6 +1291,7 @@ export default function AdminProductsPage() {
                             }}
                             shopDocs={shopDocs}
                             togglePin={togglePin}
+                            categoryOptions={categoryOptions}
                           />
                         ))}
                       </tbody>
@@ -1238,7 +1307,7 @@ export default function AdminProductsPage() {
 
       {/* ── Modals (always mounted, regardless of active tab) ── */}
       {showCSV && <CSVImportPanel onDone={n => { showToast(`${n} products imported`); setShowCSV(false) }} onClose={() => setShowCSV(false)} />}
-      {showAddDrawer && <AddProductDrawer onClose={() => setShowAddDrawer(false)} onAdded={msg => showToast(msg)} />}
+      {showAddDrawer && <AddProductDrawer onClose={() => setShowAddDrawer(false)} onAdded={msg => { setShowAddDrawer(false); showToast(msg) }} categoryOptions={categoryOptions} />}
     </div>
   )
 }

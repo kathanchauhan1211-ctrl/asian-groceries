@@ -28,7 +28,6 @@ export type FirestoreCategory = {
   id: string
   label: string
   icon: string
-  match: string[]
   active: boolean
   order: number
   createdAt?: any
@@ -38,7 +37,6 @@ function toGroup(fc: FirestoreCategory): CategoryGroup {
   return {
     label: fc.label,
     icon:  fc.icon ?? '📦',
-    match: Array.isArray(fc.match) ? fc.match : [],
   }
 }
 
