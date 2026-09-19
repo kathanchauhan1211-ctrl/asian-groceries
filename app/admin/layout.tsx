@@ -6,125 +6,144 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   LayoutDashboard, Package, ShoppingCart, Settings,
-  LogOut, ExternalLink, BarChart3, ChevronRight, Menu, X, MonitorPlay, Tag, Layers, Users,
+  LogOut, ExternalLink, BarChart3, MonitorPlay, Layers, Users,
 } from 'lucide-react'
 import { LogoSVG } from '@/components/logo-svg'
 import { ADMIN_EMAIL } from '@/lib/admin-config'
-import { Button } from '@/components/ui/button'
 
-const NAV_ITEMS = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { href: '/admin/customers', label: 'Customers', icon: Users },
-  { href: '/admin/products', label: 'Products', icon: Package },
+// ── Tab definitions ───────────────────────────────────────────────────────────
+const TABS = [
+  { href: '/admin',             label: 'Dashboard',   icon: LayoutDashboard, exact: true },
+  { href: '/admin/orders',      label: 'Orders',      icon: ShoppingCart },
+  { href: '/admin/customers',   label: 'Customers',   icon: Users },
+  { href: '/admin/products',    label: 'Products',    icon: Package },
   { href: '/admin/collections', label: 'Collections', icon: Layers },
-  { href: '/admin/slides', label: 'Slides', icon: MonitorPlay },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/admin/settings', label: 'Settings', icon: Settings },
+  { href: '/admin/slides',      label: 'Slides',      icon: MonitorPlay },
+  { href: '/admin/analytics',   label: 'Analytics',   icon: BarChart3 },
+  { href: '/admin/settings',    label: 'Settings',    icon: Settings },
 ]
 
-const PAGE_LABELS: Record<string, string> = {
-  '/admin': 'Dashboard',
-  '/admin/orders': 'Orders',
-  '/admin/customers': 'Customers',
-  '/admin/products': 'Products',
-  '/admin/collections': 'Collections',
-  '/admin/slides': 'Slides',
-  '/admin/analytics': 'Analytics',
-  '/admin/settings': 'Settings',
-}
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const BG       = '#080C14'
+const SURFACE  = '#0D1117'
+const BORDER   = 'rgba(255,255,255,0.06)'
+const MUTED    = '#4B5563'
+const ORANGE   = '#F97316'
 
+// ── Loading spinner ───────────────────────────────────────────────────────────
 function Spinner({ msg = 'Loading…' }: { msg?: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#080C14' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: BG }}>
       <div className="flex flex-col items-center gap-4">
         <div className="relative size-10">
           <div className="absolute inset-0 rounded-full border-2" style={{ borderColor: 'rgba(249,115,22,0.2)' }} />
-          <div className="absolute inset-0 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#F97316' }} />
+          <div className="absolute inset-0 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ORANGE }} />
         </div>
-        <p className="text-sm font-medium" style={{ color: '#6B7280' }}>{msg}</p>
+        <p className="text-sm font-medium" style={{ color: MUTED }}>{msg}</p>
       </div>
     </div>
   )
 }
 
-function SidebarContent({
-  pathname,
-  setSidebarOpen,
-  user,
-  signOut
-}: {
-  pathname: string
-  setSidebarOpen: (v: boolean) => void
-  user: any
-  signOut: () => void
-}) {
-  const isActive = (item: typeof NAV_ITEMS[0]) =>
-    item.exact ? pathname === item.href : pathname.startsWith(item.href)
+// ── Tab bar ───────────────────────────────────────────────────────────────────
+function TabBar({ pathname, user, signOut }: { pathname: string; user: any; signOut: () => void }) {
+  const isActive = (tab: typeof TABS[0]) =>
+    tab.exact ? pathname === tab.href : pathname.startsWith(tab.href)
+
+  const activeTabRef = useRef<HTMLAnchorElement>(null)
+
+  // Scroll active tab into view on mount / route change
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [pathname])
 
   return (
-    <aside
-      className="w-[220px] shrink-0 flex flex-col h-full"
-      style={{ background: '#0D1117', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+    <header
+      className="flex h-[52px] shrink-0 items-center w-full"
+      style={{ background: SURFACE, borderBottom: `1px solid ${BORDER}`, fontFamily: "'Inter', system-ui, sans-serif" }}
     >
-      {/* Brand */}
-      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-3">
-          <div
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg"
-            style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 0 12px rgba(249,115,22,0.3)' }}
+      {/* ── Left: Brand ────────────────────────────────────────────────────── */}
+      <div
+        className="flex h-full shrink-0 items-center gap-2.5 px-4"
+        style={{ borderRight: `1px solid ${BORDER}` }}
+      >
+        <div
+          className="flex size-7 shrink-0 items-center justify-center rounded-lg"
+          style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 0 10px rgba(249,115,22,0.3)' }}
+        >
+          <LogoSVG size={18} />
+        </div>
+        <div className="hidden sm:flex flex-col leading-tight">
+          <span className="text-[12px] font-bold text-white tracking-tight whitespace-nowrap">IndianMarket</span>
+          <span
+            className="text-[9px] font-semibold uppercase tracking-widest px-1 py-0.5 rounded"
+            style={{ background: 'rgba(249,115,22,0.12)', color: ORANGE }}
           >
-            <LogoSVG size={22} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[13px] font-bold leading-tight text-white tracking-tight">IndianMarket</p>
-            <span
-              className="mt-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
-              style={{ background: 'rgba(249,115,22,0.1)', color: '#F97316', border: '1px solid rgba(249,115,22,0.2)' }}
-            >
-              Owner
-            </span>
-          </div>
+            Owner
+          </span>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3">
-        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#374151' }}>
-          Main
-        </p>
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon
-          const active = isActive(item)
+      {/* ── Centre: Tabs (horizontally scrollable) ──────────────────────────── */}
+      <nav
+        className="flex h-full flex-1 items-end overflow-x-auto"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <style>{`nav::-webkit-scrollbar { display: none; }`}</style>
+        {TABS.map((tab) => {
+          const active = isActive(tab)
           return (
             <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className="relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-100 mb-0.5"
+              key={tab.href}
+              href={tab.href}
+              ref={active ? activeTabRef : undefined}
+              className="relative flex h-full shrink-0 items-center px-4 text-[13px] font-semibold transition-colors duration-100 whitespace-nowrap select-none"
               style={{
-                color: active ? '#F97316' : '#6B7280',
-                background: active ? 'rgba(249,115,22,0.08)' : 'transparent',
+                color: active ? '#fff' : MUTED,
+                borderBottom: active ? `2px solid ${ORANGE}` : '2px solid transparent',
               }}
             >
               {active && (
                 <span
-                  className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full"
-                  style={{ background: '#F97316' }}
+                  className="absolute inset-x-0 bottom-0 h-[2px] rounded-t-full"
+                  style={{ background: ORANGE }}
                 />
               )}
-              <Icon className="size-[15px] shrink-0" />
-              {item.label}
+              {tab.label}
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-3 pb-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div
-          className="mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-2"
-          style={{ background: 'rgba(255,255,255,0.03)' }}
+      {/* ── Right: Actions ──────────────────────────────────────────────────── */}
+      <div
+        className="flex h-full shrink-0 items-center gap-1 px-3"
+        style={{ borderLeft: `1px solid ${BORDER}` }}
+      >
+        {/* Date — hidden on xs */}
+        <span className="hidden lg:block text-[11px] mr-2 tabular-nums" style={{ color: MUTED }}>
+          {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+        </span>
+
+        {/* View Store */}
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors hover:bg-white/5"
+          style={{ color: MUTED }}
+          title="View Storefront"
+        >
+          <ExternalLink className="size-3.5" />
+          <span className="hidden md:inline">Store</span>
+        </a>
+
+        {/* Avatar + sign out */}
+        <button
+          onClick={signOut}
+          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-semibold transition-colors hover:bg-red-500/10 hover:text-red-400"
+          style={{ color: MUTED }}
+          title="Sign out"
         >
           <div
             className="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
@@ -132,43 +151,18 @@ function SidebarContent({
           >
             {(user?.displayName ?? user?.email ?? 'A').charAt(0).toUpperCase()}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-semibold text-white leading-tight">Owner</p>
-            <p className="truncate text-[10px]" style={{ color: '#4B5563' }}>{user?.email}</p>
-          </div>
-        </div>
-        <Button
-          href="/"
-          target="_blank"
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2 mb-0.5 text-[12px]"
-          style={{ color: '#6B7280' }}
-        >
-          <ExternalLink className="size-[13px]" />
-          View Store
-        </Button>
-        <Button
-          onClick={signOut}
-          variant="danger"
-          size="sm"
-          className="w-full justify-start gap-2 text-[12px]"
-        >
-          <LogOut className="size-[13px]" />
-          Sign Out
-        </Button>
+          <LogOut className="size-3.5 hidden sm:block" />
+        </button>
       </div>
-    </aside>
+    </header>
   )
 }
 
-// ── Inner layout — uses useAdminAuth ─────────────────────────────────────────
-
+// ── Inner layout ──────────────────────────────────────────────────────────────
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAdminAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const redirected = useRef(false)
 
   const isLoginPage = pathname === '/admin/login'
@@ -202,79 +196,28 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   if (loading) return <Spinner msg="Loading workspace…" />
   if (!user || user.email !== ADMIN_EMAIL) return <Spinner msg="Redirecting…" />
 
-  const currentLabel = PAGE_LABELS[pathname] ?? 'Portal'
-
   return (
     <div
-      className="flex h-screen overflow-hidden"
-      style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#080C14' }}
+      className="flex flex-col h-screen overflow-hidden"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif", background: BG }}
     >
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex h-full">
-        <SidebarContent pathname={pathname} setSidebarOpen={setSidebarOpen} user={user} signOut={signOut} />
-      </div>
+      {/* Tab bar — always on top, full width */}
+      <TabBar pathname={pathname} user={user} signOut={signOut} />
 
-      {/* Mobile sidebar */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0"
-            style={{ background: 'rgba(0,0,0,0.6)' }}
-            onClick={() => setSidebarOpen(false)}
-          />
-          <div className="relative h-full w-[220px]">
-            <SidebarContent pathname={pathname} setSidebarOpen={setSidebarOpen} user={user} signOut={signOut} />
-          </div>
-        </div>
-      )}
-
-      {/* Main */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Topbar */}
-        <header
-          className="flex h-[52px] shrink-0 items-center justify-between px-5"
-          style={{ background: '#080C14', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <div className="flex items-center gap-3">
-            <Button
-              variant="glass-dark"
-              size="icon-sm"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open sidebar"
-            >
-              <Menu className="size-4" />
-            </Button>
-            <nav className="flex items-center gap-1.5 text-[12px]">
-              <span style={{ color: '#4B5563' }}>Portal</span>
-              <ChevronRight className="size-3" style={{ color: '#374151' }} />
-              <span className="font-semibold text-white">{currentLabel}</span>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-[11px] md:block" style={{ color: '#4B5563' }}>
-              {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-            </span>
-            <div
-              className="flex size-7 items-center justify-center rounded-full text-[11px] font-bold text-white"
-              style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)' }}
-            >
-              {(user?.displayName ?? user?.email ?? 'A').charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-5 md:p-7" style={{ background: '#080C14' }}>
+      {/* Full-width content */}
+      <main
+        className="flex-1 overflow-y-auto"
+        style={{ background: BG }}
+      >
+        <div className="p-5 md:p-7">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   )
 }
 
-// ── Root export — wraps inner with AdminAuthProvider ──────────────────────────
-
+// ── Root export ───────────────────────────────────────────────────────────────
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminAuthProvider>

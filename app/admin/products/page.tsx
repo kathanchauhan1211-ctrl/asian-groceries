@@ -16,6 +16,7 @@ import {
 import {
   useShopCategories, SHOP_CATEGORY_DEFS, type ShopCategoryKey,
 } from '@/lib/use-shop-categories'
+import { CategoriesTab } from './categories-tab'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const STOCK_OPTIONS: Stock[] = ['In Stock', 'Low Stock', 'Sold Out']
@@ -930,6 +931,8 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  // Tab switcher: 'products' = main table, 'categories' = filter category pipeline
+  const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products')
 
   function showToast(msg: string, type: 'success' | 'error' = 'success') {
     setToast({ msg, type })
@@ -1031,8 +1034,31 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* ── Toast ── */}
-      {toast && (
+      {/* ── Sub-tab bar: Products | Categories ── */}
+      <div
+        className="flex items-center gap-1 rounded-xl p-1"
+        style={{ background: C.surface, border: `1px solid ${C.border}`, width: 'fit-content' }}
+      >
+        {(['products', 'categories'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className="rounded-lg px-4 py-1.5 text-[13px] font-semibold transition-all capitalize"
+            style={{
+              background:   activeTab === tab ? '#F97316' : 'transparent',
+              color:        activeTab === tab ? '#fff'    : '#6B7280',
+            }}
+          >
+            {tab === 'products' ? 'Products' : 'Filter Categories'}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Categories tab ── */}
+      {activeTab === 'categories' && <CategoriesTab />}
+
+      {/* ── Toast (only shown in products tab) ── */}
+      {activeTab === 'products' && toast && (
         <div
           className="flex items-center gap-2.5 rounded-lg px-4 py-3 text-[13px] font-medium"
           style={{
@@ -1046,11 +1072,12 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* ── Toolbar ── */}
-      <div
-        className="flex flex-wrap items-center gap-2 rounded-lg p-2"
-        style={{ background: C.surface, border: `1px solid ${C.border}` }}
-      >
+      {/* ── Toolbar + Table (hidden when categories tab is active) ── */}
+      <div className="space-y-5" style={{ display: activeTab === 'products' ? 'contents' : 'none' }}>
+        <div
+          className="flex flex-wrap items-center gap-2 rounded-lg p-2"
+          style={{ background: C.surface, border: `1px solid ${C.border}` }}
+        >
         <div className="flex flex-1 min-w-[200px] items-center gap-2 rounded-md px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}` }}>
           <Search className="size-3.5 shrink-0" style={{ color: '#4B5563' }} />
           <input
@@ -1207,8 +1234,9 @@ export default function AdminProductsPage() {
           })}
         </div>
       )}
+      </div>
 
-      {/* ── Modals ── */}
+      {/* ── Modals (always mounted, regardless of active tab) ── */}
       {showCSV && <CSVImportPanel onDone={n => { showToast(`${n} products imported`); setShowCSV(false) }} onClose={() => setShowCSV(false)} />}
       {showAddDrawer && <AddProductDrawer onClose={() => setShowAddDrawer(false)} onAdded={msg => showToast(msg)} />}
     </div>

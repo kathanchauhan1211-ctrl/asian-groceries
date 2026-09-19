@@ -10,6 +10,7 @@ import {
   DIETS, STOCKS, ORIGINS, CATEGORY_GROUPS,
   type Diet, type Stock, type Product,
 } from '@/lib/products'
+import { useCategoryFilters } from '@/lib/use-category-filters'
 import { useProducts } from '@/lib/use-products'
 import { useTranslation } from '@/lib/translation-context'
 import { ProductCard } from '@/components/product-card'
@@ -396,7 +397,7 @@ function MobileFilterDrawer({
             <p className="mb-2.5 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>Category</p>
             <div className="flex flex-wrap gap-2">
               {categories.map(cat => {
-                const active = selectedCategories.some(sc => CATEGORY_GROUPS.find(g => g.label === cat.display)?.match.includes(sc) || sc === cat.value)
+                const active = selectedCategories.some(sc => sc === cat.value)
                 return (
                   <button key={cat.value} onClick={() => onToggleCategory(cat.value)}
                     className="flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all"
@@ -549,6 +550,8 @@ export function ProductCatalog({
   const { td } = useTranslation()
   const pathname = usePathname()
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+  // category-filter-pipeline: live categories from Firestore (falls back to static while loading)
+  const { categories: liveCategoryGroups } = useCategoryFilters()
 
   // ── Read all filter state from URL params (single source of truth) ──────────
   const query          = searchParams.get('q') || ''
@@ -598,12 +601,12 @@ export function ProductCatalog({
 
   // ── Dynamic options from loaded products ──────────────────────────────────
   const categoryOptions = useMemo(() =>
-    CATEGORY_GROUPS.map(grp => ({
+    liveCategoryGroups.map(grp => ({
       value:   grp.match[0],
       display: grp.label,
       count:   allProducts.filter(p => grp.match.includes(p.category)).length,
     })).filter(o => o.count > 0),
-  [allProducts])
+  [allProducts, liveCategoryGroups])
 
   const brandOptions = useMemo(() => {
     const map = new Map<string, number>()
@@ -629,7 +632,7 @@ export function ProductCatalog({
       if (selectedCategories.length > 0) {
         // For each selected category value, find its group and check if product belongs
         const productMatchedAny = selectedCategories.some(sc => {
-          const grp = CATEGORY_GROUPS.find(g => g.match.includes(sc))
+          const grp = liveCategoryGroups.find(g => g.match.includes(sc))
           return grp ? grp.match.includes(p.category) : p.category === sc
         })
         if (!productMatchedAny) return false
@@ -670,7 +673,7 @@ export function ProductCatalog({
     if (query) chips.push({ label: `"${query}"`, onRemove: () => setParam('q', null) })
     if (originParam !== 'All') chips.push({ label: `Origin: ${originParam}`, onRemove: () => setParam('origin', null) })
     selectedCategories.forEach(sc => {
-      const grp = CATEGORY_GROUPS.find(g => g.match.includes(sc))
+      const grp = liveCategoryGroups.find(g => g.match.includes(sc))
       chips.push({ label: grp?.label ?? sc, onRemove: () => toggleListParam('category', selectedCategories, sc) })
     })
     selectedBrands.forEach(b => chips.push({ label: b, onRemove: () => toggleListParam('brand', selectedBrands, b) }))

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getAdminDb } from '@/lib/firebase-admin'
+import { getFirebaseAdmin } from '@/lib/firebase-admin'
 
 const CATEGORY_KEYS = ['new-arrivals', 'sale', 'best-offer', 'bestsellers'] as const
 
 export async function POST() {
   try {
-    const db = await getAdminDb()
+    const { db } = getFirebaseAdmin()
     const batch = db.batch()
 
     for (const key of CATEGORY_KEYS) {
