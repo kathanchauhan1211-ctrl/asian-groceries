@@ -1,4 +1,4 @@
-﻿# ADMIN FINAL BLOCK
+# ADMIN FINAL BLOCK
 ## Governance Rules — Asian Groceries Admin Portal
 
 > Single source of truth for how the admin portal is built, connected, and extended.
@@ -28,6 +28,24 @@
 Every new collection: allow read: if true; allow write: if isAdmin();
 Orders collection: Admin SDK server-side only, never client SDK writes.
 
+> ⚠️ MANDATORY: Every time a new Firestore collection is added OR a new feature writes to Firestore,
+> the developer MUST add the matching rule to `firestore.rules` AND deploy it immediately via:
+>   `firebase deploy --only firestore:rules`
+> Failure to do this causes `permission-denied` errors on the storefront.
+> Rules are NOT automatically deployed — they must be pushed manually every time.
+
+## CURRENT RULES STATUS
+| Collection       | Rule in file | Deployed |
+|-----------------|-------------|---------|
+| products         | ✅           | ✅       |
+| orders           | ✅           | ✅       |
+| users            | ✅           | ✅       |
+| offers           | ✅           | ✅       |
+| slides           | ✅           | ✅       |
+| collections      | ✅           | ✅       |
+| settings         | ✅           | ❓ Run `firebase deploy --only firestore:rules` |
+| shopCategories   | ✅           | ❓ Run `firebase deploy --only firestore:rules` |
+
 ## NEVER ALLOWED
 - Committing TODO in pipeline code
 - Using `as any` without a type guard in Firestore reads
@@ -35,3 +53,4 @@ Orders collection: Admin SDK server-side only, never client SDK writes.
 - Client SDK writes to orders collection
 - Deploying without pnpm build passing
 - Debug console.log in production pipeline code
+- Adding a new Firestore collection without updating AND deploying firestore.rules

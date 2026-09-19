@@ -15,9 +15,6 @@ service cloud.firestore {
     }
 
     // ── Orders: Admin SDK (server-side /api/orders) is the only writer. ───────
-    // ── Client-side direct writes are blocked (allow create: if false).  ───────
-    // ── Tracking: order doc ID is the unguessable ticketNumber.          ───────
-    // ── allow get but deny list prevents enumerating all orders.         ───────
     match /orders/{ticketNumber} {
       allow get: if true;
       allow list: if isAdmin();
@@ -29,7 +26,6 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       allow read, list: if isAdmin();
     }
-    // Allow admin to query (list) the entire users collection
     match /users/{document=**} {
       allow read, list: if isAdmin();
     }
@@ -52,8 +48,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ── Settings: public read, ADMIN-ONLY write ───────────────────────────────
+    // ── Settings (category filters, store config): public read, ADMIN-ONLY write
     match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Shop Categories (pinned product feeds): public read, ADMIN-ONLY write ─
+    match /shopCategories/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }

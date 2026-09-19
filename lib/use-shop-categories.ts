@@ -101,7 +101,13 @@ export function useShopCategories(db: import('firebase/firestore').Firestore) {
           setDocs(prev => ({ ...prev, [key]: { ...defaultDoc(key), ...data } }))
           setLoading(false)
         },
-        () => setLoading(false),
+        (err: any) => {
+          // permission-denied: Firestore rules not yet deployed — fall back silently
+          if (err?.code !== 'permission-denied') {
+            console.error('[useShopCategories] Firestore error:', err)
+          }
+          setLoading(false)
+        },
       )
     )
     return () => unsubs.forEach(u => u())
@@ -167,6 +173,12 @@ export function useShopCategoryDoc(
       snap => {
         if (snap.exists()) setCatDoc(snap.data() as ShopCategoryDoc)
         else setCatDoc(defaultDoc(key))
+      },
+      (err: any) => {
+        if (err?.code !== 'permission-denied') {
+          console.error('[useShopCategoryDoc] Firestore error:', err)
+        }
+        setCatDoc(defaultDoc(key))
       },
     )
     return () => unsub()
