@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { CATEGORY_GROUPS, type CategoryGroup } from '@/lib/products'
+import { useCategoryFilters } from '@/lib/use-category-filters'
 import { useTranslation } from '@/lib/translation-context'
 import { Button } from '@/components/ui/button'
 
@@ -21,10 +21,8 @@ import { Button } from '@/components/ui/button'
  *  - prependFilterButton: optional ReactNode prepended before the pill row (e.g. Filters button)
  */
 export function SwipeableCategoryBar({
-  categories = CATEGORY_GROUPS,
   prependFilterButton,
 }: {
-  categories?: CategoryGroup[]
   prependFilterButton?: React.ReactNode
 }) {
   const { td } = useTranslation()
@@ -32,6 +30,7 @@ export function SwipeableCategoryBar({
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { categories } = useCategoryFilters()
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
 

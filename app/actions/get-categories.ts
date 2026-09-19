@@ -1,8 +1,10 @@
 'use server'
 
 import { getFirebaseAdmin } from '@/lib/firebase-admin'
+import { unstable_noStore as noStore } from 'next/cache'
 
 export async function fetchCategoryFilters() {
+  noStore()
   try {
     const { db } = getFirebaseAdmin()
     const snap = await db.doc('settings/categoryFilters').get()

@@ -392,27 +392,7 @@ function MobileFilterDrawer({
             </div>
           </div>
 
-          {/* Category */}
-          <div>
-            <p className="mb-2.5 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>Category</p>
-            <div className="flex flex-wrap gap-2">
-              {categories.map(cat => {
-                const active = selectedCategories.some(sc => sc === cat.value)
-                return (
-                  <button key={cat.value} onClick={() => onToggleCategory(cat.value)}
-                    className="flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all"
-                    style={{
-                      background: active ? 'var(--primary)' : 'var(--secondary)',
-                      color: active ? '#fff' : 'var(--foreground)',
-                      borderColor: active ? 'var(--primary)' : 'var(--border)',
-                    }}>
-                    {cat.display}
-                    <span className="opacity-50 text-[10px]">({cat.count})</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          {/* Category filter removed — using global SwipeableCategoryBar instead */}
 
           {/* Brand */}
           {brands.length > 0 && (
@@ -756,14 +736,7 @@ export function ProductCatalog({
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
               <SearchInput value={query} onChange={v => setParam('q', v)} />
 
-              {/* Category */}
-              <CheckDropdown
-                label="Category"
-                options={categoryOptions}
-                selected={selectedCategories}
-                onToggle={v => toggleListParam('category', selectedCategories, v)}
-                onClear={() => setParam('category', null)}
-              />
+              {/* Category filter removed — using global SwipeableCategoryBar instead */}
 
               {/* Brand — only shown if products have brands */}
               {brandOptions.length > 0 && (
