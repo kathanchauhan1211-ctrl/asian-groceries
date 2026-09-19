@@ -2,7 +2,7 @@
 
 import { useAdminAuth, AdminAuthProvider } from '@/lib/admin-auth-context'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   LayoutDashboard, Package, ShoppingCart, Settings,
@@ -11,24 +11,24 @@ import {
 import { LogoSVG } from '@/components/logo-svg'
 import { ADMIN_EMAIL } from '@/lib/admin-config'
 
-// ── Tab definitions ───────────────────────────────────────────────────────────
-const TABS = [
-  { href: '/admin',             label: 'Dashboard',   icon: LayoutDashboard, exact: true },
-  { href: '/admin/orders',      label: 'Orders',      icon: ShoppingCart },
-  { href: '/admin/customers',   label: 'Customers',   icon: Users },
-  { href: '/admin/products',    label: 'Products',    icon: Package },
-  { href: '/admin/collections', label: 'Collections', icon: Layers },
-  { href: '/admin/slides',      label: 'Slides',      icon: MonitorPlay },
-  { href: '/admin/analytics',   label: 'Analytics',   icon: BarChart3 },
-  { href: '/admin/settings',    label: 'Settings',    icon: Settings },
+// ── Nav items ─────────────────────────────────────────────────────────────────
+const NAV = [
+  { href: '/admin',             label: 'Dashboard',   exact: true },
+  { href: '/admin/orders',      label: 'Orders'               },
+  { href: '/admin/customers',   label: 'Customers'            },
+  { href: '/admin/products',    label: 'Products'             },
+  { href: '/admin/collections', label: 'Collections'          },
+  { href: '/admin/slides',      label: 'Slides'               },
+  { href: '/admin/analytics',   label: 'Analytics'            },
+  { href: '/admin/settings',    label: 'Settings'             },
 ]
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG       = '#080C14'
-const SURFACE  = '#0D1117'
-const BORDER   = 'rgba(255,255,255,0.06)'
-const MUTED    = '#4B5563'
-const ORANGE   = '#F97316'
+const BG      = '#080C14'
+const SURFACE = '#0C1118'
+const BORDER  = 'rgba(255,255,255,0.07)'
+const MUTED   = '#6B7280'
+const ORANGE  = '#F97316'
 
 // ── Loading spinner ───────────────────────────────────────────────────────────
 function Spinner({ msg = 'Loading…' }: { msg?: string }) {
@@ -45,114 +45,129 @@ function Spinner({ msg = 'Loading…' }: { msg?: string }) {
   )
 }
 
-// ── Tab bar ───────────────────────────────────────────────────────────────────
-function TabBar({ pathname, user, signOut }: { pathname: string; user: any; signOut: () => void }) {
-  const isActive = (tab: typeof TABS[0]) =>
-    tab.exact ? pathname === tab.href : pathname.startsWith(tab.href)
-
-  const activeTabRef = useRef<HTMLAnchorElement>(null)
-
-  // Scroll active tab into view on mount / route change
-  useEffect(() => {
-    activeTabRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-  }, [pathname])
+// ── Top navbar ────────────────────────────────────────────────────────────────
+function TopNav({ pathname, user, signOut }: { pathname: string; user: any; signOut: () => void }) {
+  const isActive = (item: typeof NAV[0]) =>
+    item.exact ? pathname === item.href : pathname.startsWith(item.href)
 
   return (
     <header
-      className="flex h-[52px] shrink-0 items-center w-full"
-      style={{ background: SURFACE, borderBottom: `1px solid ${BORDER}`, fontFamily: "'Inter', system-ui, sans-serif" }}
+      style={{
+        background: SURFACE,
+        borderBottom: `1px solid ${BORDER}`,
+        fontFamily: "'Inter', system-ui, sans-serif",
+      }}
     >
-      {/* ── Left: Brand ────────────────────────────────────────────────────── */}
-      <div
-        className="flex h-full shrink-0 items-center gap-2.5 px-4"
-        style={{ borderRight: `1px solid ${BORDER}` }}
-      >
-        <div
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg"
-          style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)', boxShadow: '0 0 10px rgba(249,115,22,0.3)' }}
-        >
-          <LogoSVG size={18} />
-        </div>
-        <div className="hidden sm:flex flex-col leading-tight">
-          <span className="text-[12px] font-bold text-white tracking-tight whitespace-nowrap">IndianMarket</span>
-          <span
-            className="text-[9px] font-semibold uppercase tracking-widest px-1 py-0.5 rounded"
-            style={{ background: 'rgba(249,115,22,0.12)', color: ORANGE }}
-          >
-            Owner
-          </span>
-        </div>
-      </div>
+      {/* ── Single row ───────────────────────────────────────────────────── */}
+      <div className="flex h-[54px] items-center px-5 gap-6 w-full">
 
-      {/* ── Centre: Tabs (horizontally scrollable) ──────────────────────────── */}
-      <nav
-        className="flex h-full flex-1 items-end overflow-x-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        <style>{`nav::-webkit-scrollbar { display: none; }`}</style>
-        {TABS.map((tab) => {
-          const active = isActive(tab)
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              ref={active ? activeTabRef : undefined}
-              className="relative flex h-full shrink-0 items-center px-4 text-[13px] font-semibold transition-colors duration-100 whitespace-nowrap select-none"
-              style={{
-                color: active ? '#fff' : MUTED,
-                borderBottom: active ? `2px solid ${ORANGE}` : '2px solid transparent',
-              }}
-            >
-              {active && (
-                <span
-                  className="absolute inset-x-0 bottom-0 h-[2px] rounded-t-full"
-                  style={{ background: ORANGE }}
-                />
-              )}
-              {tab.label}
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* ── Right: Actions ──────────────────────────────────────────────────── */}
-      <div
-        className="flex h-full shrink-0 items-center gap-1 px-3"
-        style={{ borderLeft: `1px solid ${BORDER}` }}
-      >
-        {/* Date — hidden on xs */}
-        <span className="hidden lg:block text-[11px] mr-2 tabular-nums" style={{ color: MUTED }}>
-          {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-        </span>
-
-        {/* View Store */}
-        <a
-          href="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors hover:bg-white/5"
-          style={{ color: MUTED }}
-          title="View Storefront"
-        >
-          <ExternalLink className="size-3.5" />
-          <span className="hidden md:inline">Store</span>
-        </a>
-
-        {/* Avatar + sign out */}
-        <button
-          onClick={signOut}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-semibold transition-colors hover:bg-red-500/10 hover:text-red-400"
-          style={{ color: MUTED }}
-          title="Sign out"
-        >
+        {/* Logo + brand */}
+        <div className="flex shrink-0 items-center gap-2.5">
           <div
-            className="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-            style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)' }}
+            className="flex size-8 shrink-0 items-center justify-center rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg,#F97316,#EA580C)',
+              boxShadow: '0 0 14px rgba(249,115,22,0.35)',
+            }}
           >
-            {(user?.displayName ?? user?.email ?? 'A').charAt(0).toUpperCase()}
+            <LogoSVG size={18} />
           </div>
-          <LogOut className="size-3.5 hidden sm:block" />
-        </button>
+          <div className="hidden sm:flex flex-col leading-none gap-0.5">
+            <span className="text-[13px] font-bold text-white tracking-tight">IndianMarket</span>
+            <span
+              className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(249,115,22,0.15)', color: ORANGE }}
+            >
+              Owner
+            </span>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="hidden sm:block h-5 w-px shrink-0" style={{ background: BORDER }} />
+
+        {/* Nav links — horizontally scrollable on mobile */}
+        <nav
+          className="flex flex-1 items-center gap-1 overflow-x-auto"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          <style>{`nav::-webkit-scrollbar{display:none}`}</style>
+          {NAV.map((item) => {
+            const active = isActive(item)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="shrink-0 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-all duration-100 whitespace-nowrap"
+                style={{
+                  color:      active ? '#fff' : MUTED,
+                  background: active ? 'rgba(249,115,22,0.12)' : 'transparent',
+                }}
+                onMouseEnter={e => {
+                  if (!active) (e.currentTarget as HTMLAnchorElement).style.color = '#D1D5DB'
+                }}
+                onMouseLeave={e => {
+                  if (!active) (e.currentTarget as HTMLAnchorElement).style.color = MUTED
+                }}
+              >
+                {active && (
+                  <span
+                    className="mr-1.5 inline-block size-1.5 rounded-full align-middle"
+                    style={{ background: ORANGE }}
+                  />
+                )}
+                {item.label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Right actions */}
+        <div className="flex shrink-0 items-center gap-1 ml-auto">
+          {/* Date */}
+          <span className="hidden xl:block text-[11px] mr-2 tabular-nums" style={{ color: MUTED }}>
+            {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+          </span>
+
+          {/* View store */}
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all"
+            style={{ color: MUTED, background: 'transparent' }}
+            title="View Storefront"
+            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,0.05)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+          >
+            <ExternalLink className="size-3.5" />
+            <span className="hidden md:inline">Store</span>
+          </a>
+
+          {/* Avatar / sign out */}
+          <button
+            onClick={signOut}
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-semibold transition-all"
+            style={{ color: MUTED }}
+            title="Sign out"
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.color = '#FCA5A5'
+              ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.color = MUTED
+              ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+            }}
+          >
+            <div
+              className="flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+              style={{ background: 'linear-gradient(135deg,#F97316,#EA580C)' }}
+            >
+              {(user?.displayName ?? user?.email ?? 'A').charAt(0).toUpperCase()}
+            </div>
+            <LogOut className="size-3.5 hidden sm:block" />
+          </button>
+        </div>
       </div>
     </header>
   )
@@ -168,16 +183,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
-    if (isLoginPage) return
-    if (loading) return
-    if (redirected.current) return
-
+    if (isLoginPage || loading || redirected.current) return
     if (!user) {
       redirected.current = true
       router.replace('/admin/login')
       return
     }
-
     if (user.email !== ADMIN_EMAIL) {
       redirected.current = true
       signOut().then(() => router.replace('/admin/login')).catch(() => router.replace('/admin/login'))
@@ -190,7 +201,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading])
 
-  // Login page: pass through with no chrome
+  // Login page: no chrome
   if (isLoginPage) return <>{children}</>
 
   if (loading) return <Spinner msg="Loading workspace…" />
@@ -201,15 +212,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       className="flex flex-col h-screen overflow-hidden"
       style={{ fontFamily: "'Inter', system-ui, sans-serif", background: BG }}
     >
-      {/* Tab bar — always on top, full width */}
-      <TabBar pathname={pathname} user={user} signOut={signOut} />
+      {/* Top navbar — full width, always on top */}
+      <TopNav pathname={pathname} user={user} signOut={signOut} />
 
-      {/* Full-width content */}
-      <main
-        className="flex-1 overflow-y-auto"
-        style={{ background: BG }}
-      >
-        <div className="p-5 md:p-7">
+      {/* Full-width scrollable content */}
+      <main className="flex-1 overflow-y-auto" style={{ background: BG }}>
+        <div className="p-5 md:p-7 max-w-[1440px] mx-auto">
           {children}
         </div>
       </main>

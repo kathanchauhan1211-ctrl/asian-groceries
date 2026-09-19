@@ -79,7 +79,14 @@ export function useCategoryFilters(): CategoryFilterState {
         setLoading(false)
         setError(null)
       },
-      (err) => {
+      (err: any) => {
+        if (err.code === 'permission-denied') {
+          console.warn('[useCategoryFilters] Permission denied reading settings/categoryFilters. Deploy firestore.rules to fix. Falling back to static categories.')
+          setCategories(CATEGORY_GROUPS)
+          setLoading(false)
+          return
+        }
+        
         console.error('[useCategoryFilters] Firestore error:', err)
         setError(err.message)
         setCategories(CATEGORY_GROUPS) // fallback on error
