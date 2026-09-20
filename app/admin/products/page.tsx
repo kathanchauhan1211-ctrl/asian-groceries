@@ -14,8 +14,8 @@ import {
   CheckSquare, Square, Star, MoreVertical, Pin, Flame, Sparkles, Tag,
 } from 'lucide-react'
 import {
-  useShopCategories, SHOP_CATEGORY_DEFS, type ShopCategoryKey,
-} from '@/lib/use-shop-categories'
+  useCollectionDocs, type FeaturedCollectionDoc,
+} from '@/lib/use-featured-collections'
 import { CategoriesTab } from './categories-tab'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -300,13 +300,6 @@ function useAdminFilterCategories() {
 }
 
 // ─── Category Popover (3-dot on each product) ─────────────────────────────────
-const CAT_ICON: Record<ShopCategoryKey, any> = {
-  'best-offer':   Flame,
-  'bestsellers':  Star,
-  'new-arrivals': Sparkles,
-  'sale':         Tag,
-}
-
 function CategoryPopover({
   productId,
   productName,
@@ -317,16 +310,15 @@ function CategoryPopover({
   productId: string
   productName: string
   onClose: () => void
-  shopDocs: ReturnType<typeof useShopCategories>['docs']
-  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+  shopDocs: FeaturedCollectionDoc[]
+  togglePin: (collectionId: string, productId: string) => Promise<void>
 }) {
-  const [saving, setSaving] = useState<ShopCategoryKey | null>(null)
-  const [localState, setLocalState] = useState<Record<ShopCategoryKey, boolean>>(() => ({
-    'best-offer':   shopDocs['best-offer'].pinnedProductIds.includes(productId),
-    'bestsellers':  shopDocs['bestsellers'].pinnedProductIds.includes(productId),
-    'new-arrivals': shopDocs['new-arrivals'].pinnedProductIds.includes(productId),
-    'sale':         shopDocs['sale'].pinnedProductIds.includes(productId),
-  }))
+  const [saving, setSaving] = useState<string | null>(null)
+  const [localState, setLocalState] = useState<Record<string, boolean>>(() => {
+    const s: Record<string, boolean> = {}
+    shopDocs.forEach(d => { s[d.id] = (d.productIds || []).includes(productId) })
+    return s
+  })
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -338,7 +330,7 @@ function CategoryPopover({
     return () => { clearTimeout(t); document.removeEventListener('mousedown', handler) }
   }, [onClose])
 
-  async function handleToggle(key: ShopCategoryKey) {
+  async function handleToggle(key: string) {
     setSaving(key)
     setLocalState(prev => ({ ...prev, [key]: !prev[key] }))
     await togglePin(key, productId)
@@ -383,41 +375,41 @@ function CategoryPopover({
 
       {/* Category checkboxes */}
       <div className="p-2 space-y-1">
-        {SHOP_CATEGORY_DEFS.map(def => {
-          const pinned = localState[def.key]
-          const isLoading = saving === def.key
-          const CatIcon = CAT_ICON[def.key]
+        {shopDocs.map(def => {
+          const pinned = localState[def.id]
+          const isLoading = saving === def.id
+          const color = def.color || '#F97316'
           return (
             <button
-              key={def.key}
-              onClick={() => handleToggle(def.key)}
+              key={def.id}
+              onClick={() => handleToggle(def.id)}
               disabled={!!saving}
               className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all disabled:opacity-70"
               style={{
-                background: pinned ? `${def.color}12` : 'rgba(255,255,255,0.03)',
-                border: pinned ? `1px solid ${def.color}30` : '1px solid transparent',
+                background: pinned ? `${color}12` : 'rgba(255,255,255,0.03)',
+                border: pinned ? `1px solid ${color}30` : '1px solid transparent',
               }}
               onMouseEnter={e => { if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
               onMouseLeave={e => { if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
             >
-              <span className="text-base">{def.emoji}</span>
+              <span className="text-base">{def.emoji || '📦'}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-white">{def.label}</p>
+                <p className="text-[12px] font-semibold text-white">{def.title}</p>
                 <p className="text-[10px] truncate" style={{ color: '#4B5563' }}>
-                  {shopDocs[def.key].pinnedProductIds.length} pinned
+                  {def.productIds?.length || 0} pinned
                 </p>
               </div>
               {isLoading ? (
-                <Loader2 className="size-4 animate-spin shrink-0" style={{ color: def.color }} />
+                <Loader2 className="size-4 animate-spin shrink-0" style={{ color }} />
               ) : (
                 <div
                   className="shrink-0 flex size-5 items-center justify-center rounded-md transition-all"
                   style={{
-                    background: pinned ? `${def.color}25` : 'rgba(255,255,255,0.06)',
-                    border: pinned ? `1.5px solid ${def.color}` : '1.5px solid rgba(255,255,255,0.12)',
+                    background: pinned ? `${color}25` : 'rgba(255,255,255,0.06)',
+                    border: pinned ? `1.5px solid ${color}` : '1.5px solid rgba(255,255,255,0.12)',
                   }}
                 >
-                  {pinned && <Check className="size-3" style={{ color: def.color }} />}
+                  {pinned && <Check className="size-3" style={{ color }} />}
                 </div>
               )}
             </button>
@@ -440,13 +432,13 @@ function ProductCategoryButton({
   togglePin,
 }: {
   product: AdminProduct
-  shopDocs: ReturnType<typeof useShopCategories>['docs']
-  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+  shopDocs: FeaturedCollectionDoc[]
+  togglePin: (collectionId: string, productId: string) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
 
-  const pinCount = SHOP_CATEGORY_DEFS.filter(d =>
-    shopDocs[d.key].pinnedProductIds.includes(product.id)
+  const pinCount = shopDocs.filter(d =>
+    (d.productIds || []).includes(product.id)
   ).length
 
   return (
@@ -483,8 +475,8 @@ function ProductRow({
 }: {
   product: AdminProduct; selected: boolean; onSelect: (v: boolean) => void
   onSaved: (fields: Record<string, any>) => void; onDelete: () => void; index: number
-  shopDocs: ReturnType<typeof useShopCategories>['docs']
-  togglePin: ReturnType<typeof useShopCategories>['togglePin']
+  shopDocs: FeaturedCollectionDoc[]
+  togglePin: (collectionId: string, productId: string) => Promise<void>
   categoryOptions: string[]
 }) {
   const [editing, setEditing] = useState(false)
@@ -525,8 +517,8 @@ function ProductRow({
   }
 
   // Feed pin indicators
-  const pinnedFeeds = SHOP_CATEGORY_DEFS.filter(d =>
-    shopDocs[d.key].pinnedProductIds.includes(product.id)
+  const pinnedFeeds = shopDocs.filter(d =>
+    (d.productIds || []).includes(product.id)
   )
 
   const rowBg = selected ? 'rgba(249,115,22,0.04)' : 'transparent'
@@ -621,15 +613,18 @@ function ProductRow({
             {/* Feed pin badges */}
             {pinnedFeeds.length > 0 && (
               <div className="flex items-center gap-0.5 mt-0.5 flex-wrap">
-                {pinnedFeeds.map(d => (
-                  <span
-                    key={d.key}
-                    className="text-[8px] rounded-full px-1.5 py-0.5 font-bold"
-                    style={{ background: `${d.color}20`, color: d.color, border: `1px solid ${d.color}30` }}
-                  >
-                    {d.emoji}
-                  </span>
-                ))}
+                {pinnedFeeds.map(d => {
+                  const color = d.color || '#F97316'
+                  return (
+                    <span
+                      key={d.id}
+                      className="text-[8px] rounded-full px-1.5 py-0.5 font-bold"
+                      style={{ background: `${color}20`, color, border: `1px solid ${color}30` }}
+                    >
+                      {d.emoji || '📦'}
+                    </span>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -989,7 +984,7 @@ export default function AdminProductsPage() {
   const { products, loading, removeLocally, updateLocally } = useAdminProducts()
   const liveCategories = useAdminFilterCategories()
   const categoryOptions = useMemo(() => liveCategories.map(c => c.label), [liveCategories])
-  const { docs: shopDocs, togglePin } = useShopCategories(adminPortalDb)
+  const { docs: shopDocs, togglePin } = useCollectionDocs(adminPortalDb)
 
   const [showAddDrawer, setShowAddDrawer] = useState(false)
   const [showCSV, setShowCSV] = useState(false)
@@ -1289,7 +1284,7 @@ export default function AdminProductsPage() {
                               setSelected(s => { const n = new Set(s); n.delete(product.id); return n })
                               showToast(`Product deleted`)
                             }}
-                            shopDocs={shopDocs}
+                            shopDocs={shopDocs || []}
                             togglePin={togglePin}
                             categoryOptions={categoryOptions}
                           />

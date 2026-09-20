@@ -16,8 +16,8 @@ const app = initializeApp({
 const db = getFirestore(app, 'indianmarket')
 console.log('db instantiated for named database')
 
-db.collection('test').get().then(() => {
-  console.log('success')
+db.collection('settings').doc('categoryFilters').get().then((doc) => {
+  console.log(JSON.stringify(doc.data(), null, 2))
   process.exit(0)
 }).catch((err) => {
   console.error(err)

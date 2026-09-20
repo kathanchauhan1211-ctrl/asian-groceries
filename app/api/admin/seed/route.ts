@@ -102,15 +102,15 @@ export async function POST() {
       results.slides = `Skipped — ${slidesSnap.size} slides already exist`
     }
 
-    // Seed collections only if empty
-    const collectionsSnap = await getDocs(collection(db, 'collections'))
+    // Seed feed only if empty
+    const collectionsSnap = await getDocs(collection(db, 'feed'))
     if (collectionsSnap.empty) {
       for (const col of SEED_COLLECTIONS) {
-        await addDoc(collection(db, 'collections'), col)
+        await addDoc(collection(db, 'feed'), col)
       }
-      results.collections = `Seeded ${SEED_COLLECTIONS.length} collections`
+      results.collections = `Seeded ${SEED_COLLECTIONS.length} feed items`
     } else {
-      results.collections = `Skipped — ${collectionsSnap.size} collections already exist`
+      results.collections = `Skipped — ${collectionsSnap.size} feed items already exist`
     }
 
     return NextResponse.json({ success: true, results })

@@ -48,6 +48,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── Feed (renamed from collections – 4 real-time carousel feeds): public read, ADMIN-ONLY write
+    match /feed/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ── Settings (category filters, store config): public read, ADMIN-ONLY write
     match /settings/{id} {
       allow read: if true;

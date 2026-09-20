@@ -2,23 +2,18 @@
 
 import { useTranslation } from '@/lib/translation-context'
 import Image from 'next/image'
-
-export type CollectionCategory = 'new-arrivals' | 'sale' | 'best-offer' | 'bestsellers'
+import { type FeaturedCollection } from '@/lib/use-featured-collections'
 
 interface CollectionCardsProps {
-  activeCategory: CollectionCategory | null
-  onSelectCategory: (category: CollectionCategory | null) => void
+  collections: FeaturedCollection[]
+  activeCategory: string | null
+  onSelectCategory: (categoryId: string | null) => void
 }
 
-const CATEGORIES = [
-  { id: 'new-arrivals', label: 'New Arrivals', image: '/collections/new-arrivals.jpg' },
-  { id: 'sale', label: 'Sale', image: '/collections/sale.jpg' },
-  { id: 'best-offer', label: "Today's Best Offer", image: '/collections/best-offer.jpg' },
-  { id: 'bestsellers', label: 'Bestsellers', image: '/collections/bestsellers.jpg' },
-] as const
-
-export function CollectionCards({ activeCategory, onSelectCategory }: CollectionCardsProps) {
+export function CollectionCards({ collections, activeCategory, onSelectCategory }: CollectionCardsProps) {
   const { td } = useTranslation()
+
+  if (!collections || collections.length === 0) return null
 
   return (
     <section className="mx-auto max-w-7xl px-4 md:px-6 py-6 md:py-8">
@@ -29,19 +24,22 @@ export function CollectionCards({ activeCategory, onSelectCategory }: Collection
       </div>
       
       <div className="flex gap-4 md:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory custom-scrollbar pb-4 -mx-4 px-4 md:mx-0 md:px-0">
-        {CATEGORIES.map((cat) => {
+        {collections.map((cat) => {
           const isActive = activeCategory === cat.id
+          // Fallback image if not provided in Firestore
+          const imageUrl = cat.image || '/collections/new-arrivals.jpg'
+          
           return (
             <div
               key={cat.id}
-              onClick={() => onSelectCategory(isActive ? null : cat.id as CollectionCategory)}
+              onClick={() => onSelectCategory(isActive ? null : cat.id)}
               className={`relative snap-start flex-shrink-0 cursor-pointer overflow-hidden rounded-md transition-all duration-300 w-[42vw] sm:w-[28vw] md:w-[22vw] lg:w-[22%] aspect-[3/4] ${
                 isActive ? 'ring-2 ring-orange-500 shadow-xl scale-[1.02]' : 'shadow-md hover:shadow-xl hover:scale-[1.01]'
               }`}
             >
               <Image 
-                src={cat.image} 
-                alt={cat.label} 
+                src={imageUrl} 
+                alt={cat.title} 
                 fill 
                 className="object-cover transition-transform duration-700 hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 30vw, 280px"
@@ -51,8 +49,13 @@ export function CollectionCards({ activeCategory, onSelectCategory }: Collection
               
               <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 flex flex-col items-center justify-end h-full">
                  <h3 className="text-white font-extrabold text-base sm:text-lg md:text-xl tracking-tight text-center drop-shadow-md">
-                   {td(cat.label)}
+                   {td(cat.title)}
                  </h3>
+                 {cat.description && (
+                   <p className="text-white/80 text-xs mt-1 text-center font-medium drop-shadow-sm line-clamp-2">
+                     {td(cat.description)}
+                   </p>
+                 )}
                  {isActive && (
                    <span className="mt-2 h-1 w-8 bg-orange-500 rounded-full" />
                  )}

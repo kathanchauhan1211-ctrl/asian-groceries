@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
+import { collection, onSnapshot, query, orderBy, doc, setDoc, type Firestore } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
 import { type Product } from '@/lib/products'
 
@@ -36,17 +36,26 @@ export interface FeaturedCollectionDoc {
   productIds: string[]   // used when mode === 'manual'
   maxItems: number
   viewAllHref: string
+  // Visuals for the Storefront Card
+  image?: string
+  color?: string
+  emoji?: string
+  description?: string
 }
 
-/** Resolved — ready for the <HorizontalRow> component */
+/** Resolved — ready for the <HorizontalRow> component and Collection Cards */
 export interface FeaturedCollection {
   id: string
   title: string
   items: Product[]
   viewAllHref: string
+  image?: string
+  color?: string
+  emoji?: string
+  description?: string
 }
 
-// ─── Fallback carousels (shown when Firestore 'collections' is empty) ─────────
+// ─── Fallback carousels (shown when Firestore 'feed' is empty) ──────────────────
 // Mirrors the current hardcoded behaviour in page-content.tsx so the storefront
 // is never blank on first deployment.
 
@@ -56,13 +65,13 @@ function buildFallback(allProducts: Product[]): FeaturedCollection[] {
   const inStock = allProducts.filter(p => p.stock !== 'Out of Stock')
   const bestOffers = [...inStock].sort((a, b) => (a.price ?? 0) - (b.price ?? 0)).slice(0, 15)
   const newArrivals = [...allProducts].reverse().slice(0, 15)
-  const flagged     = allProducts.filter(p => p.bestseller)
+  const flagged = allProducts.filter(p => p.bestseller)
   const bestsellers = flagged.length > 0 ? flagged : allProducts.slice(0, 10)
 
   const out: FeaturedCollection[] = []
-  if (bestOffers.length)  out.push({ id: 'fb-offers',      title: "🔥 Today's Best Offers", items: bestOffers,  viewAllHref: '/?sort=price-asc' })
-  if (newArrivals.length) out.push({ id: 'fb-arrivals',    title: '✨ New Arrivals',         items: newArrivals, viewAllHref: '/' })
-  if (bestsellers.length) out.push({ id: 'fb-bestsellers', title: '⭐ Bestsellers',          items: bestsellers, viewAllHref: '/?sort=bestseller' })
+  if (bestOffers.length) out.push({ id: 'fb-offers', title: "Today's Best Offers", emoji: '🔥', color: '#F97316', image: '/collections/best-offer.jpg', items: bestOffers, viewAllHref: '/?sort=price-asc' })
+  if (newArrivals.length) out.push({ id: 'fb-arrivals', title: 'New Arrivals', emoji: '✨', color: '#3B82F6', image: '/collections/new-arrivals.jpg', items: newArrivals, viewAllHref: '/' })
+  if (bestsellers.length) out.push({ id: 'fb-bestsellers', title: 'Bestsellers', emoji: '⭐', color: '#EAB308', image: '/collections/bestsellers.jpg', items: bestsellers, viewAllHref: '/?sort=bestseller' })
   return out
 }
 
@@ -107,33 +116,41 @@ function resolveItems(col: FeaturedCollectionDoc, allProducts: Product[]): Produ
 /**
  * useFeaturedCollections
  *
- * Subscribes in real-time to Firestore 'collections' (onSnapshot).
- * Resolves product items for each enabled collection using the already-loaded
+ * Subscribes in real-time to Firestore 'feed' (onSnapshot).
+ * Resolves product items for each enabled feed using the already-loaded
  * `allProducts` array — no extra Firestore reads needed.
  *
- * Falls back to 3 hardcoded carousels when the Firestore collection is empty
+ * Falls back to 3 hardcoded carousels when the Firestore 'feed' collection is empty
  * (zero disruption on first deployment).
  */
-export function useFeaturedCollections(allProducts: Product[]) {
-  const [docs, setDocs]   = useState<FeaturedCollectionDoc[] | null>(null)
+export function useCollectionDocs(db: Firestore = clientDb) {
+  const [docs, setDocs] = useState<FeaturedCollectionDoc[] | null>(null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    const q = query(
-      collection(clientDb, 'collections'),
-      orderBy('order', 'asc'),
-    )
-    const unsub = onSnapshot(
-      q,
-      snap => {
-        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() } as FeaturedCollectionDoc))
-        setDocs(rows)
-        setError(false)
-      },
-      () => setError(true),
-    )
+    const q = query(collection(db, 'feed'), orderBy('order', 'asc'))
+    const unsub = onSnapshot(q, snap => {
+      setDocs(snap.docs.map(d => ({ id: d.id, ...d.data() } as FeaturedCollectionDoc)))
+      setError(false)
+    }, () => setError(true))
     return () => unsub()
-  }, [])
+  }, [db])
+
+  async function togglePin(collectionId: string, productId: string) {
+    const ref = doc(db, 'feed', collectionId)
+    const current = docs?.find(d => d.id === collectionId)
+    if (!current) return
+    const ids = current.productIds || []
+    const next = ids.includes(productId) ? ids.filter(id => id !== productId) : [productId, ...ids]
+    // Switch to manual mode automatically if pinning? Wait, keep mode as is, but ensure productIds is updated.
+    await setDoc(ref, { productIds: next, mode: 'manual' }, { merge: true })
+  }
+
+  return { docs, error, loading: docs === null, togglePin }
+}
+
+export function useFeaturedCollections(allProducts: Product[]) {
+  const { docs, error } = useCollectionDocs()
 
   // Resolve collections → items each time products or docs change
   const collections: FeaturedCollection[] = (() => {
@@ -146,10 +163,14 @@ export function useFeaturedCollections(allProducts: Product[]) {
     return docs
       .filter(d => d.enabled)
       .map(d => ({
-        id:          d.id,
-        title:       d.title,
-        items:       resolveItems(d, allProducts),
+        id: d.id,
+        title: d.title,
+        items: resolveItems(d, allProducts),
         viewAllHref: d.viewAllHref || '/',
+        image: d.image,
+        color: d.color,
+        emoji: d.emoji,
+        description: d.description,
       }))
       .filter(c => c.items.length > 0)   // hide empty carousels
   })()

@@ -13,22 +13,22 @@ import { ADMIN_EMAIL } from '@/lib/admin-config'
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 const NAV = [
-  { href: '/admin',             label: 'Dashboard',   exact: true },
-  { href: '/admin/orders',      label: 'Orders'               },
-  { href: '/admin/customers',   label: 'Customers'            },
-  { href: '/admin/products',    label: 'Products'             },
-  { href: '/admin/collections', label: 'Collections'          },
-  { href: '/admin/slides',      label: 'Slides'               },
-  { href: '/admin/analytics',   label: 'Analytics'            },
-  { href: '/admin/settings',    label: 'Settings'             },
+  { href: '/admin', label: 'Dashboard', exact: true },
+  { href: '/admin/orders', label: 'Orders' },
+  { href: '/admin/customers', label: 'Customers' },
+  { href: '/admin/products', label: 'Products' },
+  { href: '/admin/collections', label: 'Collections' },
+  { href: '/admin/slides', label: 'Slides' },
+  { href: '/admin/analytics', label: 'Analytics' },
+  { href: '/admin/settings', label: 'Settings' },
 ]
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG      = '#080C14'
+const BG = '#080C14'
 const SURFACE = '#0C1118'
-const BORDER  = 'rgba(255,255,255,0.07)'
-const MUTED   = '#6B7280'
-const ORANGE  = '#F97316'
+const BORDER = 'rgba(255,255,255,0.07)'
+const MUTED = '#6B7280'
+const ORANGE = '#F97316'
 
 // ── Loading spinner ───────────────────────────────────────────────────────────
 function Spinner({ msg = 'Loading…' }: { msg?: string }) {
@@ -100,7 +100,7 @@ function TopNav({ pathname, user, signOut }: { pathname: string; user: any; sign
                 href={item.href}
                 className="shrink-0 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-all duration-100 whitespace-nowrap"
                 style={{
-                  color:      active ? '#fff' : MUTED,
+                  color: active ? '#fff' : MUTED,
                   background: active ? 'rgba(249,115,22,0.12)' : 'transparent',
                 }}
                 onMouseEnter={e => {
@@ -152,11 +152,11 @@ function TopNav({ pathname, user, signOut }: { pathname: string; user: any; sign
             title="Sign out"
             onMouseEnter={e => {
               (e.currentTarget as HTMLButtonElement).style.color = '#FCA5A5'
-              ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)'
+                ; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)'
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLButtonElement).style.color = MUTED
-              ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+                ; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
             }}
           >
             <div
