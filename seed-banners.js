@@ -1,39 +1,21 @@
-'use client'
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+const dotenv = require('dotenv');
+dotenv.config({ path: '.env.local' });
 
-import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, orderBy, Firestore } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
+initializeApp({
+  credential: cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+  })
+});
 
-// ── Types ────────────────────────────────────────────────────────────────────
+const app = getApps()[0];
+const db = getFirestore(app, 'indianmarket');
 
-export type BannerSlotType = 'hero' | 'small'
-export type BannerSlotPosition = 'main' | 'secondary_top' | 'secondary_bottom'
-
-export interface BannerSlide {
-  id: string
-  title: string
-  subtitle?: string
-  tagline?: string
-  image: string
-  link: string
-  bgColor: string
-  textColor: string
-  active: boolean
-  order: number
-}
-
-export interface BannerSlot {
-  id: string
-  slotType: BannerSlotType
-  slotPosition: BannerSlotPosition
-  order: number
-  autoIntervalMs: number   // e.g. 4000
-  slides: BannerSlide[]
-}
-
-// ── Fallback Data ─────────────────────────────────────────────────────────────
-
-export const FALLBACK_SLOTS: BannerSlot[] = [
+// ── New schema: 3 slots, each with a slides[] array ──────────────────────────
+const BANNER_SLOTS = [
   {
     id: 'slot-main',
     slotType: 'hero',
@@ -77,7 +59,7 @@ export const FALLBACK_SLOTS: BannerSlot[] = [
       {
         id: 'slide-veggies',
         title: 'FRESH VEGGIES',
-        subtitle: 'GUARANTEED',
+        subtitle: 'GUARANTEED FRESH',
         image: 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?auto=format&fit=crop&q=80',
         link: '/shop?category=Fresh+Vegetables',
         bgColor: '#F59E0B',
@@ -131,38 +113,30 @@ export const FALLBACK_SLOTS: BannerSlot[] = [
       },
     ],
   },
-]
+];
 
-// ── Hook ─────────────────────────────────────────────────────────────────────
+async function seed() {
+  try {
+    // Delete old banner documents first
+    const oldSnap = await db.collection('banners').get();
+    const deleteBatch = db.batch();
+    oldSnap.docs.forEach(d => deleteBatch.delete(d.ref));
+    if (!oldSnap.empty) {
+      await deleteBatch.commit();
+      console.log(`Deleted ${oldSnap.size} old banner document(s).`);
+    }
 
-export function useBanners(db: Firestore = clientDb) {
-  const [slots, setSlots] = useState<BannerSlot[] | null>(null)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    const q = query(collection(db, 'banners'), orderBy('order', 'asc'))
-    const unsub = onSnapshot(q, snap => {
-      if (snap.empty) {
-        setSlots(FALLBACK_SLOTS)
-      } else {
-        const docs = snap.docs.map(d => {
-          const data = d.data() as Omit<BannerSlot, 'id'>
-          // Sort slides by order within each slot
-          const slides = (data.slides || [])
-            .filter((s: BannerSlide) => s.active !== false)
-            .sort((a: BannerSlide, b: BannerSlide) => (a.order ?? 0) - (b.order ?? 0))
-          return { ...data, id: d.id, slides }
-        })
-        setSlots(docs)
-      }
-      setError(false)
-    }, (err) => {
-      console.error('Error fetching banners:', err)
-      setError(true)
-      setSlots(FALLBACK_SLOTS)
-    })
-    return () => unsub()
-  }, [db])
-
-  return { slots, loading: slots === null, error }
+    // Write new slot documents
+    const batch = db.batch();
+    BANNER_SLOTS.forEach(slot => {
+      batch.set(db.collection('banners').doc(slot.id), slot);
+    });
+    await batch.commit();
+    console.log(`Seeded ${BANNER_SLOTS.length} banner slots successfully.`);
+    console.log('Slot IDs:', BANNER_SLOTS.map(s => s.id).join(', '));
+  } catch (e) {
+    console.error('Error seeding banners:', e.message);
+  }
 }
+
+seed().catch(console.error);
