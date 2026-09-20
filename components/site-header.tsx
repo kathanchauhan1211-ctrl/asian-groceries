@@ -8,6 +8,7 @@ import { useTranslation } from '@/lib/translation-context'
 import { useTheme } from '@/lib/theme-context'
 import Link from 'next/link'
 import { LogoSVG } from '@/components/logo-svg'
+import { SpiceDecor } from '@/components/spice-decor'
 import { Switch } from '@/components/ui/switch-button'
 import { useActiveOrder } from '@/lib/use-active-order'
 import { Button } from '@/components/ui/button'
@@ -91,6 +92,7 @@ export function SiteHeader() {
     >
       {/* Animated spice powder gradient — sits ABOVE bg-color, BELOW content */}
       <div className="spice-powder-gradient" />
+      <SpiceDecor />
 
       {/* ── Top accent bar + announcement ticker ────────────────────────────── */}
       <div

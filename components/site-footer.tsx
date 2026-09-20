@@ -2,6 +2,7 @@ import { Mail, MapPin, Phone } from 'lucide-react'
 import Link from 'next/link'
 import { LogoSVG } from '@/components/logo-svg'
 import { Button } from '@/components/ui/button'
+import { SpiceDecor } from '@/components/spice-decor'
 
 // Category → query param mapping for functional footer links
 const SHOP_LINKS = [
@@ -41,6 +42,7 @@ export function SiteFooter() {
     <footer className="relative border-t mt-auto text-white" style={{ backgroundColor: '#140308', borderColor: '#4a1122' }}>
       {/* Animated spice powder gradient — sits ABOVE bg-color, BELOW content */}
       <div className="spice-powder-gradient" />
+      <SpiceDecor />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 md:px-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 md:gap-8">
 
