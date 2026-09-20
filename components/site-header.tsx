@@ -87,18 +87,18 @@ export function SiteHeader() {
   return (
     <header
       className="sticky top-0 z-40 shadow-xl transition-colors duration-300 backdrop-blur-xl border-b"
-      style={{ backgroundColor: 'rgba(46, 8, 20, 0.95)', borderColor: '#4a1122' }}
+      style={{ backgroundColor: 'rgba(20, 3, 8, 0.98)', borderColor: '#4a1122' }}
     >
-      {/* Decorative Side Backgrounds */}
+      {/* Decorative Side Backgrounds with slow flowing animation */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-20 md:opacity-35" 
+        className="absolute inset-0 pointer-events-none opacity-30 md:opacity-45 animate-pulse duration-[10000ms]" 
         style={{
           backgroundImage: `url('/images/footer-left.jpg'), url('/images/footer-right.jpg')`,
           backgroundPosition: 'left center, right center',
           backgroundRepeat: 'no-repeat, no-repeat',
-          backgroundSize: 'max(250px, 20vw) auto, max(250px, 20vw) auto',
-          maskImage: 'linear-gradient(to right, black 0%, transparent 25%, transparent 75%, black 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 25%, transparent 75%, black 100%)'
+          backgroundSize: 'auto 100%, auto 100%',
+          maskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)'
         }}
       />
 

@@ -38,17 +38,17 @@ const SOCIAL_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative border-t mt-auto overflow-hidden text-white" style={{ backgroundColor: '#2e0814', borderColor: '#4a1122' }}>
-      {/* Decorative Side Backgrounds */}
+    <footer className="relative border-t mt-auto overflow-hidden text-white" style={{ backgroundColor: '#140308', borderColor: '#4a1122' }}>
+      {/* Decorative Side Backgrounds with slow flowing animation */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-30 md:opacity-50" 
+        className="absolute inset-0 pointer-events-none opacity-40 md:opacity-50 animate-pulse duration-[10000ms]" 
         style={{
           backgroundImage: `url('/images/footer-left.jpg'), url('/images/footer-right.jpg')`,
           backgroundPosition: 'left center, right center',
           backgroundRepeat: 'no-repeat, no-repeat',
-          backgroundSize: 'max(350px, 25vw) auto, max(350px, 25vw) auto',
-          maskImage: 'linear-gradient(to right, black 0%, transparent 30%, transparent 70%, black 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 30%, transparent 70%, black 100%)'
+          backgroundSize: 'auto 100%, auto 100%',
+          maskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)'
         }}
       />
       {/* Fallback gradient not needed anymore because of mask, but we keep the layout */}
