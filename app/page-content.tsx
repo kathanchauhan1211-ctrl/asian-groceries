@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { PromoSlider } from '@/components/promo-slider'
 import { CollectionCards } from '@/components/collection-cards'
 import { BannerModule } from '@/components/banner-module'
+import { BrandCatalog } from '@/components/brand-catalog'
 import { HorizontalRow } from '@/components/HorizontalRow'
 import { useProducts } from '@/lib/use-products'
 import HomepageStatus from '@/components/homepage-status'
@@ -39,6 +40,9 @@ export default function PageContent() {
 
       {/* ═══ Banners (Dynamic) ═══ */}
       <BannerModule />
+
+      {/* ═══ Brand Catalog ═══ */}
+      <BrandCatalog />
 
       {/* ═══ Category Popup Modal ═══ */}
       {activeCategory && popupData && (
