@@ -68,6 +68,18 @@ export default function CollectionsPage() {
     return () => { unsubProds(); unsubCols() }
   }, [])
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (editingId) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [editingId])
+
   function openNew() {
     setEditingId('new')
     setTitle('')

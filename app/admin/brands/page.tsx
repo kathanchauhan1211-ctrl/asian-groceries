@@ -51,6 +51,18 @@ export default function AdminBrandsPage() {
     return () => unsub()
   }, [])
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (editingId) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [editingId])
+
   function openNew() {
     setEditingId('new')
     setName('')
