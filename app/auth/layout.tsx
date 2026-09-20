@@ -27,9 +27,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
        * Inline script sets `dark` class on <html> immediately, before paint,
        * preventing any light-mode flash on the auth page.
        */}
-      <Script id="auth-dark-init" strategy="beforeInteractive">
-        {`document.documentElement.classList.add('dark')`}
-      </Script>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `document.documentElement.classList.add('dark')`
+        }}
+      />
       {children}
     </>
   )
