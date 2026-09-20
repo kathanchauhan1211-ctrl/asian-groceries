@@ -63,7 +63,7 @@ function HeroBanner({ slot }: { slot: BannerSlot }) {
           <Link
             key={slide.id}
             href={slide.link}
-            className="absolute inset-0 flex flex-col justify-center"
+            className="absolute inset-0 flex flex-col justify-end md:justify-center"
             style={{
               backgroundColor: slide.bgColor,
               opacity: active ? 1 : 0,
@@ -77,35 +77,36 @@ function HeroBanner({ slot }: { slot: BannerSlot }) {
               className="absolute inset-0 bg-cover bg-center md:bg-right bg-no-repeat"
               style={{ backgroundImage: `url(${slide.image})` }}
             />
-            {/* Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
+            {/* Gradient — Bottom for mobile, Left for desktop */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent md:hidden" />
+            <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
 
             {/* Content */}
             <div
-              className="relative z-10 py-8 pl-14 pr-6 md:p-12 md:pl-16 flex flex-col items-start max-w-[75%] md:max-w-[65%]"
+              className="relative z-10 pb-10 pl-12 pr-6 pt-10 md:py-8 md:pl-16 md:pr-12 flex flex-col items-start w-[85%] md:max-w-[65%]"
               style={{ animation: active ? 'banner-caption-in 0.5s ease-out 0.1s both' : 'none' }}
             >
               {slide.subtitle && (
-                <p className="text-[10px] md:text-xs font-bold tracking-[0.2em] mb-2 uppercase"
-                  style={{ color: slide.textColor, opacity: 0.75 }}>
+                <p className="text-[9px] md:text-xs font-bold tracking-[0.2em] mb-1.5 md:mb-2 uppercase"
+                  style={{ color: slide.textColor, opacity: 0.85 }}>
                   {slide.subtitle}
                 </p>
               )}
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black leading-[0.92] tracking-tight mb-3"
+              <h2 className="text-[26px] leading-[1.0] md:text-5xl lg:text-6xl font-black md:leading-[0.92] tracking-tight mb-2 md:mb-3 drop-shadow-md"
                 style={{ color: slide.textColor }}>
                 {slide.title.split(' ').map((word, wi) => (
                   <span key={wi} className="block">{word}</span>
                 ))}
               </h2>
               {slide.tagline && (
-                <p className="text-sm md:text-base font-medium mb-5 opacity-85"
+                <p className="text-[11px] md:text-base font-medium mb-3 md:mb-5 opacity-90 drop-shadow-sm"
                   style={{ color: slide.textColor }}>
                   {slide.tagline}
                 </p>
               )}
-              <div className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold bg-white/20 hover:bg-white/30 backdrop-blur-md transition-colors"
+              <div className="inline-flex items-center gap-1.5 md:gap-2 rounded-full px-4 py-2 md:px-5 md:py-2.5 text-[11px] md:text-sm font-bold bg-white/20 hover:bg-white/30 backdrop-blur-md transition-colors"
                 style={{ color: slide.textColor }}>
-                Shop Now <ArrowRight className="size-4" />
+                Shop Now <ArrowRight className="size-3.5 md:size-4" />
               </div>
             </div>
           </Link>
