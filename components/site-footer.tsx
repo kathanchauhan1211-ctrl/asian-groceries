@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button'
 
 // Category → query param mapping for functional footer links
 const SHOP_LINKS = [
-  { label: 'Spices',  href: '/?category=Spices' },
-  { label: 'Grains',  href: '/?category=Rice+%26+Grains' },
+  { label: 'Spices', href: '/?category=Spices' },
+  { label: 'Grains', href: '/?category=Rice+%26+Grains' },
   { label: 'Lentils', href: '/?category=Lentils+%26+Pulses' },
-  { label: 'Frozen',  href: '/?category=Frozen+Foods' },
-  { label: 'Sweets',  href: '/?category=Snacks+%26+Sweets' },
+  { label: 'Frozen', href: '/?category=Frozen+Foods' },
+  { label: 'Sweets', href: '/?category=Snacks+%26+Sweets' },
 ]
 
 // Social media links
@@ -39,18 +39,8 @@ const SOCIAL_LINKS = [
 export function SiteFooter() {
   return (
     <footer className="relative border-t mt-auto overflow-hidden text-white" style={{ backgroundColor: '#140308', borderColor: '#4a1122' }}>
-      {/* Decorative Side Backgrounds with slow flowing animation */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-40 md:opacity-50 animate-pulse duration-[10000ms]" 
-        style={{
-          backgroundImage: `url('/images/footer-left.jpg'), url('/images/footer-right.jpg')`,
-          backgroundPosition: 'left center, right center',
-          backgroundRepeat: 'no-repeat, no-repeat',
-          backgroundSize: 'auto 100%, auto 100%',
-          maskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)'
-        }}
-      />
+      {/* Custom Fancy Animated Powder Gradient */}
+      <div className="spice-powder-gradient opacity-80" />
       {/* Fallback gradient not needed anymore because of mask, but we keep the layout */}
       <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 md:gap-8">

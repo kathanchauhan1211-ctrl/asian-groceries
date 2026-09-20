@@ -415,6 +415,39 @@ select:focus {
   pointer-events: none;
 }
 
+@keyframes powder-flow {
+  0% { background-position: 0% 0%, 100% 100%, 0% 100%, 50% 50%; }
+  25% { background-position: 100% 0%, 0% 100%, 100% 100%, 40% 60%; }
+  50% { background-position: 100% 100%, 0% 0%, 100% 0%, 50% 40%; }
+  75% { background-position: 0% 100%, 100% 0%, 0% 0%, 60% 50%; }
+  100% { background-position: 0% 0%, 100% 100%, 0% 100%, 50% 50%; }
+}
+
+.spice-powder-gradient {
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(249, 115, 22, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(251, 191, 36, 0.20) 0%, transparent 60%),
+    radial-gradient(circle at 80% 10%, rgba(110, 34, 111, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 20% 90%, rgba(4, 120, 87, 0.15) 0%, transparent 60%);
+  background-size: 200% 200%;
+  animation: powder-flow 25s ease-in-out infinite alternate;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.spice-powder-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
 /* Card entrance animation */
 @keyframes card-enter {
   from {

@@ -16,10 +16,10 @@ import { LiquidGlassBox } from '@/components/ui/liquid-glass-box'
 export type Tab = 'shop' | 'checkout' | 'track' | 'dashboard' | 'community'
 
 const LANGUAGES = [
-  { name: 'English',    flag: '🇬🇧', code: 'EN' },
+  { name: 'English', flag: '🇬🇧', code: 'EN' },
   { name: 'Lithuanian', flag: '🇱🇹', code: 'LT' },
-  { name: 'Russian',    flag: '🇷🇺', code: 'RU' },
-  { name: 'Hindi',      flag: '🇮🇳', code: 'HI' },
+  { name: 'Russian', flag: '🇷🇺', code: 'RU' },
+  { name: 'Hindi', flag: '🇮🇳', code: 'HI' },
 ]
 
 const ANNOUNCEMENTS = [
@@ -89,18 +89,8 @@ export function SiteHeader() {
       className="sticky top-0 z-40 shadow-xl transition-colors duration-300 backdrop-blur-xl border-b"
       style={{ backgroundColor: 'rgba(20, 3, 8, 0.98)', borderColor: '#4a1122' }}
     >
-      {/* Decorative Side Backgrounds with slow flowing animation */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-30 md:opacity-45 animate-pulse duration-[10000ms]" 
-        style={{
-          backgroundImage: `url('/images/footer-left.jpg'), url('/images/footer-right.jpg')`,
-          backgroundPosition: 'left center, right center',
-          backgroundRepeat: 'no-repeat, no-repeat',
-          backgroundSize: 'auto 100%, auto 100%',
-          maskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 20%, transparent 80%, black 100%)'
-        }}
-      />
+      {/* Custom Fancy Animated Powder Gradient */}
+      <div className="spice-powder-gradient opacity-60" />
 
       {/* ── Top accent bar + announcement ticker ────────────────────────────── */}
       <div
@@ -211,11 +201,10 @@ export function SiteHeader() {
                       <button
                         key={lang.name}
                         onClick={() => { setActiveLang(lang.name); setLangOpen(false) }}
-                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                          activeLang === lang.name
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${activeLang === lang.name
                             ? 'bg-orange-500/20 text-orange-300 font-semibold'
                             : 'text-white/80 hover:bg-white/10'
-                        }`}
+                          }`}
                       >
                         <span className="text-base">{lang.flag}</span>
                         {lang.name}
