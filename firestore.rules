@@ -17,7 +17,7 @@ service cloud.firestore {
     // ── Orders: Admin SDK (server-side /api/orders) is the only writer. ───────
     match /orders/{ticketNumber} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || (request.auth != null && request.auth.token.email == resource.data.customerEmail);
       allow create, update, delete: if false;
     }
 
@@ -62,6 +62,12 @@ service cloud.firestore {
 
     // ── Shop Categories (pinned product feeds): public read, ADMIN-ONLY write ─
     match /shopCategories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Banners (homepage banner grid): public read, ADMIN-ONLY write ─────────
+    match /banners/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }

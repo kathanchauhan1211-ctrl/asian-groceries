@@ -56,7 +56,8 @@ export function SwipeableCategoryBar({
       }
     }
     const queryString = params.toString()
-    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+    const targetPath = pathname === '/' ? '/shop' : pathname
+    router.push(queryString ? `${targetPath}?${queryString}` : targetPath, { scroll: false })
   }, [router, searchParams, selectedCategories, pathname])
 
   const checkScroll = () => {

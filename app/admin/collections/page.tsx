@@ -194,46 +194,87 @@ export default function CollectionsPage() {
       {/* List */}
       <div className="space-y-2">
         {docs.map((d, i) => (
-          <div key={d.id} className="flex items-center gap-4 rounded-xl border p-3 pl-2 transition-all hover:bg-white/5" style={{ borderColor: C.border, background: C.surface }}>
-            <div className="flex flex-col gap-1">
-              <button onClick={() => moveDoc(i, -1)} disabled={i === 0} className="disabled:opacity-20 text-gray-500 hover:text-white"><GripVertical className="size-3" /></button>
-              <button onClick={() => moveDoc(i, 1)} disabled={i === docs.length - 1} className="disabled:opacity-20 text-gray-500 hover:text-white"><GripVertical className="size-3" /></button>
-            </div>
-
-            <div className="h-12 w-12 rounded-lg bg-gray-800 shrink-0 overflow-hidden relative border border-white/10 flex items-center justify-center">
-              {d.image ? (
-                <img src={d.image} className="w-full h-full object-cover" alt="" />
-              ) : (
-                <span className="text-xl">{d.emoji}</span>
-              )}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-[14px] text-white truncate">{d.title}</span>
-                {!d.enabled && <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-400">HIDDEN</span>}
+          <div key={d.id} className="flex flex-col gap-2 rounded-xl border p-3 pl-2 transition-all hover:bg-white/5" style={{ borderColor: C.border, background: C.surface }}>
+            {/* Feed Header */}
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-1">
+                <button onClick={() => moveDoc(i, -1)} disabled={i === 0} className="disabled:opacity-20 text-gray-500 hover:text-white"><GripVertical className="size-3" /></button>
+                <button onClick={() => moveDoc(i, 1)} disabled={i === docs.length - 1} className="disabled:opacity-20 text-gray-500 hover:text-white"><GripVertical className="size-3" /></button>
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span
-                  className="text-[11px] font-bold rounded-full px-2 py-0.5"
-                  style={
-                    (d.productIds?.length || 0) > 0
-                      ? { background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
-                      : { background: 'rgba(255,255,255,0.04)', color: '#4B5563', border: '1px solid rgba(255,255,255,0.07)' }
-                  }
-                >
-                  {d.productIds?.length || 0} products
-                </span>
-                {(d.productIds?.length || 0) === 0 && (
-                  <span className="text-[11px] text-gray-500">← pin from Products page</span>
+
+              <div className="h-12 w-12 rounded-lg bg-gray-800 shrink-0 overflow-hidden relative border border-white/10 flex items-center justify-center">
+                {d.image ? (
+                  <img src={d.image} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <span className="text-xl">{d.emoji}</span>
                 )}
               </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[14px] text-white truncate">{d.title}</span>
+                  {!d.enabled && <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-400">HIDDEN</span>}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span
+                    className="text-[11px] font-bold rounded-full px-2 py-0.5"
+                    style={
+                      (d.productIds?.length || 0) > 0
+                        ? { background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
+                        : { background: 'rgba(255,255,255,0.04)', color: '#4B5563', border: '1px solid rgba(255,255,255,0.07)' }
+                    }
+                  >
+                    {d.productIds?.length || 0} products
+                  </span>
+                  {(d.productIds?.length || 0) === 0 && (
+                    <span className="text-[11px] text-gray-500">← pin from Products page</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button onClick={() => openEdit(d)} className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"><Edit3 className="size-4" /></button>
+                <button onClick={() => handleDelete(d.id)} className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10"><Trash2 className="size-4" /></button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <button onClick={() => openEdit(d)} className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"><Edit3 className="size-4" /></button>
-              <button onClick={() => handleDelete(d.id)} className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10"><Trash2 className="size-4" /></button>
-            </div>
+            {/* Pinned Products Mini-Feed */}
+            {(d.productIds?.length || 0) > 0 && (
+              <div className="ml-10 mt-2 flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+                {d.productIds.map(pid => {
+                  const p = allProducts.find(x => x.id === pid)
+                  if (!p) return null
+                  return (
+                    <div key={pid} className="group relative shrink-0 w-24 rounded-lg overflow-hidden border transition-all" style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
+                      <div className="aspect-square w-full bg-gray-900 relative">
+                        {p.image ? (
+                          <img src={p.image} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full text-gray-700 text-xs">No img</div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Remove "${p.name}" from ${d.title}?`)) return
+                              const nextIds = d.productIds.filter(id => id !== pid)
+                              await setDoc(doc(clientDb, 'feed', d.id), { productIds: nextIds }, { merge: true })
+                            }}
+                            className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600 transition-transform hover:scale-110"
+                            title="Remove from feed"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="p-1.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                        <p className="text-[10px] text-white font-medium truncate">{p.name}</p>
+                        <p className="text-[9px] text-orange-400 font-bold truncate">€{Number(p.price || 0).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>

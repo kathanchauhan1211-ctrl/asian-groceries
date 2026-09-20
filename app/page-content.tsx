@@ -1,19 +1,15 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { PromoSlider } from '@/components/promo-slider'
 import { CollectionCards } from '@/components/collection-cards'
-import { ProductCatalog } from '@/components/product-catalog'
+import { BannerModule } from '@/components/banner-module'
 import { HorizontalRow } from '@/components/HorizontalRow'
-import { SwipeableCategoryBar } from '@/components/swipeable-category-bar'
 import { useProducts } from '@/lib/use-products'
-import { Filter } from 'lucide-react'
 import HomepageStatus from '@/components/homepage-status'
 import { useFeaturedCollections } from '@/lib/use-featured-collections'
 
 export default function PageContent() {
-  const searchParams = useSearchParams()
   const { products: allProducts } = useProducts()
 
   // Fetch dynamic collections (formerly feeds) from Firestore
@@ -21,19 +17,6 @@ export default function PageContent() {
 
   // Track which collection popup is open (by ID)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-
-  // Detect if ANY filter/search is active
-  const hasActiveFilter = Boolean(
-    searchParams.get('q') ||
-    searchParams.get('category') ||
-    searchParams.get('origin') ||
-    searchParams.get('brand') ||
-    searchParams.get('diet') ||
-    searchParams.get('stock') ||
-    searchParams.get('priceMin') ||
-    searchParams.get('priceMax') ||
-    (searchParams.get('sort') && searchParams.get('sort') !== 'default')
-  )
 
   // ─── Active popup feed ────────────────────────────────────────────────────
   const popupData = useMemo(() => {
@@ -48,36 +31,14 @@ export default function PageContent() {
       <PromoSlider />
 
       {/* ═══ Collection Cards (Dynamic) ═══ */}
-      {!hasActiveFilter && (
-        <CollectionCards
-          collections={collections}
-          activeCategory={activeCategory}
-          onSelectCategory={setActiveCategory}
-        />
-      )}
+      <CollectionCards
+        collections={collections}
+        activeCategory={activeCategory}
+        onSelectCategory={setActiveCategory}
+      />
 
-      {/* ═══ Swipeable Category Bar ═══ */}
-      <div className="mx-auto max-w-7xl px-4 md:px-6 pt-2 pb-2">
-        <SwipeableCategoryBar
-          prependFilterButton={
-            <a
-              href="#shop"
-              className="snap-start shrink-0 flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-bold transition-all border bg-card text-foreground hover:-translate-y-0.5 active:scale-95 shadow-sm"
-              style={{ borderColor: 'var(--border)' }}
-              onClick={e => {
-                e.preventDefault()
-                document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' })
-              }}
-            >
-              <Filter className="size-4" style={{ color: 'var(--primary)' }} />
-              Filters
-            </a>
-          }
-        />
-      </div>
-
-      {/* ═══ Full product catalog ═══ */}
-      <ProductCatalog hideGridWhenUnfiltered={!hasActiveFilter} />
+      {/* ═══ Banners (Dynamic) ═══ */}
+      <BannerModule />
 
       {/* ═══ Category Popup Modal ═══ */}
       {activeCategory && popupData && (

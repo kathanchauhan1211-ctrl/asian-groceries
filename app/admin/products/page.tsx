@@ -430,12 +430,15 @@ function ProductCategoryButton({
   product,
   shopDocs,
   togglePin,
+  open,
+  setOpen,
 }: {
   product: AdminProduct
   shopDocs: FeaturedCollectionDoc[]
   togglePin: (collectionId: string, productId: string) => Promise<void>
+  open: boolean
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
 }) {
-  const [open, setOpen] = useState(false)
 
   const pinCount = shopDocs.filter(d =>
     (d.productIds || []).includes(product.id)
@@ -482,6 +485,7 @@ function ProductRow({
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [form, setForm] = useState({
     name:       product.name ?? '',
     brand:      product.brand ?? '',
@@ -525,7 +529,7 @@ function ProductRow({
 
   if (editing) {
     return (
-      <tr style={{ background: 'rgba(249,115,22,0.03)', borderBottom: `1px solid ${C.border}` }}>
+      <tr className="[&_td]:border-b [&_td]:border-white/10" style={{ background: 'rgba(249,115,22,0.03)' }}>
         <td className="pl-4 pr-2 py-2.5">
           <input type="checkbox" checked={selected} onChange={e => onSelect(e.target.checked)}
             className="rounded" style={{ accentColor: '#F97316' }} />
@@ -576,11 +580,11 @@ function ProductRow({
 
   return (
     <tr
-      className="group transition-colors"
+      className="group transition-colors relative [&_td]:border-b [&_td]:border-white/10"
       style={{
         background: rowBg,
-        borderBottom: `1px solid ${C.border}`,
         opacity: deleting ? 0.3 : 1,
+        zIndex: menuOpen ? 50 : 1,
         transition: 'opacity 0.3s, background 0.1s',
       }}
     >
@@ -654,12 +658,15 @@ function ProductRow({
           borderLeft: '1px solid rgba(255,255,255,0.06)',
           width: '52px',
           minWidth: '52px',
+          zIndex: menuOpen ? 50 : 10,
         }}
       >
         <ProductCategoryButton
           product={product}
           shopDocs={shopDocs}
           togglePin={togglePin}
+          open={menuOpen}
+          setOpen={setMenuOpen}
         />
       </td>
     </tr>
@@ -1243,9 +1250,9 @@ export default function AdminProductsPage() {
 
                 {!isCollapsed && (
                   <div className="overflow-x-auto">
-                    <table className="w-full" style={{ minWidth: '900px' }}>
+                    <table className="w-full border-separate border-spacing-0" style={{ minWidth: '900px' }}>
                       <thead>
-                        <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                        <tr className="[&_th]:border-b [&_th]:border-white/10">
                           {['', 'Product', 'Category', 'Price', 'Unit', 'Status', 'Actions'].map(h => (
                             <th
                               key={h}

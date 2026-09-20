@@ -21,7 +21,7 @@ const PAGE_SIZE = 48
  * Normalise a raw Firestore document into a safe Product shape.
  * Handles field name mismatches between admin portal and storefront.
  */
-function normaliseProduct(id: string, data: any): Product {
+export function normaliseProduct(id: string, data: any): Product {
   const price = parseFloat(data.price) || 0
 
   const variants: Product['variants'] =

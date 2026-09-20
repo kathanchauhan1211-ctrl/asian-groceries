@@ -1,14 +1,13 @@
 'use client'
 
-import { ShoppingBag, Bus, User, MessageSquare, Home } from 'lucide-react'
+import { Store, Bus, User, MessageSquare, Home } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCart } from '@/lib/cart-context'
 import { useTranslation } from '@/lib/translation-context'
-import { useEffect, useRef, useState } from 'react'
 
 const NAV_ITEMS = [
-  { id: 'shop', href: '/', label: 'Shop', icon: Home },
+  { id: 'home', href: '/', label: 'Home', icon: Home },
+  { id: 'shop', href: '/shop', label: 'Shop', icon: Store },
   { id: 'track', href: '/track', label: 'Track', icon: Bus },
   { id: 'dashboard', href: '/dashboard', label: 'Account', icon: User },
   { id: 'group', href: '/community', label: 'Group', icon: MessageSquare },
@@ -159,22 +158,11 @@ function IslandShell({ children, className, style, cartHasItems }: {
 export function FloatingNavigation() {
   const pathname = usePathname()
   const { td } = useTranslation()
-  const { count, setOpen } = useCart()
-  const prevCount = useRef(count)
-  const [cartPulse, setCartPulse] = useState(false)
-
-  useEffect(() => {
-    if (count > prevCount.current) {
-      setCartPulse(true)
-      setTimeout(() => setCartPulse(false), 750)
-    }
-    prevCount.current = count
-  }, [count])
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
-  const baseClass = `island-wrap${count > 0 ? ' cart-has-items' : ''}`
+  const baseClass = `island-wrap`
 
   return (
     <>
@@ -191,7 +179,6 @@ export function FloatingNavigation() {
         <IslandShell
           className={`${baseClass} flex-row px-2 py-2 rounded-full`}
           style={{ display: 'flex', flexDirection: 'row' }}
-          cartHasItems={count > 0}
         >
           {NAV_ITEMS.map(item => (
             <Item
@@ -202,21 +189,6 @@ export function FloatingNavigation() {
               active={isActive(item.href)}
             />
           ))}
-
-          {/* Orange-ish separator */}
-          <span
-            className="mx-1 self-center rounded-full"
-            style={{ width: 1.5, height: 32, background: 'rgba(249,115,22,0.25)' }}
-          />
-
-          <Item
-            icon={ShoppingBag}
-            label={td("Cart")}
-            active={count > 0}
-            badge={count > 0 ? count : undefined}
-            onClick={() => setOpen(true)}
-            cartPulse={cartPulse}
-          />
         </IslandShell>
       </div>
 
@@ -243,20 +215,6 @@ export function FloatingNavigation() {
                 active={isActive(item.href)}
               />
             ))}
-
-            <span
-              className="my-1 rounded-full"
-              style={{ height: 1.5, width: 32, background: 'rgba(249,115,22,0.25)' }}
-            />
-
-            <Item
-              icon={ShoppingBag}
-              label={td("Cart")}
-              active={count > 0}
-              badge={count > 0 ? count : undefined}
-              onClick={() => setOpen(true)}
-              cartPulse={cartPulse}
-            />
           </nav>
         </div>
       </div>

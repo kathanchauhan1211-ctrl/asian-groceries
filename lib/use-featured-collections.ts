@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, orderBy, doc, setDoc, type Firestore } from 'firebase/firestore'
+import { useState, useEffect, useMemo } from 'react'
+import { collection, onSnapshot, query, orderBy, doc, setDoc, where, getDocs, type Firestore } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
 import { type Product } from '@/lib/products'
+import { normaliseProduct } from '@/lib/use-products'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -151,6 +152,61 @@ export function useCollectionDocs(db: Firestore = clientDb) {
 
 export function useFeaturedCollections(allProducts: Product[]) {
   const { docs, error } = useCollectionDocs()
+  const [extraProducts, setExtraProducts] = useState<Product[]>([])
+
+  useEffect(() => {
+    if (!docs) return
+    const missingIds = new Set<string>()
+    const byId = new Map(allProducts.map(p => [p.id, true]))
+    const byExtraId = new Map(extraProducts.map(p => [p.id, true]))
+
+    docs.forEach(d => {
+      if (d.mode === 'manual' && d.productIds) {
+        d.productIds.forEach(id => {
+          if (!byId.has(id) && !byExtraId.has(id)) missingIds.add(id)
+        })
+      }
+    })
+
+    if (missingIds.size > 0) {
+      const ids = Array.from(missingIds)
+      const fetchMissing = async () => {
+        try {
+          const chunks = []
+          for (let i = 0; i < ids.length; i += 30) {
+            chunks.push(ids.slice(i, i + 30))
+          }
+          const proms = chunks.map(chunk => 
+            getDocs(query(collection(clientDb, 'products'), where('__name__', 'in', chunk)))
+          )
+          const snaps = await Promise.all(proms)
+          const newProducts: Product[] = []
+          snaps.forEach(snap => {
+            snap.docs.forEach(d => newProducts.push(normaliseProduct(d.id, d.data())))
+          })
+          
+          if (newProducts.length > 0) {
+            setExtraProducts(prev => {
+              const map = new Map(prev.map(p => [p.id, p]))
+              newProducts.forEach(p => map.set(p.id, p))
+              return Array.from(map.values())
+            })
+          }
+        } catch (e) {
+          console.error("Failed to fetch missing pinned products:", e)
+        }
+      }
+      fetchMissing()
+    }
+  }, [docs, allProducts, extraProducts])
+
+  // Combine products
+  const combinedProducts = useMemo(() => {
+    if (extraProducts.length === 0) return allProducts
+    const map = new Map(allProducts.map(p => [p.id, p]))
+    extraProducts.forEach(p => map.set(p.id, p))
+    return Array.from(map.values())
+  }, [allProducts, extraProducts])
 
   // Resolve collections → items each time products or docs change
   const collections: FeaturedCollection[] = (() => {
@@ -158,14 +214,14 @@ export function useFeaturedCollections(allProducts: Product[]) {
     if (docs === null) return []
 
     // Firestore had an error or is empty → fall back to hardcoded carousels
-    if (error || docs.length === 0) return buildFallback(allProducts)
+    if (error || docs.length === 0) return buildFallback(combinedProducts)
 
     return docs
       .filter(d => d.enabled)
       .map(d => ({
         id: d.id,
         title: d.title,
-        items: resolveItems(d, allProducts),
+        items: resolveItems(d, combinedProducts),
         viewAllHref: d.viewAllHref || '/',
         image: d.image,
         color: d.color,
