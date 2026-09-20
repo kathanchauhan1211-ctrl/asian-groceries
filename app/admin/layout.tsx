@@ -54,6 +54,7 @@ function TopNav({ pathname, user, signOut }: { pathname: string; user: any; sign
 
   return (
     <header
+      className="sticky top-0 z-40 w-full"
       style={{
         background: SURFACE,
         borderBottom: `1px solid ${BORDER}`,
@@ -211,14 +212,14 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden"
+      className="flex flex-col min-h-dvh"
       style={{ fontFamily: "'Inter', system-ui, sans-serif", background: BG }}
     >
       {/* Top navbar — full width, always on top */}
       <TopNav pathname={pathname} user={user} signOut={signOut} />
 
       {/* Full-width scrollable content */}
-      <main className="flex-1 overflow-y-auto" style={{ background: BG }}>
+      <main className="flex-1" style={{ background: BG }}>
         <div className="p-5 md:p-7 max-w-[1440px] mx-auto">
           {children}
         </div>
