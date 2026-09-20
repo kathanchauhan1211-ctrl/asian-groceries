@@ -425,16 +425,43 @@ select:focus {
 
 .spice-powder-gradient {
   background-image: 
-    radial-gradient(ellipse 60% 80% at 8%  20%, rgba(249, 115, 22, 0.55) 0%, transparent 70%),
-    radial-gradient(ellipse 55% 70% at 92% 80%, rgba(251, 191, 36, 0.45) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 80% 10%, rgba(139, 40, 140, 0.40) 0%, transparent 65%),
-    radial-gradient(ellipse 45% 55% at 20% 90%, rgba(4,  120, 87,  0.30) 0%, transparent 65%);
+    radial-gradient(ellipse 60% 80% at 8%  20%, rgba(139, 40, 140, 0.45) 0%, transparent 70%),   /* Plum */
+    radial-gradient(ellipse 55% 70% at 92% 80%, rgba(112, 26, 53, 0.6) 0%, transparent 70%),    /* Ruby Maroon */
+    radial-gradient(ellipse 50% 60% at 80% 10%, rgba(74, 17, 34, 0.5) 0%, transparent 65%),     /* Deep Maroon */
+    radial-gradient(ellipse 45% 55% at 20% 90%, rgba(94, 26, 95, 0.45) 0%, transparent 65%);    /* Deep Plum */
   background-size: 200% 200%;
   animation: powder-flow 20s ease-in-out infinite alternate;
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+}
+
+@keyframes gentle-spice-float {
+  0%   { transform: translateY(0px) rotate(0deg); opacity: 0.15; }
+  50%  { transform: translateY(-15px) rotate(5deg); opacity: 0.25; }
+  100% { transform: translateY(0px) rotate(-5deg); opacity: 0.15; }
+}
+
+.spice-powder-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: 
+    /* Star Anise */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff'%3E%3Cpath d='M50 10 L55 40 L85 35 L60 55 L75 85 L50 65 L25 85 L40 55 L15 35 L45 40 Z'/%3E%3Ccircle cx='50' cy='50' r='5' fill='%23140308'/%3E%3C/svg%3E"),
+    /* Cardamom/Leaf shape */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff'%3E%3Cpath d='M20 50 Q50 10 80 50 Q50 90 20 50 Z'/%3E%3C/svg%3E"),
+    /* Cinnamon Stick */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23ffffff' stroke-width='6' stroke-linecap='round'%3E%3Cpath d='M30 20 Q45 10 55 20 L70 80 Q55 90 45 80 Z'/%3E%3Cpath d='M45 20 L60 80'/%3E%3C/svg%3E"),
+    /* Star Anise Small */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff'%3E%3Cpath d='M50 10 L55 40 L85 35 L60 55 L75 85 L50 65 L25 85 L40 55 L15 35 L45 40 Z'/%3E%3C/svg%3E");
+  background-size: 80px 80px, 50px 50px, 70px 70px, 40px 40px;
+  background-position: 10% 20%, 85% 70%, 75% 15%, 25% 85%;
+  background-repeat: no-repeat;
+  animation: gentle-spice-float 15s ease-in-out infinite;
 }
 
 .spice-powder-gradient::after {

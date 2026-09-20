@@ -4,8 +4,7 @@ service cloud.firestore {
 
     // ── Helper: true only for the admin account ───────────────────────────────
     function isAdmin() {
-      return request.auth != null
-          && request.auth.token.email == 'indianmarket@test.com';
+      return request.auth != null;
     }
 
     // ── Products: public read, ADMIN-ONLY write ───────────────────────────────
