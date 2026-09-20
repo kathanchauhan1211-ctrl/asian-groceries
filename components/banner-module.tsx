@@ -74,7 +74,7 @@ function HeroBanner({ slot }: { slot: BannerSlot }) {
           >
             {/* Background image */}
             <div
-              className="absolute inset-0 bg-cover bg-right bg-no-repeat"
+              className="absolute inset-0 bg-cover bg-center md:bg-right bg-no-repeat"
               style={{ backgroundImage: `url(${slide.image})` }}
             />
             {/* Gradient */}
@@ -82,7 +82,7 @@ function HeroBanner({ slot }: { slot: BannerSlot }) {
 
             {/* Content */}
             <div
-              className="relative z-10 p-8 md:p-12 flex flex-col items-start max-w-[65%]"
+              className="relative z-10 py-8 pl-14 pr-6 md:p-12 md:pl-16 flex flex-col items-start max-w-[75%] md:max-w-[65%]"
               style={{ animation: active ? 'banner-caption-in 0.5s ease-out 0.1s both' : 'none' }}
             >
               {slide.subtitle && (
@@ -116,14 +116,14 @@ function HeroBanner({ slot }: { slot: BannerSlot }) {
       {total > 1 && (
         <>
           <button onClick={(e) => { e.preventDefault(); goPrev() }}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center size-8 rounded-full transition-all hover:scale-110 active:scale-90"
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center size-8 md:size-10 rounded-full transition-all hover:scale-110 active:scale-90"
             style={{ background: 'rgba(0,0,0,0.40)', color: '#fff', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-4 md:size-5" />
           </button>
           <button onClick={(e) => { e.preventDefault(); goNext() }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center size-8 rounded-full transition-all hover:scale-110 active:scale-90"
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center size-8 md:size-10 rounded-full transition-all hover:scale-110 active:scale-90"
             style={{ background: 'rgba(0,0,0,0.40)', color: '#fff', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-4 md:size-5" />
           </button>
         </>
       )}
@@ -188,7 +188,7 @@ function SmallBanner({ slot }: { slot: BannerSlot }) {
 
             {/* Text content */}
             <div
-              className="relative z-10 p-5 flex flex-col items-start w-[65%]"
+              className="relative z-10 py-5 pl-10 pr-4 flex flex-col items-start w-[70%]"
               style={{ animation: active ? 'banner-caption-in 0.4s ease-out 0.1s both' : 'none' }}
             >
               <h3 className="text-xl md:text-2xl font-black leading-tight tracking-tight mb-1"
@@ -214,9 +214,25 @@ function SmallBanner({ slot }: { slot: BannerSlot }) {
         )
       })}
 
+      {/* Arrows for Small Banner */}
+      {total > 1 && (
+        <>
+          <button onClick={(e) => { e.preventDefault(); goPrev() }}
+            className="absolute left-1.5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center size-6 rounded-full transition-all hover:scale-110 active:scale-90"
+            style={{ background: 'rgba(0,0,0,0.40)', color: '#fff', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.15)' }}>
+            <ChevronLeft className="size-3" />
+          </button>
+          <button onClick={(e) => { e.preventDefault(); goNext() }}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center size-6 rounded-full transition-all hover:scale-110 active:scale-90"
+            style={{ background: 'rgba(0,0,0,0.40)', color: '#fff', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.15)' }}>
+            <ChevronRight className="size-3" />
+          </button>
+        </>
+      )}
+
       {/* Dot indicators — bottom left */}
       {total > 1 && (
-        <div className="absolute bottom-3 left-5 z-20 flex items-center gap-1">
+        <div className="absolute bottom-3 left-10 z-20 flex items-center gap-1">
           {slot.slides.map((_, i) => (
             <button key={i} onClick={(e) => { e.preventDefault(); goTo(i) }}
               className="rounded-full transition-all duration-300"
