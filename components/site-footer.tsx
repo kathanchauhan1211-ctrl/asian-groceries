@@ -38,8 +38,21 @@ const SOCIAL_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative border-t-4 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] mt-auto backdrop-blur-xl" style={{ backgroundColor: 'rgba(62, 15, 58, 0.85)', borderColor: 'var(--im-orange, #F97316)' }}>
-      <div className="relative mx-auto max-w-7xl px-4 py-8 md:px-6">
+    <footer className="relative border-t mt-auto overflow-hidden text-white" style={{ backgroundColor: '#2e0814', borderColor: '#4a1122' }}>
+      {/* Decorative Side Backgrounds */}
+      <div 
+        className="absolute inset-0 pointer-events-none hidden md:block opacity-60" 
+        style={{
+          backgroundImage: `url('/images/footer-left.jpg'), url('/images/footer-right.jpg')`,
+          backgroundPosition: 'left center, right center',
+          backgroundRepeat: 'no-repeat, no-repeat',
+          backgroundSize: 'auto 100%, auto 100%',
+          maskImage: 'linear-gradient(to right, black 5%, transparent 35%, transparent 65%, black 95%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 5%, transparent 35%, transparent 65%, black 95%)'
+        }}
+      />
+      {/* Fallback gradient not needed anymore because of mask, but we keep the layout */}
+      <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 md:gap-8">
 
           {/* Brand block */}
