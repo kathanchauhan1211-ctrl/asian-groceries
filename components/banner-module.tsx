@@ -66,18 +66,21 @@ export function BannerModule() {
             >
                {/* Background Image */}
               <div 
-                className="absolute inset-y-0 right-0 w-[60%] bg-cover bg-left bg-no-repeat transition-transform duration-700 group-hover:scale-105" 
-                style={{ backgroundImage: `url(${topBanner.image})` }} 
+                className="absolute inset-y-0 right-0 w-[55%] sm:w-[50%] bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105" 
+                style={{ 
+                  backgroundImage: `url(${topBanner.image})`,
+                  WebkitMaskImage: 'linear-gradient(to right, transparent, black 30%)',
+                  maskImage: 'linear-gradient(to right, transparent, black 30%)'
+                }} 
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent sm:from-transparent sm:bg-none" />
-              <div className="relative z-10 p-6 flex flex-col items-start w-full sm:w-[60%]">
+              <div className="relative z-10 p-6 flex flex-col items-start w-[70%] sm:w-[60%]">
                 <h3 className="text-2xl md:text-3xl font-black leading-tight tracking-tight mb-1" style={{ color: topBanner.textColor }}>
                   {topBanner.title.split(' ').map((word, i) => (
-                    <span key={i} className="block">{word}</span>
+                    <span key={i} className="block break-words">{word}</span>
                   ))}
                 </h3>
                 {topBanner.subtitle && (
-                  <p className="text-sm font-medium tracking-wide uppercase opacity-90" style={{ color: topBanner.textColor }}>
+                  <p className="text-sm font-bold tracking-wide mt-2" style={{ color: topBanner.textColor }}>
                     {topBanner.subtitle}
                   </p>
                 )}
@@ -94,23 +97,26 @@ export function BannerModule() {
             >
               {/* Background Image */}
               <div 
-                className="absolute inset-y-0 right-0 w-[60%] bg-cover bg-left bg-no-repeat transition-transform duration-700 group-hover:scale-105" 
-                style={{ backgroundImage: `url(${bottomBanner.image})` }} 
+                className="absolute inset-y-0 right-0 w-[55%] sm:w-[50%] bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105" 
+                style={{ 
+                  backgroundImage: `url(${bottomBanner.image})`,
+                  WebkitMaskImage: 'linear-gradient(to right, transparent, black 30%)',
+                  maskImage: 'linear-gradient(to right, transparent, black 30%)'
+                }} 
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent sm:from-transparent sm:bg-none" />
-              <div className="relative z-10 p-6 flex flex-col items-start w-full sm:w-[60%]">
+              <div className="relative z-10 p-6 flex flex-col items-start w-[70%] sm:w-[60%]">
                 <h3 className="text-2xl md:text-3xl font-black leading-tight tracking-tight mb-2" style={{ color: bottomBanner.textColor }}>
                   {bottomBanner.title.split(' ').map((word, i) => (
-                    <span key={i} className="block">{word}</span>
+                    <span key={i} className="block break-words">{word}</span>
                   ))}
                 </h3>
                 {bottomBanner.tagline && (
-                  <p className="text-xs font-medium opacity-90 mb-1" style={{ color: bottomBanner.textColor }}>
+                  <p className="text-sm font-bold mb-1" style={{ color: bottomBanner.textColor }}>
                     {bottomBanner.tagline}
                   </p>
                 )}
                 {bottomBanner.subtitle && (
-                  <p className="text-[10px] uppercase tracking-wider font-bold opacity-75" style={{ color: bottomBanner.textColor }}>
+                  <p className="text-[10px] uppercase tracking-wider font-bold opacity-75 mt-1" style={{ color: bottomBanner.textColor }}>
                     {bottomBanner.subtitle}
                   </p>
                 )}
