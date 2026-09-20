@@ -87,8 +87,21 @@ export function SiteHeader() {
   return (
     <header
       className="sticky top-0 z-40 shadow-xl transition-colors duration-300 backdrop-blur-xl border-b"
-      style={{ backgroundColor: 'rgba(62, 15, 58, 0.85)', borderColor: 'rgba(255,255,255,0.1)' }}
+      style={{ backgroundColor: 'rgba(46, 8, 20, 0.95)', borderColor: '#4a1122' }}
     >
+      {/* Decorative Side Backgrounds */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-20 md:opacity-35" 
+        style={{
+          backgroundImage: `url('/images/footer-left.jpg'), url('/images/footer-right.jpg')`,
+          backgroundPosition: 'left center, right center',
+          backgroundRepeat: 'no-repeat, no-repeat',
+          backgroundSize: 'max(250px, 20vw) auto, max(250px, 20vw) auto',
+          maskImage: 'linear-gradient(to right, black 0%, transparent 25%, transparent 75%, black 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 25%, transparent 75%, black 100%)'
+        }}
+      />
+
       {/* ── Top accent bar + announcement ticker ────────────────────────────── */}
       <div
         className="border-b"

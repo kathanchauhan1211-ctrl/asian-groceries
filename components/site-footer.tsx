@@ -41,14 +41,14 @@ export function SiteFooter() {
     <footer className="relative border-t mt-auto overflow-hidden text-white" style={{ backgroundColor: '#2e0814', borderColor: '#4a1122' }}>
       {/* Decorative Side Backgrounds */}
       <div 
-        className="absolute inset-0 pointer-events-none hidden md:block opacity-60" 
+        className="absolute inset-0 pointer-events-none opacity-30 md:opacity-50" 
         style={{
           backgroundImage: `url('/images/footer-left.jpg'), url('/images/footer-right.jpg')`,
           backgroundPosition: 'left center, right center',
           backgroundRepeat: 'no-repeat, no-repeat',
-          backgroundSize: 'auto 100%, auto 100%',
-          maskImage: 'linear-gradient(to right, black 5%, transparent 35%, transparent 65%, black 95%)',
-          WebkitMaskImage: 'linear-gradient(to right, black 5%, transparent 35%, transparent 65%, black 95%)'
+          backgroundSize: 'max(350px, 25vw) auto, max(350px, 25vw) auto',
+          maskImage: 'linear-gradient(to right, black 0%, transparent 30%, transparent 70%, black 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 30%, transparent 70%, black 100%)'
         }}
       />
       {/* Fallback gradient not needed anymore because of mask, but we keep the layout */}
