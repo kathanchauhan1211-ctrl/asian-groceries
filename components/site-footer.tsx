@@ -38,11 +38,10 @@ const SOCIAL_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative border-t mt-auto overflow-hidden text-white" style={{ backgroundColor: '#140308', borderColor: '#4a1122' }}>
-      {/* Custom Fancy Animated Powder Gradient */}
-      <div className="spice-powder-gradient opacity-80" />
-      {/* Fallback gradient not needed anymore because of mask, but we keep the layout */}
-      <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-8">
+    <footer className="relative border-t mt-auto text-white" style={{ backgroundColor: '#140308', borderColor: '#4a1122' }}>
+      {/* Animated spice powder gradient — sits ABOVE bg-color, BELOW content */}
+      <div className="spice-powder-gradient" />
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 md:px-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 md:gap-8">
 
           {/* Brand block */}
@@ -136,7 +135,7 @@ export function SiteFooter() {
       </div>
 
       {/* Bottom bar */}
-      <div style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+      <div className="relative z-10" style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}>
         <div className="mx-auto max-w-7xl px-4 md:px-6 pt-3 pb-28 lg:pb-3 flex flex-col items-center justify-between gap-1 text-[11px] text-white/60 sm:flex-row">
           <p>© {new Date().getFullYear()} Asian Groceries Vilnius. All rights reserved.</p>
           <p>Made with care in Vilnius, Lithuania 🇱🇹</p>

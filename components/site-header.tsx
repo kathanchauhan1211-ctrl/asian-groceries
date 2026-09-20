@@ -89,13 +89,13 @@ export function SiteHeader() {
       className="sticky top-0 z-40 shadow-xl transition-colors duration-300 backdrop-blur-xl border-b"
       style={{ backgroundColor: 'rgba(20, 3, 8, 0.98)', borderColor: '#4a1122' }}
     >
-      {/* Custom Fancy Animated Powder Gradient */}
-      <div className="spice-powder-gradient opacity-60" />
+      {/* Animated spice powder gradient — sits ABOVE bg-color, BELOW content */}
+      <div className="spice-powder-gradient" />
 
       {/* ── Top accent bar + announcement ticker ────────────────────────────── */}
       <div
-        className="border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(0,0,0,0.25)' }}
+        className="relative z-10 border-b"
+        style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(0,0,0,0.15)' }}
       >
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 sm:px-4 md:px-6 py-1.5">
           {/* Store info — left */}
@@ -115,8 +115,8 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* ── Main header row ──────────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6">
+      {/* ── Main header row ───────────────────────────────────────────────── */}
+      <div className="relative z-10 mx-auto max-w-7xl px-3 sm:px-4 md:px-6">
         <div className="flex items-center gap-1.5 sm:gap-3 py-3 sm:py-5">
 
           {/* Brand Logo */}
