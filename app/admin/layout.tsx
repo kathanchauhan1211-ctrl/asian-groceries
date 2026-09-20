@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   LayoutDashboard, Package, ShoppingCart, Settings,
-  LogOut, ExternalLink, BarChart3, MonitorPlay, Layers, Users,
+  LogOut, ExternalLink, BarChart3, MonitorPlay, Layers, Users, Tag
 } from 'lucide-react'
 import { LogoSVG } from '@/components/logo-svg'
 import { ADMIN_EMAIL } from '@/lib/admin-config'
@@ -18,6 +18,7 @@ const NAV = [
   { href: '/admin/customers', label: 'Customers' },
   { href: '/admin/products', label: 'Products' },
   { href: '/admin/collections', label: 'Collections' },
+  { href: '/admin/brands', label: 'Brands' },
   { href: '/admin/banners', label: 'Banners' },
   { href: '/admin/slides', label: 'Slides' },
   { href: '/admin/analytics', label: 'Analytics' },

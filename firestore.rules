@@ -71,6 +71,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── Brands (Shop by Brand carousel): public read, ADMIN-ONLY write ────────
+    match /brands/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ── Catch-all: deny everything not explicitly listed above ────────────────
     match /{document=**} {
       allow read, write: if false;
