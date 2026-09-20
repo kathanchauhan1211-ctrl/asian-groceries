@@ -90,11 +90,11 @@ export default function AdminBrandsPage() {
         name: name.trim(),
         tagline: tagline.trim(),
         emoji: emoji.trim(),
-        image: image.trim() || undefined,
+        image: image.trim() || '',
         color: color.trim(),
         textColor: textColor.trim(),
         href: href.trim() || `/?q=${encodeURIComponent(name.trim().toLowerCase())}`,
-        badge: badge.trim() || undefined,
+        badge: badge.trim() || '',
         active
       }
 
