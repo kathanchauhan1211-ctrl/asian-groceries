@@ -3,44 +3,44 @@
 /**
  * components/daily-fresh-section.tsx
  *
- * "Daily Fresh" homepage section — two swipeable product rows:
- *   Row 1 → Fresh Vegetables (category label contains "Vegetable" or "Produce")
- *   Row 2 → Fresh Fruits     (category label contains "Fruit")
- *
- * Receives allProducts + productsLoading from page-content.tsx to avoid a
- * duplicate useProducts() fetch which was causing a flash/race condition.
+ * Homepage "Daily Fresh" section.
+ * Reads from Firestore `dailyFresh` collection (curated by admin).
+ * Resolves product details from the allProducts array passed in from page-content.tsx.
  */
 
 import { useMemo, useRef } from 'react'
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { useCategoryFilters } from '@/lib/use-category-filters'
+import { useDailyFresh } from '@/lib/use-daily-fresh'
 import { ProductCard } from '@/components/product-card'
 import type { Product } from '@/lib/products'
 
-function findCategoryLabel(labels: string[], keywords: string[]): string | null {
-  const kw = keywords.map(k => k.toLowerCase())
-  return labels.find(l => kw.some(k => l.toLowerCase().includes(k))) ?? null
-}
+// ─── Single row ────────────────────────────────────────────────────────────────
 
 function FreshRow({
-  title, emoji, accentColor, bgColor, products, viewAllCategory,
+  title,
+  emoji,
+  accentColor,
+  bgColor,
+  products,
+  viewAllId,
 }: {
-  title: string; emoji: string; accentColor: string; bgColor: string
-  products: Product[]; viewAllCategory: string | null
+  title: string
+  emoji: string
+  accentColor: string
+  bgColor: string
+  products: Product[]
+  viewAllId: string
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const scroll = (dir: 'left' | 'right') => {
+  const scroll = (dir: 'left' | 'right') =>
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' })
-  }
-  const viewAllHref = viewAllCategory
-    ? `/shop?category=${encodeURIComponent(viewAllCategory)}`
-    : '/shop'
 
   if (products.length === 0) return null
 
   return (
     <div className="relative">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-3">
           <div
@@ -50,7 +50,10 @@ function FreshRow({
             {emoji}
           </div>
           <div>
-            <h3 className="text-lg font-black leading-tight tracking-tight" style={{ color: 'var(--foreground)' }}>
+            <h3
+              className="text-lg font-black leading-tight tracking-tight"
+              style={{ color: 'var(--foreground)' }}
+            >
               {title}
             </h3>
             <p className="text-[12px] font-medium" style={{ color: 'var(--muted-foreground)' }}>
@@ -77,7 +80,7 @@ function FreshRow({
             <ChevronRight className="size-4" style={{ color: 'var(--muted-foreground)' }} />
           </button>
           <Link
-            href={viewAllHref}
+            href={`/shop`}
             className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-bold transition-all hover:opacity-85 active:scale-95"
             style={{ background: accentColor, color: '#fff' }}
           >
@@ -86,6 +89,7 @@ function FreshRow({
         </div>
       </div>
 
+      {/* Swipeable carousel */}
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
@@ -102,6 +106,8 @@ function FreshRow({
     </div>
   )
 }
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function FreshRowSkeleton() {
   return (
@@ -133,6 +139,29 @@ function FreshRowSkeleton() {
   )
 }
 
+// ─── Row config (colour per row id) ──────────────────────────────────────────
+
+const ROW_STYLE: Record<string, { accentColor: string; bgColor: string; emoji: string }> = {
+  vegetables: {
+    accentColor: '#16a34a',
+    bgColor: 'color-mix(in srgb, #16a34a 18%, var(--secondary))',
+    emoji: '🥦',
+  },
+  fruits: {
+    accentColor: '#dc2626',
+    bgColor: 'color-mix(in srgb, #dc2626 15%, var(--secondary))',
+    emoji: '🍎',
+  },
+}
+
+const DEFAULT_STYLE = {
+  accentColor: '#F97316',
+  bgColor: 'color-mix(in srgb, #F97316 15%, var(--secondary))',
+  emoji: '🌿',
+}
+
+// ─── Main section ─────────────────────────────────────────────────────────────
+
 export function DailyFreshSection({
   allProducts,
   productsLoading,
@@ -140,27 +169,38 @@ export function DailyFreshSection({
   allProducts: Product[]
   productsLoading: boolean
 }) {
-  const { categories, loading: catLoading } = useCategoryFilters()
-  const categoryLabels = useMemo(() => categories.map(c => c.label), [categories])
+  const { rows, loading: freshLoading } = useDailyFresh()
 
-  const vegLabel   = useMemo(() => findCategoryLabel(categoryLabels, ['vegetable', 'produce']), [categoryLabels])
-  const fruitLabel = useMemo(() => findCategoryLabel(categoryLabels, ['fruit']), [categoryLabels])
+  // Build a fast lookup map
+  const productMap = useMemo(
+    () => new Map(allProducts.map(p => [p.id, p])),
+    [allProducts],
+  )
 
-  const vegProducts   = useMemo(() => vegLabel   ? allProducts.filter(p => p.category === vegLabel)   : [], [allProducts, vegLabel])
-  const fruitProducts = useMemo(() => fruitLabel ? allProducts.filter(p => p.category === fruitLabel) : [], [allProducts, fruitLabel])
+  // Resolve products for each row
+  const resolvedRows = useMemo(
+    () =>
+      rows.map(row => ({
+        ...row,
+        products: (row.productIds ?? [])
+          .map(id => productMap.get(id))
+          .filter(Boolean) as Product[],
+      })),
+    [rows, productMap],
+  )
 
-  const isLoading  = productsLoading || catLoading
-  const hasContent = vegProducts.length > 0 || fruitProducts.length > 0
+  const isLoading  = productsLoading || freshLoading
+  const hasContent = resolvedRows.some(r => r.products.length > 0)
 
-  // Once we have content, never hide — prevents flash/vanish on re-renders
+  // Prevent section from vanishing once it has shown content
   const everHadContent = useRef(false)
   if (hasContent) everHadContent.current = true
-
   if (!isLoading && !everHadContent.current) return null
 
   return (
     <section className="w-full py-8 md:py-10" id="daily-fresh">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
+        {/* Heading */}
         <div className="mb-8">
           <h2
             className="text-2xl md:text-3xl font-black tracking-tight"
@@ -170,6 +210,7 @@ export function DailyFreshSection({
           </h2>
         </div>
 
+        {/* Rows */}
         <div className="space-y-10">
           {isLoading ? (
             <>
@@ -177,24 +218,20 @@ export function DailyFreshSection({
               <FreshRowSkeleton />
             </>
           ) : (
-            <>
-              <FreshRow
-                title="Fresh Vegetables"
-                emoji="🥦"
-                accentColor="#16a34a"
-                bgColor="color-mix(in srgb, #16a34a 15%, var(--secondary))"
-                products={vegProducts}
-                viewAllCategory={vegLabel}
-              />
-              <FreshRow
-                title="Fresh Fruits"
-                emoji="🍎"
-                accentColor="#dc2626"
-                bgColor="color-mix(in srgb, #dc2626 12%, var(--secondary))"
-                products={fruitProducts}
-                viewAllCategory={fruitLabel}
-              />
-            </>
+            resolvedRows.map(row => {
+              const style = ROW_STYLE[row.id] ?? DEFAULT_STYLE
+              return (
+                <FreshRow
+                  key={row.id}
+                  title={row.title}
+                  emoji={row.emoji || style.emoji}
+                  accentColor={style.accentColor}
+                  bgColor={style.bgColor}
+                  products={row.products}
+                  viewAllId={row.id}
+                />
+              )
+            })
           )}
         </div>
       </div>

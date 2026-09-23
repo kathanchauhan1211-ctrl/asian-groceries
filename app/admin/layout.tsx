@@ -17,6 +17,7 @@ const NAV = [
   { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/customers', label: 'Customers' },
   { href: '/admin/products', label: 'Products' },
+  { href: '/admin/daily-fresh', label: '🌿 Daily Fresh' },
   { href: '/admin/collections', label: 'Collections' },
   { href: '/admin/brands', label: 'Brands' },
   { href: '/admin/banners', label: 'Banners' },

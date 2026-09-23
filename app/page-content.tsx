@@ -32,7 +32,7 @@ export default function PageContent() {
       <HomepageStatus />
       <PromoSlider />
 
-      {/* ═══ Daily Fresh — Vegetables & Fruits rows ═══ */}
+      {/* ═══ Daily Fresh — curated rows from admin ═══ */}
       <DailyFreshSection allProducts={allProducts} productsLoading={productsLoading} />
 
       {/* ═══ Collection Cards (Dynamic) ═══ */}
