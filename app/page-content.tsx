@@ -6,6 +6,7 @@ import { CollectionCards } from '@/components/collection-cards'
 import { BannerModule } from '@/components/banner-module'
 import { BrandCatalog } from '@/components/brand-catalog'
 import { HorizontalRow } from '@/components/HorizontalRow'
+import { DailyFreshSection } from '@/components/daily-fresh-section'
 import { useProducts } from '@/lib/use-products'
 import HomepageStatus from '@/components/homepage-status'
 import { useFeaturedCollections } from '@/lib/use-featured-collections'
@@ -30,6 +31,9 @@ export default function PageContent() {
       {/* ═══ Promo sections (always visible) ═══ */}
       <HomepageStatus />
       <PromoSlider />
+
+      {/* ═══ Daily Fresh — Vegetables & Fruits rows ═══ */}
+      <DailyFreshSection />
 
       {/* ═══ Collection Cards (Dynamic) ═══ */}
       <CollectionCards

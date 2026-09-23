@@ -17,7 +17,8 @@
 
 import React, { useState, useEffect, useRef, Fragment } from 'react'
 import {
-  collection, doc, onSnapshot, setDoc, getDoc,
+  doc, onSnapshot, setDoc, getDocs,
+  collection, query, writeBatch, where,
 } from 'firebase/firestore'
 import { adminPortalDb } from '@/lib/firebase-admin-client'
 import { CATEGORY_GROUPS } from '@/lib/products'
@@ -203,6 +204,31 @@ export function CategoriesTab() {
     }
   }
 
+  /**
+   * When a category label is renamed, batch-update every product that still
+   * has the old label as its `category` field so the storefront filter stays
+   * in sync without the admin having to manually re-assign every product.
+   */
+  async function migrateCategoryLabel(oldLabel: string, newLabel: string) {
+    if (oldLabel === newLabel) return
+    try {
+      const snap = await getDocs(
+        query(
+          collection(adminPortalDb, 'products'),
+          where('category', '==', oldLabel),
+        ),
+      )
+      if (snap.empty) return
+      const batch = writeBatch(adminPortalDb)
+      snap.docs.forEach(d => batch.update(d.ref, { category: newLabel }))
+      await batch.commit()
+      console.log(`[CategoriesTab] Migrated ${snap.size} products: "${oldLabel}" → "${newLabel}"`)
+    } catch (e: any) {
+      console.error('[CategoriesTab] Product migration error:', e)
+      showToast(`Warning: category saved but products not migrated: ${e.message}`, false)
+    }
+  }
+
   // ── Add / Edit save handler ───────────────────────────────────────────────
   async function handleSave(label: string, icon: string) {
     const id = editId ?? slugify(label)
@@ -214,6 +240,7 @@ export function CategoriesTab() {
     }
 
     const existing = editId ? categories.find(c => c.id === editId) : null
+    const oldLabel = existing?.label ?? null
 
     const entry: Category = {
       id,
@@ -229,9 +256,15 @@ export function CategoriesTab() {
       : [...categories, entry]
 
     await writeCategories(next)
+
+    // If the label changed, update all products that used the old label
+    if (oldLabel && oldLabel !== label) {
+      await migrateCategoryLabel(oldLabel, label)
+    }
+
     setShowForm(false)
     setEditId(null)
-    showToast(editId ? 'Category updated.' : 'Category created.')
+    showToast(editId ? 'Category updated. Products re-categorised.' : 'Category created.')
   }
 
   // ── Delete ─────────────────────────────────────────────────────────────────
@@ -505,6 +538,8 @@ export function CategoriesTab() {
           <li>Every category you create or edit is saved to <code className="text-orange-400">settings/categoryFilters</code> in Firestore.</li>
           <li>The storefront subscribes to this in real-time — changes appear instantly, no redeploy needed.</li>
           <li>Inactive categories are hidden from the storefront but kept in Firestore.</li>
+          <li><strong className="text-white">Renaming a category</strong> automatically updates every product that used the old name — no manual re-assignment needed.</li>
+          <li>The <strong className="text-white">Daily Fresh</strong> section on the homepage auto-detects categories containing "Vegetable"/"Produce" or "Fruit" and shows them.</li>
         </ul>
       </div>
     </div>

@@ -875,6 +875,13 @@ function AddProductDrawer({ onClose, onAdded, categoryOptions }: { onClose: () =
     tagline: '', bestseller: false,
   })
 
+  // Sync category default when categoryOptions loads asynchronously
+  useEffect(() => {
+    if (categoryOptions.length > 0 && (form.category === 'Other' || form.category === '')) {
+      setForm(f => ({ ...f, category: categoryOptions[0] }))
+    }
+  }, [categoryOptions])
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setCreating(true)
