@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 /**
  * components/daily-fresh-section.tsx
@@ -192,10 +192,12 @@ export function DailyFreshSection({
   const isLoading  = productsLoading || freshLoading
   const hasContent = resolvedRows.some(r => r.products.length > 0)
 
-  // Prevent section from vanishing once it has shown content
-  const everHadContent = useRef(false)
-  if (hasContent) everHadContent.current = true
-  if (!isLoading && !everHadContent.current) return null
+  // Show while loading (skeleton) OR when Firestore docs exist (even with no products pinned yet)
+  // Only hide if fully settled AND no rows exist in Firestore at all
+  const hasDocs    = rows.length > 0
+  const everShown  = useRef(false)
+  if (hasDocs || hasContent) everShown.current = true
+  if (!isLoading && !everShown.current) return null
 
   return (
     <section className="w-full py-8 md:py-10" id="daily-fresh">

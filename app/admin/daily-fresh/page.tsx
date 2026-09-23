@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 /**
  * app/admin/daily-fresh/page.tsx
@@ -349,21 +349,24 @@ export default function DailyFreshAdmin() {
     return () => unsub()
   }, [])
 
-  // Load Daily Fresh rows from Firestore
+  // Load Daily Fresh rows from Firestore — auto-seed on first visit
   useEffect(() => {
-    const unsub = onSnapshot(collection(adminPortalDb, 'dailyFresh'), snap => {
+    const unsub = onSnapshot(collection(adminPortalDb, 'dailyFresh'), async snap => {
       if (snap.empty) {
-        // First time: seed defaults
-        setRows(DEFAULT_ROWS)
-      } else {
-        const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as FreshRow))
-        // Merge with defaults so both rows always exist
-        const merged = DEFAULT_ROWS.map(def => {
-          const found = data.find(r => r.id === def.id)
-          return found ?? def
-        })
-        setRows(merged)
+        // First visit — seed the two default empty rows
+        await Promise.all([
+          setDoc(doc(adminPortalDb, 'dailyFresh', 'vegetables'), DEFAULT_ROWS[0]),
+          setDoc(doc(adminPortalDb, 'dailyFresh', 'fruits'), DEFAULT_ROWS[1]),
+        ])
+        // onSnapshot will fire again with the seeded data
+        return
       }
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as FreshRow))
+      const merged = DEFAULT_ROWS.map(def => {
+        const found = data.find(r => r.id === def.id)
+        return found ?? def
+      })
+      setRows(merged)
       setLoading(false)
     }, () => setLoading(false))
     return () => unsub()

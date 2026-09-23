@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import {
   collection, onSnapshot, query, orderBy,
-  doc, addDoc, updateDoc, getDoc, setDoc
+  doc, addDoc, updateDoc, getDoc, setDoc, arrayUnion, arrayRemove,
 } from 'firebase/firestore'
 import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { type Stock } from '@/lib/products'
@@ -299,19 +299,20 @@ function useAdminFilterCategories() {
   return categories
 }
 
-// ─── Category Popover (3-dot on each product) ─────────────────────────────────
 function CategoryPopover({
   productId,
   productName,
   onClose,
   shopDocs,
   togglePin,
+  dailyFreshDocs,
 }: {
   productId: string
   productName: string
   onClose: () => void
   shopDocs: FeaturedCollectionDoc[]
   togglePin: (collectionId: string, productId: string) => Promise<void>
+  dailyFreshDocs: Array<{ id: string; title: string; emoji: string; productIds: string[] }>
 }) {
   const [saving, setSaving] = useState<string | null>(null)
   const [localState, setLocalState] = useState<Record<string, boolean>>(() => {
@@ -417,6 +418,62 @@ function CategoryPopover({
         })}
       </div>
 
+      {/* ── Daily Fresh section ── */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="px-4 py-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#16a34a' }}>Daily Fresh</p>
+        </div>
+        <div className="px-2 pb-2 space-y-1">
+          {dailyFreshDocs.map(row => {
+            const pinned = (row.productIds || []).includes(productId)
+            const color = row.id === 'vegetables' ? '#16a34a' : '#dc2626'
+            const [dfSaving, setDfSaving] = [saving === `df-${row.id}`, (v: boolean) => setSaving(v ? `df-${row.id}` : null)]
+            return (
+              <button
+                key={row.id}
+                onClick={async () => {
+                  setSaving(`df-${row.id}`)
+                  const ref = doc(adminPortalDb, 'dailyFresh', row.id)
+                  await setDoc(ref, {
+                    productIds: pinned ? arrayRemove(productId) : arrayUnion(productId)
+                  }, { merge: true })
+                  setSaving(null)
+                }}
+                disabled={!!saving}
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all disabled:opacity-70"
+                style={{
+                  background: pinned ? `${color}12` : 'rgba(255,255,255,0.03)',
+                  border: pinned ? `1px solid ${color}30` : '1px solid transparent',
+                }}
+                onMouseEnter={e => { if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+                onMouseLeave={e => { if (!pinned) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+              >
+                <span className="text-base">{row.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-semibold text-white">{row.title}</p>
+                  <p className="text-[10px]" style={{ color: '#4B5563' }}>
+                    {(row.productIds || []).length} pinned
+                  </p>
+                </div>
+                {saving === `df-${row.id}` ? (
+                  <Loader2 className="size-4 animate-spin shrink-0" style={{ color }} />
+                ) : (
+                  <div
+                    className="shrink-0 flex size-5 items-center justify-center rounded-md transition-all"
+                    style={{
+                      background: pinned ? `${color}25` : 'rgba(255,255,255,0.06)',
+                      border: pinned ? `1.5px solid ${color}` : '1.5px solid rgba(255,255,255,0.12)',
+                    }}
+                  >
+                    {pinned && <Check className="size-3" style={{ color }} />}
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <div className="px-4 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
         <p className="text-[10px]" style={{ color: '#374151' }}>
           Pinned products appear first in the storefront category popup. Live instantly.
@@ -430,12 +487,14 @@ function ProductCategoryButton({
   product,
   shopDocs,
   togglePin,
+  dailyFreshDocs,
   open,
   setOpen,
 }: {
   product: AdminProduct
   shopDocs: FeaturedCollectionDoc[]
   togglePin: (collectionId: string, productId: string) => Promise<void>
+  dailyFreshDocs: Array<{ id: string; title: string; emoji: string; productIds: string[] }>
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
 }) {
@@ -444,19 +503,25 @@ function ProductCategoryButton({
     (d.productIds || []).includes(product.id)
   ).length
 
+  const dfPinCount = dailyFreshDocs.filter(d =>
+    (d.productIds || []).includes(product.id)
+  ).length
+
+  const totalPins = pinCount + dfPinCount
+
   return (
     <div className="relative">
       <button
         onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
         className="flex size-7 items-center justify-center rounded-md transition-all"
         style={{
-          background: pinCount > 0 ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
-          border: pinCount > 0 ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.08)',
-          color: pinCount > 0 ? '#F97316' : '#4B5563',
+          background: totalPins > 0 ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
+          border: totalPins > 0 ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.08)',
+          color: totalPins > 0 ? '#F97316' : '#4B5563',
         }}
-        title={pinCount > 0 ? `Pinned to ${pinCount} feed${pinCount > 1 ? 's' : ''}` : 'Add to category feed'}
+        title={totalPins > 0 ? `Pinned to ${totalPins} feed${totalPins > 1 ? 's' : ''}` : 'Add to feed / Daily Fresh'}
       >
-        {pinCount > 0 ? <Pin className="size-3.5" /> : <MoreVertical className="size-3.5" />}
+        {totalPins > 0 ? <Pin className="size-3.5" /> : <MoreVertical className="size-3.5" />}
       </button>
 
       {open && (
@@ -466,6 +531,7 @@ function ProductCategoryButton({
           onClose={() => setOpen(false)}
           shopDocs={shopDocs}
           togglePin={togglePin}
+          dailyFreshDocs={dailyFreshDocs}
         />
       )}
     </div>
@@ -474,13 +540,14 @@ function ProductCategoryButton({
 
 // ─── Editable Table Row ───────────────────────────────────────────────────────
 function ProductRow({
-  product, selected, onSelect, onSaved, onDelete, index, shopDocs, togglePin, categoryOptions,
+  product, selected, onSelect, onSaved, onDelete, index, shopDocs, togglePin, categoryOptions, dailyFreshDocs,
 }: {
   product: AdminProduct; selected: boolean; onSelect: (v: boolean) => void
   onSaved: (fields: Record<string, any>) => void; onDelete: () => void; index: number
   shopDocs: FeaturedCollectionDoc[]
   togglePin: (collectionId: string, productId: string) => Promise<void>
   categoryOptions: string[]
+  dailyFreshDocs: Array<{ id: string; title: string; emoji: string; productIds: string[] }>
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -665,6 +732,7 @@ function ProductRow({
           product={product}
           shopDocs={shopDocs}
           togglePin={togglePin}
+          dailyFreshDocs={dailyFreshDocs}
           open={menuOpen}
           setOpen={setMenuOpen}
         />
@@ -1000,6 +1068,15 @@ export default function AdminProductsPage() {
   const categoryOptions = useMemo(() => liveCategories.map(c => c.label), [liveCategories])
   const { docs: shopDocs, togglePin } = useCollectionDocs(adminPortalDb)
 
+  // Load Daily Fresh rows for the 3-dots menu
+  const [dailyFreshDocs, setDailyFreshDocs] = useState<Array<{ id: string; title: string; emoji: string; productIds: string[] }>>([])
+  useEffect(() => {
+    const unsub = onSnapshot(collection(adminPortalDb, 'dailyFresh'), snap => {
+      setDailyFreshDocs(snap.docs.map(d => ({ id: d.id, ...d.data() } as any)))
+    })
+    return () => unsub()
+  }, [])
+
   const [showAddDrawer, setShowAddDrawer] = useState(false)
   const [showCSV, setShowCSV] = useState(false)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
@@ -1300,6 +1377,7 @@ export default function AdminProductsPage() {
                             }}
                             shopDocs={shopDocs || []}
                             togglePin={togglePin}
+                            dailyFreshDocs={dailyFreshDocs}
                             categoryOptions={categoryOptions}
                           />
                         ))}
