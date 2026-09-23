@@ -12,7 +12,7 @@ import HomepageStatus from '@/components/homepage-status'
 import { useFeaturedCollections } from '@/lib/use-featured-collections'
 
 export default function PageContent() {
-  const { products: allProducts } = useProducts()
+  const { products: allProducts, loading: productsLoading } = useProducts()
 
   // Fetch dynamic collections (formerly feeds) from Firestore
   const { collections } = useFeaturedCollections(allProducts)
@@ -33,7 +33,7 @@ export default function PageContent() {
       <PromoSlider />
 
       {/* ═══ Daily Fresh — Vegetables & Fruits rows ═══ */}
-      <DailyFreshSection />
+      <DailyFreshSection allProducts={allProducts} productsLoading={productsLoading} />
 
       {/* ═══ Collection Cards (Dynamic) ═══ */}
       <CollectionCards

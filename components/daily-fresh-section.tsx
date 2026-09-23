@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * components/daily-fresh-section.tsx
@@ -7,54 +7,32 @@
  *   Row 1 → Fresh Vegetables (category label contains "Vegetable" or "Produce")
  *   Row 2 → Fresh Fruits     (category label contains "Fruit")
  *
- * Data pipeline:
- *  - Reads live category list from useCategoryFilters() — same source as the shop
- *  - Reads all products from useProducts() — same hook the shop uses
- *  - Filters products client-side by matching category label
- *
- * Admin just needs to assign products to "Vegetables & Produce" or "Fruits"
- * categories; they'll automatically appear here with zero extra wiring.
+ * Receives allProducts + productsLoading from page-content.tsx to avoid a
+ * duplicate useProducts() fetch which was causing a flash/race condition.
  */
 
 import { useMemo, useRef } from 'react'
-import { ChevronLeft, ChevronRight, ArrowRight, Leaf } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { useProducts } from '@/lib/use-products'
 import { useCategoryFilters } from '@/lib/use-category-filters'
 import { ProductCard } from '@/components/product-card'
 import type { Product } from '@/lib/products'
 
-// ─── Category-matching helper ─────────────────────────────────────────────────
-
-/** Finds the first live category label whose text contains any of the given keywords. */
 function findCategoryLabel(labels: string[], keywords: string[]): string | null {
   const kw = keywords.map(k => k.toLowerCase())
   return labels.find(l => kw.some(k => l.toLowerCase().includes(k))) ?? null
 }
 
-// ─── Single horizontal-scroll row ────────────────────────────────────────────
-
 function FreshRow({
-  title,
-  emoji,
-  accentColor,
-  bgColor,
-  products,
-  viewAllCategory,
+  title, emoji, accentColor, bgColor, products, viewAllCategory,
 }: {
-  title: string
-  emoji: string
-  accentColor: string
-  bgColor: string
-  products: Product[]
-  viewAllCategory: string | null
+  title: string; emoji: string; accentColor: string; bgColor: string
+  products: Product[]; viewAllCategory: string | null
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
-
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' })
   }
-
   const viewAllHref = viewAllCategory
     ? `/shop?category=${encodeURIComponent(viewAllCategory)}`
     : '/shop'
@@ -63,7 +41,6 @@ function FreshRow({
 
   return (
     <div className="relative">
-      {/* Row header */}
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-3">
           <div
@@ -83,7 +60,6 @@ function FreshRow({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Desktop arrow nav */}
           <button
             onClick={() => scroll('left')}
             className="hidden md:flex size-8 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95"
@@ -100,7 +76,6 @@ function FreshRow({
           >
             <ChevronRight className="size-4" style={{ color: 'var(--muted-foreground)' }} />
           </button>
-
           <Link
             href={viewAllHref}
             className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-bold transition-all hover:opacity-85 active:scale-95"
@@ -111,7 +86,6 @@ function FreshRow({
         </div>
       </div>
 
-      {/* Swipeable carousel */}
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
@@ -129,8 +103,7 @@ function FreshRow({
   )
 }
 
-// ─── Skeleton loader ──────────────────────────────────────────────────────────
-function FreshRowSkeleton({ label }: { label: string }) {
+function FreshRowSkeleton() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-4 px-1">
@@ -160,68 +133,48 @@ function FreshRowSkeleton({ label }: { label: string }) {
   )
 }
 
-// ─── Main exported section ────────────────────────────────────────────────────
-
-export function DailyFreshSection() {
-  const { products: allProducts, loading } = useProducts()
+export function DailyFreshSection({
+  allProducts,
+  productsLoading,
+}: {
+  allProducts: Product[]
+  productsLoading: boolean
+}) {
   const { categories, loading: catLoading } = useCategoryFilters()
-
   const categoryLabels = useMemo(() => categories.map(c => c.label), [categories])
 
-  // Resolve live category labels that correspond to vegetables and fruits
   const vegLabel   = useMemo(() => findCategoryLabel(categoryLabels, ['vegetable', 'produce']), [categoryLabels])
   const fruitLabel = useMemo(() => findCategoryLabel(categoryLabels, ['fruit']), [categoryLabels])
 
-  // Filter products accordingly
-  const vegProducts = useMemo(
-    () => vegLabel ? allProducts.filter(p => p.category === vegLabel) : [],
-    [allProducts, vegLabel],
-  )
-  const fruitProducts = useMemo(
-    () => fruitLabel ? allProducts.filter(p => p.category === fruitLabel) : [],
-    [allProducts, fruitLabel],
-  )
+  const vegProducts   = useMemo(() => vegLabel   ? allProducts.filter(p => p.category === vegLabel)   : [], [allProducts, vegLabel])
+  const fruitProducts = useMemo(() => fruitLabel ? allProducts.filter(p => p.category === fruitLabel) : [], [allProducts, fruitLabel])
 
-  const isLoading   = loading || catLoading
-  const hasContent  = vegProducts.length > 0 || fruitProducts.length > 0
+  const isLoading  = productsLoading || catLoading
+  const hasContent = vegProducts.length > 0 || fruitProducts.length > 0
 
-  // Hide entirely once loaded if there is nothing to show
-  if (!isLoading && !hasContent) return null
+  // Once we have content, never hide — prevents flash/vanish on re-renders
+  const everHadContent = useRef(false)
+  if (hasContent) everHadContent.current = true
+
+  if (!isLoading && !everHadContent.current) return null
 
   return (
     <section className="w-full py-8 md:py-10" id="daily-fresh">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
-
-        {/* Section header */}
         <div className="mb-8">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest mb-2"
-            style={{
-              background: 'color-mix(in srgb, #22c55e 12%, transparent)',
-              color: '#16a34a',
-              border: '1px solid color-mix(in srgb, #22c55e 25%, transparent)',
-            }}
-          >
-            <Leaf className="size-3" />
-            Farm to Door
-          </span>
           <h2
             className="text-2xl md:text-3xl font-black tracking-tight"
             style={{ color: 'var(--foreground)' }}
           >
             Daily Fresh 🌿
           </h2>
-          <p className="mt-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-            Freshly stocked vegetables &amp; fruits, delivered to your door
-          </p>
         </div>
 
-        {/* Rows */}
         <div className="space-y-10">
           {isLoading ? (
             <>
-              <FreshRowSkeleton label="Fresh Vegetables" />
-              <FreshRowSkeleton label="Fresh Fruits" />
+              <FreshRowSkeleton />
+              <FreshRowSkeleton />
             </>
           ) : (
             <>
