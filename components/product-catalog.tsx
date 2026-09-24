@@ -13,7 +13,7 @@ import {
 import { useCategoryFilters } from '@/lib/use-category-filters'
 import { useProducts } from '@/lib/use-products'
 import { useTranslation } from '@/lib/translation-context'
-import { ProductCard } from '@/components/product-card'
+import { ProductCard, AnimatedPlaceholderLogo } from '@/components/product-card'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SortKey = 'default' | 'price-asc' | 'price-desc' | 'name' | 'bestseller'
@@ -835,12 +835,14 @@ export function ProductCatalog({
         {/* ══ Product grid ══ */}
         {!hideGridWhenUnfiltered && (
           filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-20 text-center" style={{ borderColor: 'var(--border)', background: 'var(--secondary)' }}>
-            <PackageSearch className="mb-4 size-10" style={{ color: 'var(--muted-foreground)' }} />
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-20 text-center bg-white dark:bg-gray-900 overflow-hidden relative" style={{ borderColor: 'var(--border)' }}>
+            <div className="size-32 mb-6">
+              <AnimatedPlaceholderLogo size={120} />
+            </div>
             <p className="font-serif text-xl font-semibold" style={{ color: 'var(--foreground)' }}>No products found</p>
             <p className="mt-1 max-w-sm text-sm" style={{ color: 'var(--muted-foreground)' }}>Try adjusting your search or filters.</p>
             {totalActiveFilters > 0 && (
-              <button onClick={clearAll} className="mt-4 rounded-full px-5 py-2 text-sm font-semibold text-white" style={{ background: 'var(--primary)' }}>
+              <button onClick={clearAll} className="mt-4 rounded-full px-5 py-2 text-sm font-semibold text-white transition-all hover:scale-105 active:scale-95" style={{ background: 'var(--primary)' }}>
                 Clear all filters
               </button>
             )}

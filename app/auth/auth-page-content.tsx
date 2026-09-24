@@ -519,6 +519,12 @@ export default function AuthPageContent() {
   // Ref to block the auto-redirect while Google OAuth is in-flight
   const googleSigningIn = useRef(false)
 
+  // Hydration-safe dark mode toggle for auth pages
+  useEffect(() => {
+    document.documentElement.classList.add('dark')
+    return () => document.documentElement.classList.remove('dark')
+  }, [])
+
   const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
   const [tab, setTab] = useState<'login' | 'signup'>(defaultTab)
 

@@ -8,12 +8,15 @@
  * Resolves product details from the allProducts array passed in from page-content.tsx.
  */
 
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useDailyFresh } from '@/lib/use-daily-fresh'
 import { ProductCard } from '@/components/product-card'
 import type { Product } from '@/lib/products'
+import { doc, getDoc } from 'firebase/firestore'
+import { clientDb } from '@/lib/firebase-client'
+import { normaliseProduct } from '@/lib/use-products'
 
 // ─── Single row ────────────────────────────────────────────────────────────────
 
@@ -63,22 +66,6 @@ function FreshRow({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => scroll('left')}
-            className="hidden md:flex size-8 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95"
-            style={{ borderColor: 'var(--border)', background: 'var(--card)' }}
-            aria-label={`Scroll ${title} left`}
-          >
-            <ChevronLeft className="size-4" style={{ color: 'var(--muted-foreground)' }} />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="hidden md:flex size-8 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95"
-            style={{ borderColor: 'var(--border)', background: 'var(--card)' }}
-            aria-label={`Scroll ${title} right`}
-          >
-            <ChevronRight className="size-4" style={{ color: 'var(--muted-foreground)' }} />
-          </button>
           <Link
             href={`/shop`}
             className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-bold transition-all hover:opacity-85 active:scale-95"
@@ -90,18 +77,38 @@ function FreshRow({
       </div>
 
       {/* Swipeable carousel */}
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      >
-        {products.map((product, i) => (
-          <div
-            key={product.id}
-            className="snap-start shrink-0 w-[47vw] min-w-[47vw] sm:w-[33vw] sm:min-w-[33vw] md:w-[220px] md:min-w-[220px] lg:w-[240px] lg:min-w-[240px]"
-          >
-            <ProductCard product={product} index={i} />
-          </div>
-        ))}
+      <div className="relative group">
+        <button
+          onClick={() => scroll('left')}
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 hidden md:flex size-11 items-center justify-center rounded-full border transition-all hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100 backdrop-blur-md shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+          style={{ background: 'rgba(249,115,22,0.2)', borderColor: 'rgba(249,115,22,0.3)' }}
+          aria-label={`Scroll ${title} left`}
+        >
+          <ChevronLeft className="size-5" style={{ color: '#F97316' }} />
+        </button>
+
+        <button
+          onClick={() => scroll('right')}
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 hidden md:flex size-11 items-center justify-center rounded-full border transition-all hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100 backdrop-blur-md shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+          style={{ background: 'rgba(249,115,22,0.2)', borderColor: 'rgba(249,115,22,0.3)' }}
+          aria-label={`Scroll ${title} right`}
+        >
+          <ChevronRight className="size-5" style={{ color: '#F97316' }} />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="grid grid-flow-col gap-4 overflow-x-auto snap-x snap-mandatory pb-4 pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        >
+          {products.map((product, i) => (
+            <div
+              key={product.id}
+              className="snap-start shrink-0 w-[47vw] min-w-[47vw] sm:w-[33vw] sm:min-w-[33vw] md:w-[220px] md:min-w-[220px] lg:w-[240px] lg:min-w-[240px]"
+            >
+              <ProductCard product={product} index={i} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -119,7 +126,7 @@ function FreshRowSkeleton() {
           <div className="h-3 w-24 rounded-md animate-pulse" style={{ background: 'var(--secondary)' }} />
         </div>
       </div>
-      <div className="flex gap-4 overflow-hidden pb-4">
+      <div className="grid grid-flow-col gap-4 overflow-hidden pb-4">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
@@ -177,16 +184,49 @@ export function DailyFreshSection({
     [allProducts],
   )
 
+  const [missingProducts, setMissingProducts] = useState<Record<string, Product>>({})
+
+  useEffect(() => {
+    const missingIds = new Set<string>()
+    rows.forEach(row => {
+      ;(row.productIds ?? []).forEach(id => {
+        if (!productMap.has(id) && !missingProducts[id]) {
+          missingIds.add(id)
+        }
+      })
+    })
+
+    if (missingIds.size > 0) {
+      missingIds.forEach(async id => {
+        try {
+          const d = await getDoc(doc(clientDb, 'products', id))
+          if (d.exists()) {
+            setMissingProducts(prev => ({
+              ...prev,
+              [id]: normaliseProduct(id, d.data())
+            }))
+          }
+        } catch (e) {
+          console.error('Failed to fetch missing product', id, e)
+        }
+      })
+    }
+  }, [rows, productMap, missingProducts])
+
   // Resolve products for each row
   const resolvedRows = useMemo(
     () =>
       rows.map(row => ({
         ...row,
         products: (row.productIds ?? [])
-          .map(id => productMap.get(id))
+          .map(id => productMap.get(id) || missingProducts[id])
           .filter(Boolean) as Product[],
-      })),
-    [rows, productMap],
+      })).sort((a, b) => {
+        if (a.id === 'vegetables') return -1;
+        if (b.id === 'vegetables') return 1;
+        return 0;
+      }),
+    [rows, productMap, missingProducts],
   )
 
   const isLoading  = productsLoading || freshLoading
@@ -202,21 +242,15 @@ export function DailyFreshSection({
   return (
     <section className="w-full py-8 md:py-10" id="daily-fresh">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
-        {/* Heading */}
-        <div className="mb-8">
-          <h2
-            className="text-2xl md:text-3xl font-black tracking-tight"
-            style={{ color: 'var(--foreground)' }}
-          >
-            Daily Fresh 🌿
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-black md:text-3xl" style={{ color: 'var(--foreground)' }}>
+            Daily Fresh
           </h2>
         </div>
-
         {/* Rows */}
         <div className="space-y-10">
           {isLoading ? (
             <>
-              <FreshRowSkeleton />
               <FreshRowSkeleton />
             </>
           ) : (
@@ -225,7 +259,7 @@ export function DailyFreshSection({
               return (
                 <FreshRow
                   key={row.id}
-                  title={row.title}
+                  title={row.id === 'vegetables' ? 'Vegetables' : row.id === 'fruits' ? 'Fruits' : row.title}
                   emoji={row.emoji || style.emoji}
                   accentColor={style.accentColor}
                   bgColor={style.bgColor}

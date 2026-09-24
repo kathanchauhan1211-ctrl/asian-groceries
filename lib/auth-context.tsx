@@ -62,6 +62,7 @@ type AuthContextValue = {
     surname: string,
     phone: string,
   ) => Promise<void>
+  reloadUser: () => Promise<void>
 }
 
 // ─── Context ─────────────────────────────────────────────────────────────────
@@ -203,6 +204,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function reloadUser() {
+    if (clientAuth.currentUser) {
+      await clientAuth.currentUser.reload()
+      setUser({ ...clientAuth.currentUser } as User)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -214,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         updateUserProfile,
         completeGoogleProfile,
+        reloadUser,
       }}
     >
       {children}

@@ -34,12 +34,8 @@ export function useDailyFresh() {
         const data = snap.docs
           .filter(d => d.id.startsWith('dailyFresh_'))
           .map(d => ({ id: d.id.replace('dailyFresh_', ''), ...d.data() } as DailyFreshRow))
+          .filter(r => r.id !== 'all')
           .filter(r => r.enabled !== false)
-          .sort((a, b) => {
-            // Vegetables first, then Fruits
-            const order = ['vegetables', 'fruits']
-            return order.indexOf(a.id) - order.indexOf(b.id)
-          })
         setRows(data)
         setLoading(false)
       },

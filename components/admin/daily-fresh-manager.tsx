@@ -43,8 +43,8 @@ type FreshRow = {
 }
 
 const DEFAULT_ROWS: FreshRow[] = [
-  { id: 'vegetables', title: 'Fresh Vegetables', emoji: '🥦', productIds: [], enabled: true },
-  { id: 'fruits',     title: 'Fresh Fruits',     emoji: '🍎', productIds: [], enabled: true },
+  { id: 'vegetables', title: 'Vegetables', emoji: '🥦', productIds: [], enabled: true },
+  { id: 'fruits', title: 'Fruits', emoji: '🍎', productIds: [], enabled: true },
 ]
 
 // ── Product search box ─────────────────────────────────────────────────────────
@@ -334,31 +334,20 @@ function RowCard({
   )
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
-export default function DailyFreshAdmin() {
-  const [allProducts, setAllProducts] = useState<AdminProduct[]>([])
+export function DailyFreshManager({ allProducts }: { allProducts: AdminProduct[] }) {
   const [rows, setRows] = useState<FreshRow[]>(DEFAULT_ROWS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-
-  // Load products
-  useEffect(() => {
-    const unsub = onSnapshot(collection(adminPortalDb, 'products'), snap => {
-      setAllProducts(snap.docs.map(d => ({ id: d.id, ...d.data() } as AdminProduct)))
-    })
-    return () => unsub()
-  }, [])
 
   // Load Daily Fresh rows from Firestore — auto-seed on first visit (using 'settings' to bypass rules)
   useEffect(() => {
     const unsub = onSnapshot(collection(adminPortalDb, 'settings'), async snap => {
       const dailyFreshDocs = snap.docs.filter(d => d.id.startsWith('dailyFresh_'))
       if (dailyFreshDocs.length === 0) {
-        // First visit — seed the two default empty rows
-        await Promise.all([
-          setDoc(doc(adminPortalDb, 'settings', 'dailyFresh_vegetables'), DEFAULT_ROWS[0]),
-          setDoc(doc(adminPortalDb, 'settings', 'dailyFresh_fruits'), DEFAULT_ROWS[1]),
-        ])
+        // First visit — seed the default rows
+        await Promise.all(
+          DEFAULT_ROWS.map(row => setDoc(doc(adminPortalDb, 'settings', `dailyFresh_${row.id}`), row))
+        )
         // onSnapshot will fire again with the seeded data
         return
       }
@@ -392,7 +381,7 @@ export default function DailyFreshAdmin() {
   }
 
   return (
-    <div className="mx-auto max-w-[900px] pb-16">
+    <div className="mx-auto pb-16">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>

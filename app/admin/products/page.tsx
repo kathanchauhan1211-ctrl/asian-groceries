@@ -2,8 +2,6 @@
 
 import { createPortal } from 'react-dom'
 
-import { createPortal } from 'react-dom'
-
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import {
   collection, onSnapshot, query, orderBy,
@@ -446,7 +444,7 @@ function CategoryPopover({
         <div className="px-2 pb-2 space-y-1">
           {dailyFreshDocs.map(row => {
             const pinned = (row.productIds || []).includes(productId)
-            const color = row.id === 'vegetables' ? '#16a34a' : '#dc2626'
+            const color = '#16a34a'
             const [dfSaving, setDfSaving] = [saving === `df-${row.id}`, (v: boolean) => setSaving(v ? `df-${row.id}` : null)]
             return (
               <button
@@ -1099,7 +1097,19 @@ export default function AdminProductsPage() {
       const data = snap.docs
         .filter(d => d.id.startsWith('dailyFresh_'))
         .map(d => ({ id: d.id.replace('dailyFresh_', ''), ...d.data() } as any))
-      setDailyFreshDocs(data)
+        .filter(r => r.id !== 'all')
+        
+      const DEFAULT_ROWS = [
+        { id: 'vegetables', title: 'Vegetables', emoji: '🥦', productIds: [] },
+        { id: 'fruits', title: 'Fruits', emoji: '🍎', productIds: [] },
+      ]
+      
+      const merged = DEFAULT_ROWS.map(def => {
+        const found = data.find(r => r.id === def.id)
+        return found ?? def
+      })
+      
+      setDailyFreshDocs(merged)
     })
     return () => unsub()
   }, [])

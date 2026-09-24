@@ -42,6 +42,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
 } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
 import Link from 'next/link'
@@ -330,7 +331,13 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
   const [saving,    setSaving]    = useState(false)
   const [saved,     setSaved]     = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [requestSuccess, setRequestSuccess] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const [userReqs, setUserReqs] = useState<any[]>([])
 
   useEffect(() => {
     getDoc(doc(clientDb, 'users', user.uid)).then(d => {
@@ -341,21 +348,29 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
         if (data.surname)   setSurname(data.surname)
       }
     }).catch(console.error)
+
+    const q = query(collection(clientDb, 'userRequests'), where('userId', '==', user.uid))
+    const unsub = onSnapshot(q, snap => {
+      setUserReqs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    }, console.error)
+    return () => unsub()
   }, [user.uid])
 
   const handleSave = async () => {
     setSaving(true)
     try {
       const newDisplayName = `${firstName.trim()} ${surname.trim()}`.trim()
+      
       await setDoc(doc(clientDb, 'users', user.uid), {
         firstName: firstName.trim(),
         surname: surname.trim(),
         phone: phone.trim(),
         displayName: newDisplayName,
-        updatedAt: new Date().toISOString(),
       }, { merge: true })
 
-      if (onNameUpdate) await onNameUpdate(newDisplayName)
+      if (onNameUpdate && newDisplayName !== user.displayName) {
+        await onNameUpdate(newDisplayName)
+      }
 
       setSaved(true); setIsEditing(false)
       setTimeout(() => setSaved(false), 3000)
@@ -439,6 +454,17 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
       </div>
 
+      {/* Notifications Banner */}
+      {userReqs.filter(r => r.status !== 'PENDING').slice(0, 2).map(req => (
+        <div key={req.id} className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium mb-6 ${
+          req.status === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400' 
+          : 'bg-red-500/10 border-red-500/25 text-red-600 dark:text-red-400'
+        }`}>
+          {req.status === 'APPROVED' ? <CheckCircle2 className="size-4 shrink-0" /> : <AlertCircle className="size-4 shrink-0" />}
+          Your {req.type.replace('_', ' ')} request was {req.status.toLowerCase()} by the admin.
+        </div>
+      ))}
+
       {/* Fields */}
       <div className={`${card} p-6 space-y-5`}>
         <h3 className="text-sm font-bold text-foreground">Personal Information</h3>
@@ -484,6 +510,88 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
 
         </div>
       </div>
+
+      {/* Success Message for Requests */}
+      {requestSuccess && (
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-6">
+          <CheckCircle2 className="size-4 shrink-0" /> {requestSuccess}
+        </div>
+      )}
+
+      {/* Danger Zone */}
+      <div className={`${card} p-6 space-y-5 border-destructive/20 mt-6`}>
+        <h3 className="text-sm font-bold text-destructive">Account Actions</h3>
+        <p className="text-xs text-muted-foreground mb-4">Critical changes require admin approval.</p>
+        
+        {userReqs.some(r => r.status === 'PENDING') && (
+          <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 text-xs px-3 py-2 rounded-lg font-semibold flex items-center gap-2 mb-4">
+            <AlertCircle className="size-4" /> You have a pending request waiting for admin review.
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-4">
+           <Button variant="outline" className="text-destructive hover:bg-destructive hover:text-white" disabled={userReqs.some(r => r.type === 'DELETE_ACCOUNT' && r.status === 'PENDING')} onClick={() => setShowDeleteModal(true)}>
+             Request Account Deletion
+           </Button>
+           <Button variant="outline" disabled={userReqs.some(r => r.type === 'CHANGE_EMAIL' && r.status === 'PENDING')} onClick={() => { setNewEmail(''); setShowEmailModal(true); }}>
+             Request Email Change
+           </Button>
+        </div>
+      </div>
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`${card} p-6 max-w-sm w-full space-y-4 animate-in fade-in zoom-in-95 duration-200`}>
+            <h3 className="text-lg font-bold text-destructive flex items-center gap-2">
+              <AlertCircle className="size-5" /> Request Deletion
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to request account deletion? This action must be approved by an administrator.
+            </p>
+            <div className="flex gap-3 justify-end pt-2">
+              <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={async () => {
+                await addDoc(collection(clientDb, 'userRequests'), { userId: user.uid, userEmail: user.email, type: 'DELETE_ACCOUNT', status: 'PENDING', createdAt: new Date().toISOString() });
+                setShowDeleteModal(false);
+                setRequestSuccess('Account deletion request submitted to admin.');
+                setTimeout(() => setRequestSuccess(''), 5000);
+              }}>Submit Request</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`${card} p-6 max-w-sm w-full space-y-4 animate-in fade-in zoom-in-95 duration-200`}>
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Mail className="size-5" /> Change Email
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Enter your new email address. This change will require administrative approval.
+            </p>
+            <input 
+              type="email" 
+              value={newEmail} 
+              onChange={e => setNewEmail(e.target.value)} 
+              placeholder="new@example.com"
+              className={inputCls}
+            />
+            <div className="flex gap-3 justify-end pt-2">
+              <Button variant="ghost" onClick={() => setShowEmailModal(false)}>Cancel</Button>
+              <Button variant="default" onClick={async () => {
+                if (!newEmail || !newEmail.includes('@')) return alert('Please enter a valid email.');
+                await addDoc(collection(clientDb, 'userRequests'), { userId: user.uid, userEmail: user.email, type: 'CHANGE_EMAIL', payload: { newEmail }, status: 'PENDING', createdAt: new Date().toISOString() });
+                setShowEmailModal(false);
+                setRequestSuccess(`Email change request (${newEmail}) submitted to admin.`);
+                setTimeout(() => setRequestSuccess(''), 5000);
+              }}>Submit Request</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -772,11 +880,49 @@ function BasketSection() {
 }
 
 // ─── Activity Section ────────────────────────────────────────────────────────
-function ActivitySection({ orders }: { orders: LiveOrder[] }) {
-  const events = orders.flatMap(o => [
-    { time: o.createdAt, label: `Order placed: ${o.ticketNumber}`, detail: `€${(o.grandTotal || 0).toFixed(2)} · ${o.items?.length || 0} items`, icon: <Package className="size-3" />, dotColor: 'var(--im-green-mid)' },
-    ...(o.status.toLowerCase().includes('delivered') ? [{ time: o.createdAt, label: `Delivered: ${o.ticketNumber}`, detail: `To ${o.transitHub}`, icon: <CheckCircle2 className="size-3" />, dotColor: '#059669' }] : []),
-  ]).sort((a, b) => b.time.localeCompare(a.time))
+function ActivitySection({ orders, user }: { orders: LiveOrder[], user: { uid: string } }) {
+  const [requests, setRequests] = useState<any[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    const q = query(collection(clientDb, 'userRequests'), where('userId', '==', user.uid))
+    const unsub = onSnapshot(q, snap => {
+      setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    }, console.error)
+    return () => unsub()
+  }, [user])
+
+  const reqEvents = requests.map(req => {
+    let icon = <AlertCircle className="size-3" />
+    let dotColor = '#f59e0b' // amber PENDING
+    let label = `Request: ${req.type.replace('_', ' ')}`
+    let detail = `Status: ${req.status}`
+    
+    if (req.status === 'APPROVED') { 
+      dotColor = '#10b981' 
+      icon = <CheckCircle2 className="size-3" /> 
+      detail = 'Status: Approved by Admin'
+    } else if (req.status === 'REJECTED') { 
+      dotColor = '#ef4444' 
+      detail = 'Status: Rejected by Admin'
+    }
+    
+    return {
+      time: req.createdAt,
+      label,
+      detail,
+      icon,
+      dotColor
+    }
+  })
+
+  const events = [
+    ...orders.flatMap(o => [
+      { time: o.createdAt, label: `Order placed: ${o.ticketNumber}`, detail: `€${(o.grandTotal || 0).toFixed(2)} · ${o.items?.length || 0} items`, icon: <Package className="size-3" />, dotColor: 'var(--im-green-mid)' },
+      ...(o.status.toLowerCase().includes('delivered') ? [{ time: o.createdAt, label: `Delivered: ${o.ticketNumber}`, detail: `To ${o.transitHub}`, icon: <CheckCircle2 className="size-3" />, dotColor: '#059669' }] : []),
+    ]),
+    ...reqEvents
+  ].sort((a, b) => b.time.localeCompare(a.time))
 
   return (
     <div className="space-y-6">
@@ -814,7 +960,7 @@ function ActivitySection({ orders }: { orders: LiveOrder[] }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) => void }) {
   const { lines }   = useCart()
-  const { user, signOut, updateUserProfile } = useAuth()
+  const { user, signOut, updateUserProfile, reloadUser } = useAuth()
 
   const [section,  setSection]  = useState<DashboardSection>('overview')
   const [orders,   setOrders]   = useState<LiveOrder[]>([])
@@ -824,6 +970,7 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
 
   useEffect(() => {
     if (!user) return
+    reloadUser().catch(console.error)
     getDoc(doc(clientDb, 'users', user.uid)).then(d => {
       if (d.exists() && d.data().photoURL) setPhotoURL(d.data().photoURL)
     }).catch(console.error)
@@ -909,7 +1056,7 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
             {section === 'address'   && <AddressSection   user={user} />}
             {section === 'orders'    && <OrdersSection    orders={orders}  loading={loading} />}
             {section === 'basket'    && <BasketSection />}
-            {section === 'activity'  && <ActivitySection  orders={orders} />}
+            {section === 'activity'  && <ActivitySection  orders={orders} user={user} />}
           </div>
         </div>
       </div>

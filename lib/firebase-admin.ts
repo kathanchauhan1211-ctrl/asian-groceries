@@ -61,3 +61,9 @@ function getFirebaseAdmin() {
 }
 
 export { getFirebaseAdmin }
+
+export const { app: adminApp, db: adminDb, auth: adminAuth } = getFirebaseAdmin()
+
+export function getAdminEmail() {
+  return process.env.ADMIN_EMAIL || 'admin@indianmarket.lt'
+}

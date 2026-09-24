@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { type FeaturedCollectionDoc, type AutoRule } from '@/lib/use-featured-collections'
 import { CATEGORY_GROUPS } from '@/lib/products'
+import { DailyFreshManager } from '@/components/admin/daily-fresh-manager'
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -179,7 +180,9 @@ export default function CollectionsPage() {
 
   return (
     <div className="mx-auto max-w-[860px] space-y-4 pb-12">
-      <div className="flex items-center justify-between mb-6">
+      <DailyFreshManager allProducts={allProducts} />
+
+      <div className="flex items-center justify-between mb-6 mt-8 pt-8 border-t border-white/10">
         <div>
           <h2 className="text-[20px] font-bold text-white tracking-tight">Storefront Feed</h2>
           <p className="text-[13px] text-gray-400 mt-1">Manage the 4 feed sections shown on the homepage in real-time.</p>
