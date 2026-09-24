@@ -87,7 +87,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 shadow-xl transition-colors duration-300 backdrop-blur-xl border-b"
+      className="fixed top-0 left-0 w-full z-40 shadow-xl transition-colors duration-300 backdrop-blur-xl border-b"
       style={{ backgroundColor: 'rgba(20, 3, 8, 0.98)', borderColor: '#4a1122' }}
     >
       {/* Animated spice powder gradient — sits ABOVE bg-color, BELOW content */}

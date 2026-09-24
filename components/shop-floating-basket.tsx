@@ -52,7 +52,7 @@ export function ShopFloatingBasket() {
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div
-        className="fixed bottom-6 right-6 z-40 lg:bottom-10 lg:right-10"
+        className="fixed bottom-[90px] right-4 z-40 lg:bottom-10 lg:right-10"
       >
         <div
           className={`${baseClass} relative overflow-hidden rounded-full cursor-pointer ${cartPulse ? 'cart-ripple-anim' : ''}`}
@@ -64,7 +64,7 @@ export function ShopFloatingBasket() {
           <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
           {/* Inner shadow for sharp 3D gel effect on the island */}
           <div className="absolute inset-0 rounded-[inherit] shadow-[inset_0_2px_1px_rgba(255,255,255,0.15),inset_0_-3px_5px_rgba(0,0,0,0.4)] pointer-events-none" />
-          
+
           <div className="relative z-10 flex items-center justify-center p-3 sm:p-4">
             <span className="nav-item-btn relative flex flex-col items-center justify-center gap-1">
               {/* Active orange pill background if has items */}
@@ -80,7 +80,7 @@ export function ShopFloatingBasket() {
                   <span className="absolute inset-0 rounded-full shadow-[inset_0_2px_1px_rgba(255,255,255,0.6),inset_0_-3px_5px_rgba(0,0,0,0.3)] pointer-events-none" />
                 </span>
               )}
-              
+
               <span className="relative z-10 flex items-center justify-center">
                 <ShoppingBag
                   className="size-6 sm:size-7"

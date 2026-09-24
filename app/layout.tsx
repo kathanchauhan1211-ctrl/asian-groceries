@@ -42,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable} bg-background`} suppressHydrationWarning>
-      <body className="font-sans antialiased overflow-x-hidden">
+      <body className="font-sans antialiased">
         <TranslationProvider>
           <ThemeProvider>
             <ClientLayout>

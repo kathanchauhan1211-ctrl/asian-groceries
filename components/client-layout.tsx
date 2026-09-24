@@ -50,7 +50,7 @@ function StorefrontLayout({ children }: { children: React.ReactNode }) {
 
       {/* pb-20 for floating nav on mobile, extra env() padding for iOS home indicator */}
       <main
-        className="relative z-10 flex-1 pb-20 md:pb-0"
+        className="relative z-10 flex-1 pb-20 md:pb-0 pt-[88px] lg:pt-[110px]"
         style={{ paddingBottom: 'max(80px, calc(80px + env(safe-area-inset-bottom)))' }}
       >
         {children}

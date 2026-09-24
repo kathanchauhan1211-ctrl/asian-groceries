@@ -517,11 +517,12 @@ function MobileFilterDrawer({
 
 // ─── Main ProductCatalog ──────────────────────────────────────────────────────
 export function ProductCatalog({
-  externalFilterOpen, onCloseExternalFilter, hideGridWhenUnfiltered,
+  externalFilterOpen, onCloseExternalFilter, hideGridWhenUnfiltered, prependHeader
 }: {
   externalFilterOpen?: boolean
   onCloseExternalFilter?: () => void
   hideGridWhenUnfiltered?: boolean
+  prependHeader?: React.ReactNode
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -691,7 +692,9 @@ export function ProductCatalog({
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
 
         {/* ══ Filter Bar ══ */}
-        <div id="shop-grid" className="scroll-mt-24 mb-4 relative z-40">
+        <div id="shop-grid" className="fixed left-0 right-0 top-[104px] md:top-[132px] w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-2 pb-2 z-40 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+          <div className="mx-auto max-w-7xl px-4 md:px-6">
+            {prependHeader}
 
           {/* ── MOBILE: Filter & Sort button ── */}
           <div className="flex flex-col gap-3 md:hidden mb-3">
@@ -798,7 +801,11 @@ export function ProductCatalog({
               )}
             </div>
           )}
+          </div>
         </div>
+
+        {/* ── Spacer to prevent grid from hiding behind fixed header ── */}
+        <div className="h-[140px] md:h-[130px] shrink-0" />
 
         <MobileFilterDrawer
           open={!!isDrawerOpen}

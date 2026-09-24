@@ -1,8 +1,8 @@
 // ── Types (open strings so any Firestore value is accepted) ──────────────────
-export type Origin   = string
+export type Origin = string
 export type Category = string
-export type Diet     = string
-export type Stock    = 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Sold Out'
+export type Diet = string
+export type Stock = 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Sold Out'
 
 export type Variant = {
   label: string
@@ -32,8 +32,8 @@ export type Product = {
 
 // ORIGIN_FLAG — falls back to a globe emoji for any unknown origin
 const KNOWN_FLAGS: Record<string, string> = {
-  'India':     '🇮🇳',
-  'Pakistan':  '🇵🇰',
+  'India': '🇮🇳',
+  'Pakistan': '🇵🇰',
   'Sri Lanka': '🇱🇰',
 }
 export const ORIGIN_FLAG = new Proxy(KNOWN_FLAGS, {
@@ -44,22 +44,22 @@ export const ORIGIN_FLAG = new Proxy(KNOWN_FLAGS, {
 // Display label → array of raw Firestore category string values
 // Add new groups here; all filter dropdowns and category bars import this.
 export type CategoryGroup = {
-  label:  string        // what the user sees in the UI
-  icon:   string        // emoji icon
+  label: string        // what the user sees in the UI
+  icon: string        // emoji icon
 }
 
 export const CATEGORY_GROUPS: CategoryGroup[] = [
   { label: 'Wheat & Chapati Flour', icon: '🌾' },
-  { label: 'Basmati Rice',          icon: '🍚' },
-  { label: 'Spices & Masala',       icon: '🌶️' },
-  { label: 'Snacks',                icon: '🍿' },
-  { label: 'Sweets',                icon: '🍮' },
-  { label: 'Frozen Foods',          icon: '🧊' },
-  { label: 'Oils',                  icon: '🫙' },
-  { label: 'Pickles',               icon: '🥒' },
-  { label: 'Tea & Drinks',          icon: '🍵' },
-  { label: 'Vegetables & Produce',  icon: '🥦' },
-  { label: 'Personal Care',         icon: '🧴' },
+  { label: 'Basmati Rice', icon: '🍚' },
+  { label: 'Spices & Masala', icon: '🌶️' },
+  { label: 'Snacks', icon: '🍿' },
+  { label: 'Sweets', icon: '🍮' },
+  { label: 'Frozen Foods', icon: '🧊' },
+  { label: 'Oils', icon: '🫙' },
+  { label: 'Pickles', icon: '🥒' },
+  { label: 'Tea & Drinks', icon: '🍵' },
+  { label: 'Vegetables & Produce', icon: '🥦' },
+  { label: 'Personal Care', icon: '🧴' },
 ]
 
 // Flat list of all default categories
@@ -67,9 +67,9 @@ export const CATEGORIES: Category[] = CATEGORY_GROUPS.map(g => g.label)
 
 // ─── Canonical origin + dietary filter options ────────────────────────────────
 export const ORIGINS = [
-  { label: 'All',       code: 'GLOBAL' },
-  { label: 'India',     code: 'IN' },
-  { label: 'Pakistan',  code: 'PK' },
+  { label: 'All', code: 'GLOBAL' },
+  { label: 'India', code: 'IN' },
+  { label: 'Pakistan', code: 'PK' },
   { label: 'Sri Lanka', code: 'LK' },
 ] as const
 

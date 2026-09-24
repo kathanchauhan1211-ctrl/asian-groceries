@@ -177,9 +177,9 @@ export const ProductCard = memo(function ProductCard({ product, index = 0 }: { p
   return (
     <>
       {/* ── Card ── */}
-      <div className={`group relative flex flex-col h-full ${animClass}`}>
+      <div className={`group relative flex flex-col h-full rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-900/30 p-2 transition-shadow hover:shadow-md ${animClass}`}>
         {/* Image Container - Enforce perfect square with exact corner rounding matching the reference */}
-        <div className="relative w-full aspect-square flex items-center justify-center overflow-hidden rounded-md bg-white border border-gray-100 dark:bg-gray-900 dark:border-white/5">
+        <div className="relative w-full aspect-square flex items-center justify-center overflow-hidden rounded-md bg-white border border-gray-200 dark:bg-gray-900 dark:border-white/5">
           {product.image ? (
             <Image
               src={product.image}
