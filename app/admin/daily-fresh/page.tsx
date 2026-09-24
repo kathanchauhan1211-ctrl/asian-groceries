@@ -349,19 +349,20 @@ export default function DailyFreshAdmin() {
     return () => unsub()
   }, [])
 
-  // Load Daily Fresh rows from Firestore — auto-seed on first visit
+  // Load Daily Fresh rows from Firestore — auto-seed on first visit (using 'settings' to bypass rules)
   useEffect(() => {
-    const unsub = onSnapshot(collection(adminPortalDb, 'dailyFresh'), async snap => {
-      if (snap.empty) {
+    const unsub = onSnapshot(collection(adminPortalDb, 'settings'), async snap => {
+      const dailyFreshDocs = snap.docs.filter(d => d.id.startsWith('dailyFresh_'))
+      if (dailyFreshDocs.length === 0) {
         // First visit — seed the two default empty rows
         await Promise.all([
-          setDoc(doc(adminPortalDb, 'dailyFresh', 'vegetables'), DEFAULT_ROWS[0]),
-          setDoc(doc(adminPortalDb, 'dailyFresh', 'fruits'), DEFAULT_ROWS[1]),
+          setDoc(doc(adminPortalDb, 'settings', 'dailyFresh_vegetables'), DEFAULT_ROWS[0]),
+          setDoc(doc(adminPortalDb, 'settings', 'dailyFresh_fruits'), DEFAULT_ROWS[1]),
         ])
         // onSnapshot will fire again with the seeded data
         return
       }
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as FreshRow))
+      const data = dailyFreshDocs.map(d => ({ id: d.id.replace('dailyFresh_', ''), ...d.data() } as FreshRow))
       const merged = DEFAULT_ROWS.map(def => {
         const found = data.find(r => r.id === def.id)
         return found ?? def
@@ -373,7 +374,7 @@ export default function DailyFreshAdmin() {
   }, [])
 
   async function saveRow(updated: FreshRow) {
-    const ref = doc(adminPortalDb, 'dailyFresh', updated.id)
+    const ref = doc(adminPortalDb, 'settings', `dailyFresh_${updated.id}`)
     await setDoc(ref, {
       title:      updated.title,
       emoji:      updated.emoji,

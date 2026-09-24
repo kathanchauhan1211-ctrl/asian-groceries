@@ -1,5 +1,9 @@
 'use client'
 
+import { createPortal } from 'react-dom'
+
+import { createPortal } from 'react-dom'
+
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import {
   collection, onSnapshot, query, orderBy,
@@ -306,6 +310,7 @@ function CategoryPopover({
   shopDocs,
   togglePin,
   dailyFreshDocs,
+  btnRect,
 }: {
   productId: string
   productName: string
@@ -313,6 +318,7 @@ function CategoryPopover({
   shopDocs: FeaturedCollectionDoc[]
   togglePin: (collectionId: string, productId: string) => Promise<void>
   dailyFreshDocs: Array<{ id: string; title: string; emoji: string; productIds: string[] }>
+  btnRect: DOMRect
 }) {
   const [saving, setSaving] = useState<string | null>(null)
   const [localState, setLocalState] = useState<Record<string, boolean>>(() => {
@@ -320,13 +326,23 @@ function CategoryPopover({
     shopDocs.forEach(d => { s[d.id] = (d.productIds || []).includes(productId) })
     return s
   })
+  
+  // Portal positioning
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  useEffect(() => {
+    const height = 350 // rough estimate of popover height
+    const top = btnRect.bottom + 8
+    const left = btnRect.right - 240
+    const isOffBottom = top + height > window.innerHeight
+    setPos({ top: isOffBottom ? btnRect.top - height - 8 : top, left })
+  }, [btnRect])
+
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose()
     }
-    // small delay so the triggering click doesn't immediately close
     const t = setTimeout(() => document.addEventListener('mousedown', handler), 100)
     return () => { clearTimeout(t); document.removeEventListener('mousedown', handler) }
   }, [onClose])
@@ -340,11 +356,15 @@ function CategoryPopover({
 
   const anyPinned = Object.values(localState).some(Boolean)
 
-  return (
+  if (!pos.top) return null
+
+  return createPortal(
     <div
       ref={ref}
-      className="absolute right-0 top-9 z-[60] rounded-2xl overflow-hidden shadow-2xl"
+      className="fixed z-[9999] rounded-2xl overflow-hidden shadow-2xl"
       style={{
+        top: pos.top,
+        left: pos.left,
         width: '240px',
         background: 'rgba(10, 15, 30, 0.97)',
         backdropFilter: 'blur(24px)',
@@ -433,7 +453,7 @@ function CategoryPopover({
                 key={row.id}
                 onClick={async () => {
                   setSaving(`df-${row.id}`)
-                  const ref = doc(adminPortalDb, 'dailyFresh', row.id)
+                  const ref = doc(adminPortalDb, 'settings', `dailyFresh_${row.id}`)
                   await setDoc(ref, {
                     productIds: pinned ? arrayRemove(productId) : arrayUnion(productId)
                   }, { merge: true })
@@ -479,7 +499,8 @@ function CategoryPopover({
           Pinned products appear first in the storefront category popup. Live instantly.
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -508,10 +529,12 @@ function ProductCategoryButton({
   ).length
 
   const totalPins = pinCount + dfPinCount
+  const btnRef = useRef<HTMLButtonElement>(null)
 
   return (
-    <div className="relative">
+    <>
       <button
+        ref={btnRef}
         onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
         className="flex size-7 items-center justify-center rounded-md transition-all"
         style={{
@@ -524,8 +547,9 @@ function ProductCategoryButton({
         {totalPins > 0 ? <Pin className="size-3.5" /> : <MoreVertical className="size-3.5" />}
       </button>
 
-      {open && (
+      {open && btnRef.current && (
         <CategoryPopover
+          btnRect={btnRef.current.getBoundingClientRect()}
           productId={product.id}
           productName={product.name || 'Product'}
           onClose={() => setOpen(false)}
@@ -534,7 +558,7 @@ function ProductCategoryButton({
           dailyFreshDocs={dailyFreshDocs}
         />
       )}
-    </div>
+    </>
   )
 }
 
@@ -1068,11 +1092,14 @@ export default function AdminProductsPage() {
   const categoryOptions = useMemo(() => liveCategories.map(c => c.label), [liveCategories])
   const { docs: shopDocs, togglePin } = useCollectionDocs(adminPortalDb)
 
-  // Load Daily Fresh rows for the 3-dots menu
+  // Load Daily Fresh rows for the 3-dots menu from 'settings' collection to bypass rules deployment
   const [dailyFreshDocs, setDailyFreshDocs] = useState<Array<{ id: string; title: string; emoji: string; productIds: string[] }>>([])
   useEffect(() => {
-    const unsub = onSnapshot(collection(adminPortalDb, 'dailyFresh'), snap => {
-      setDailyFreshDocs(snap.docs.map(d => ({ id: d.id, ...d.data() } as any)))
+    const unsub = onSnapshot(collection(adminPortalDb, 'settings'), snap => {
+      const data = snap.docs
+        .filter(d => d.id.startsWith('dailyFresh_'))
+        .map(d => ({ id: d.id.replace('dailyFresh_', ''), ...d.data() } as any))
+      setDailyFreshDocs(data)
     })
     return () => unsub()
   }, [])

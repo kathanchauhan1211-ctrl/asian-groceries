@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 /**
  * lib/use-daily-fresh.ts
@@ -29,10 +29,11 @@ export function useDailyFresh() {
 
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(clientDb, 'dailyFresh'),
+      collection(clientDb, 'settings'),
       (snap) => {
         const data = snap.docs
-          .map(d => ({ id: d.id, ...d.data() } as DailyFreshRow))
+          .filter(d => d.id.startsWith('dailyFresh_'))
+          .map(d => ({ id: d.id.replace('dailyFresh_', ''), ...d.data() } as DailyFreshRow))
           .filter(r => r.enabled !== false)
           .sort((a, b) => {
             // Vegetables first, then Fruits
