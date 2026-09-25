@@ -67,7 +67,7 @@ function FreshRow({
 
         <div className="flex items-center gap-2">
           <Link
-            href={`/shop`}
+            href={viewAllId === 'vegetables' ? '/shop?category=Fresh+Vegetables' : viewAllId === 'fruits' ? '/shop?category=Fruits' : '/shop'}
             className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-bold transition-all hover:opacity-85 active:scale-95"
             style={{ background: accentColor, color: '#fff' }}
           >

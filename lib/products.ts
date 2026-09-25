@@ -58,7 +58,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
   { label: 'Oils', icon: '🫙' },
   { label: 'Pickles', icon: '🥒' },
   { label: 'Tea & Drinks', icon: '🍵' },
-  { label: 'Vegetables & Produce', icon: '🥦' },
+  { label: 'Fresh Vegetables', icon: '🥦' },
   { label: 'Personal Care', icon: '🧴' },
 ]
 

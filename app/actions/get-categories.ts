@@ -134,10 +134,10 @@ export async function fixCategoryMatches() {
         createdAt: 1789855566786,
       },
       {
-        id: 'vegetables-produce',
-        label: 'Vegetables & Produce',
+        id: 'fresh-vegetables',
+        label: 'Fresh Vegetables',
         icon: '🥦',
-        match: ['Vegetables & Produce'],  // actual value in products
+        match: ['Fresh Vegetables', 'Vegetables & Produce', 'Vegetable produce'], 
         active: true,
         order: 10,
         createdAt: 1789855566786,

@@ -42,7 +42,28 @@ export default function AdminCustomersPage() {
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const { users: data } = await res.json()
-      setUsers(data ?? [])
+      const fetchedUsers = data ?? []
+      
+      // Clean up phone numbers to prevent duplicate country codes (e.g., +370 +370...)
+      const cleaned = fetchedUsers.map((u: any) => ({
+        ...u,
+        phone: u.phone ? u.phone.replace(/^(\+\d{1,4})\s*\1/, '$1') : u.phone
+      }))
+
+      // Sort by creation time (oldest first) to maintain sequence
+      const sorted = cleaned.sort((a: any, b: any) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeA - timeB;
+      });
+
+      // Assign sequential ID (001, 002, etc.)
+      const withIds = sorted.map((u: any, i: number) => ({
+        ...u,
+        sequentialId: String(i + 1).padStart(3, '0')
+      }));
+
+      setUsers(withIds)
     } catch (err) {
       console.error('[AdminCustomersPage] Failed to fetch users:', err)
     } finally {
@@ -155,8 +176,11 @@ export default function AdminCustomersPage() {
                       {u.photoURL ? <img src={u.photoURL} alt={u.name} className="w-full h-full object-cover" /> : <User className="size-5" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-white text-base truncate">{u.name || u.displayName || 'Unnamed User'}</h3>
-                      <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1 truncate"><Mail className="size-3.5 shrink-0" /><span className="truncate">{u.email || u.id}</span></div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full border border-white/5">#{u.sequentialId}</span>
+                        <h3 className="font-bold text-white text-base truncate">{u.name || u.displayName || 'Unnamed User'}</h3>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1 truncate"><Mail className="size-3.5 shrink-0" /><span className="truncate">{u.email || 'No email provided'}</span></div>
                       {u.phone && <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1"><Phone className="size-3.5 shrink-0" />{u.phone}</div>}
                     </div>
                   </div>
@@ -304,47 +328,146 @@ function ManagementUserCard({ u, onRefresh }: { u: any, onRefresh: () => void })
     }
   }
 
+  const [actionPrompt, setActionPrompt] = useState<{ action: 'suspend' | 'ban' | 'delete' | 'activate' } | null>(null)
+  const [confirmEmail, setConfirmEmail] = useState('')
+
+  const handleActionConfirm = async () => {
+    if (!actionPrompt) return
+    const action = actionPrompt.action
+    
+    if (confirmEmail !== (u.email || u.id)) {
+      alert('Email did not match. Action cancelled.')
+      return
+    }
+
+    setActionPrompt(null)
+    setConfirmEmail('')
+    setSaving(true)
+    
+    try {
+      const currentUser = adminPortalAuth.currentUser
+      if (!currentUser) throw new Error('Not authenticated as admin')
+      const token = await currentUser.getIdToken()
+
+      const res = await fetch('/api/admin/users/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: u.id, action })
+      })
+
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || `Failed to ${action} user`)
+      }
+
+      onRefresh()
+      // Optional success alert, or just let UI update
+    } catch (e: any) {
+      alert(e.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const isSuspendedOrBanned = u.disabled || u.status === 'suspended' || u.status === 'banned'
+
   return (
-    <div className="rounded-2xl border border-red-500/20 bg-slate-900/40 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-500" id={`user-${u.id}`}>
-       <div className="flex-1 min-w-0 w-full">
-          {isEditing ? (
-            <div className="space-y-2 max-w-sm">
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
-              <input type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
-              <input type="text" value={password} onChange={e => setPassword(e.target.value)} placeholder="New Password (leave blank to keep current)" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
+    <>
+      <div className={`rounded-2xl border ${isSuspendedOrBanned ? 'border-orange-500/50 bg-orange-950/20' : 'border-red-500/20 bg-slate-900/40'} p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-500`} id={`user-${u.id}`}>
+         <div className="flex-1 min-w-0 w-full">
+            {isEditing ? (
+              <div className="space-y-2 max-w-sm">
+                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
+                <input type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
+                <input type="text" value={password} onChange={e => setPassword(e.target.value)} placeholder="New Password (leave blank to keep current)" className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500" />
+              </div>
+            ) : (
+              <>
+                <h3 className="font-bold text-white text-base truncate flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full border border-white/5">#{u.sequentialId}</span>
+                  {u.name || u.displayName || 'Unnamed User'}
+                  {isSuspendedOrBanned && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-black bg-orange-500/20 text-orange-400">{u.status || 'Disabled'}</span>}
+                </h3>
+                <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1 truncate"><Mail className="size-3.5 shrink-0" /><span className="truncate">{u.email || 'No email provided'}</span></div>
+                {u.phone && <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1"><Phone className="size-3.5 shrink-0" />{u.phone}</div>}
+              </>
+            )}
+         </div>
+         <div className="flex flex-wrap items-center gap-2">
+            {isEditing ? (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-slate-400">Cancel</Button>
+                <Button variant="default" size="sm" onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-white">Save</Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+                  <Edit3 className="size-4 mr-1.5" /> Edit
+                </Button>
+                
+                {isSuspendedOrBanned ? (
+                  <Button variant="ghost" size="sm" onClick={() => setActionPrompt({ action: 'activate' })} disabled={saving} className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10">
+                    <CheckCircle2 className="size-4 mr-1.5" /> Reactivate
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => setActionPrompt({ action: 'suspend' })} disabled={saving} className="text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                      <ShieldOff className="size-4 mr-1.5" /> Suspend
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setActionPrompt({ action: 'ban' })} disabled={saving} className="text-orange-500 hover:text-orange-400 hover:bg-orange-500/10">
+                      <ShieldAlert className="size-4 mr-1.5" /> Ban
+                    </Button>
+                  </>
+                )}
+                
+                <Button variant="ghost" size="sm" onClick={() => setActionPrompt({ action: 'delete' })} disabled={saving} className="text-red-500 hover:text-red-400 hover:bg-red-500/10">
+                  <Trash2 className="size-4 mr-1.5" /> Delete
+                </Button>
+              </>
+            )}
+         </div>
+      </div>
+
+      {/* ── Custom Action Popup Modal ── */}
+      {actionPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex size-10 rounded-full items-center justify-center bg-red-500/20 text-red-500">
+                  <ShieldAlert className="size-5" />
+                </div>
+                <h2 className="text-xl font-bold text-white uppercase tracking-wider">{actionPrompt.action} User</h2>
+              </div>
+              <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+                You are about to securely <strong>{actionPrompt.action}</strong> this customer. This action will take effect immediately.
+                <br /><br />
+                To confirm, please type their exact email address (or ID): <strong className="text-white select-all">{u.email || u.id}</strong>
+              </p>
+              
+              <input 
+                type="text" 
+                value={confirmEmail} 
+                onChange={e => setConfirmEmail(e.target.value)} 
+                placeholder="Type to confirm" 
+                autoFocus
+                className="w-full rounded-xl border border-red-500/30 bg-black/50 py-3 px-4 text-sm text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all mb-6"
+                onKeyDown={(e) => e.key === 'Enter' && handleActionConfirm()}
+              />
+
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => { setActionPrompt(null); setConfirmEmail('') }} className="text-slate-400 hover:text-white hover:bg-white/5 rounded-xl">
+                  Cancel
+                </Button>
+                <Button variant="default" onClick={handleActionConfirm} disabled={confirmEmail !== (u.email || u.id) || saving} className="bg-red-600 hover:bg-red-500 text-white rounded-xl shadow-lg shadow-red-900/20">
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : 'Confirm Action'}
+                </Button>
+              </div>
             </div>
-          ) : (
-            <>
-              <h3 className="font-bold text-white text-base truncate">{u.name || u.displayName || 'Unnamed User'}</h3>
-              <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1 truncate"><Mail className="size-3.5 shrink-0" /><span className="truncate">{u.email || u.id}</span></div>
-              {u.phone && <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1"><Phone className="size-3.5 shrink-0" />{u.phone}</div>}
-            </>
-          )}
-       </div>
-       <div className="flex flex-wrap items-center gap-2">
-          {isEditing ? (
-            <>
-              <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-slate-400">Cancel</Button>
-              <Button variant="default" size="sm" onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-white">Save</Button>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
-                <Edit3 className="size-4 mr-1.5" /> Edit
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => alert('Feature coming soon.')} className="text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                <ShieldOff className="size-4 mr-1.5" /> Suspend
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => alert('Feature coming soon.')} className="text-orange-500 hover:text-orange-400 hover:bg-orange-500/10">
-                <ShieldAlert className="size-4 mr-1.5" /> Ban
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => alert('To delete a user securely, ask them to submit a deletion request.')} className="text-red-500 hover:text-red-400 hover:bg-red-500/10">
-                <Trash2 className="size-4 mr-1.5" /> Delete
-              </Button>
-            </>
-          )}
-       </div>
-    </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

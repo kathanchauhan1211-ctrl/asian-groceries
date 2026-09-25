@@ -14,7 +14,8 @@
 
 import { useEffect, useState } from 'react'
 import { CATEGORY_GROUPS, type CategoryGroup } from '@/lib/products'
-import { fetchCategoryFilters } from '@/app/actions/get-categories'
+import { onSnapshot, doc } from 'firebase/firestore'
+import { clientDb } from '@/lib/firebase-client'
 
 export type { CategoryGroup }
 
@@ -46,38 +47,37 @@ export function useCategoryFilters(): CategoryFilterState {
   const [error,      setError]      = useState<string | null>(null)
 
   useEffect(() => {
-    let mounted = true
-    
-    async function load() {
-      try {
-        const data = await fetchCategoryFilters()
-        if (!mounted) return
-        
-        if (data && Array.isArray(data.categories)) {
-          const raw: FirestoreCategory[] = data.categories
-          const active = raw
-            .filter((c) => c.active !== false && c.id && c.label)
-            .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-            .map(toGroup)
+    const unsubscribe = onSnapshot(
+      doc(clientDb, 'settings/categoryFilters'),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data()
+          if (data && Array.isArray(data.categories)) {
+            const raw: FirestoreCategory[] = data.categories
+            const active = raw
+              .filter((c) => c.active !== false && c.id && c.label)
+              .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+              .map(toGroup)
 
-          setCategories(active.length > 0 ? active : CATEGORY_GROUPS)
+            setCategories(active.length > 0 ? active : CATEGORY_GROUPS)
+          } else {
+            setCategories(CATEGORY_GROUPS)
+          }
         } else {
           setCategories(CATEGORY_GROUPS)
         }
-      } catch (err: any) {
-        if (mounted) {
-          console.error('[useCategoryFilters] Error:', err)
-          setError(err.message)
-          setCategories(CATEGORY_GROUPS)
-        }
-      } finally {
-        if (mounted) setLoading(false)
+        setLoading(false)
+        setError(null)
+      },
+      (err) => {
+        console.error('[useCategoryFilters] Real-time error:', err)
+        setCategories(CATEGORY_GROUPS)
+        setError(err.message)
+        setLoading(false)
       }
-    }
-    
-    load()
-    
-    return () => { mounted = false }
+    )
+
+    return () => unsubscribe()
   }, [])
 
   return { categories, loading, error }

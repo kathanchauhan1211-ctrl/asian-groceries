@@ -27,8 +27,25 @@ export async function GET(req: NextRequest) {
     }
 
     // 2. Fetch all users via Admin SDK (bypasses Firestore rules)
-    const snap = await db.collection('users').get()
-    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    const listUsersResult = await auth.listUsers(1000);
+    const authUsers = listUsersResult.users.map(u => ({
+      id: u.uid,
+      email: u.email,
+      displayName: u.displayName,
+      phone: u.phoneNumber,
+      photoURL: u.photoURL,
+      disabled: u.disabled,
+      createdAt: u.metadata.creationTime,
+      lastSignInTime: u.metadata.lastSignInTime
+    }));
+
+    const snap = await db.collection('users').get();
+    const dbUsers = new Map(snap.docs.map(d => [d.id, d.data()]));
+
+    const users = authUsers.map(u => ({
+      ...u,
+      ...(dbUsers.get(u.id) || {})
+    }));
 
     return NextResponse.json({ users })
   } catch (err: any) {
