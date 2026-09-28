@@ -57,7 +57,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}>
       <div
-        className="relative w-full max-w-[55rem] bg-gradient-to-b from-[#1c2c4d] to-[#0c162c] shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row max-h-[95vh]"
+        className="relative w-full max-w-[65rem] min-h-[35rem] bg-gradient-to-b from-[#1c2c4d] to-[#0c162c] shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row max-h-[95vh]"
         onClick={e => e.stopPropagation()}
       >
         {/* iOS style strong top white gradient shine for the modal */}
@@ -71,13 +71,13 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
         </button>
 
         {/* Left side (Image) - Full bleed panel */}
-        <div className="relative w-full md:w-1/2 aspect-square md:aspect-auto flex items-center justify-center order-1 bg-white border border-gray-100 dark:bg-gray-900 dark:border-white/5 overflow-hidden">
+        <div className="relative w-full md:w-1/2 md:min-h-full aspect-square md:aspect-auto flex items-center justify-center order-1 bg-white border border-gray-100 dark:bg-gray-900 dark:border-white/5 overflow-hidden p-6">
           {product.image ? (
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover"
+              className="object-contain p-6"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ) : (

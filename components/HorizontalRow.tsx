@@ -44,7 +44,15 @@ export function HorizontalRow({ title, items, viewAllHref, rows = 1 }: Horizonta
         {/* Left arrow – hidden on mobile */}
         <button
           onClick={() => scroll(-1)}
-          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-gray-200 shadow-xl hover:bg-white dark:hover:bg-slate-700 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 border border-black/5 dark:border-white/10"
+          className="hidden md:flex absolute -left-4 lg:-left-6 top-[40%] -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
+          style={{ 
+            background: 'var(--card)', 
+            border: '1px solid var(--border)',
+            color: 'var(--foreground)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderColor = 'var(--primary)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--foreground)'; e.currentTarget.style.borderColor = 'var(--border)' }}
           aria-label="Scroll left"
         >
           <ChevronLeft className="size-6" />
@@ -77,7 +85,15 @@ export function HorizontalRow({ title, items, viewAllHref, rows = 1 }: Horizonta
         {/* Right arrow – hidden on mobile */}
         <button
           onClick={() => scroll(1)}
-          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-gray-200 shadow-xl hover:bg-white dark:hover:bg-slate-700 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 border border-black/5 dark:border-white/10"
+          className="hidden md:flex absolute -right-4 lg:-right-6 top-[40%] -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
+          style={{ 
+            background: 'var(--card)', 
+            border: '1px solid var(--border)',
+            color: 'var(--foreground)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderColor = 'var(--primary)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--foreground)'; e.currentTarget.style.borderColor = 'var(--border)' }}
           aria-label="Scroll right"
         >
           <ChevronRight className="size-6" />

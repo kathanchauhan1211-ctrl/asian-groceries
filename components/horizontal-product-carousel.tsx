@@ -29,7 +29,7 @@ export function HorizontalProductCarousel({
   if (!products.length) return null
 
   return (
-    <div className="my-2 w-full overflow-hidden">
+    <div className="my-2 w-full relative">
 
       {/* Header — only shown when a title string is provided */}
       {title ? (
@@ -37,7 +37,6 @@ export function HorizontalProductCarousel({
           <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
             {td(title)}
           </h2>
-
           <div className="flex items-center gap-4">
             {viewAllLink && (
               <Button
@@ -50,31 +49,10 @@ export function HorizontalProductCarousel({
                 {td('View All')} <ArrowRight className="size-4" />
               </Button>
             )}
-
-            <div className="hidden md:flex items-center gap-2">
-              <Button
-                onClick={() => scroll('left')}
-                variant="glass-light"
-                size="icon"
-                className="rounded-full"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <Button
-                onClick={() => scroll('right')}
-                variant="glass-light"
-                size="icon"
-                className="rounded-full"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="size-4" />
-              </Button>
-            </div>
           </div>
         </div>
       ) : (
-        /* No title: just show scroll arrows + View All on the right */
+        /* No title: just show View All on the right */
         <div className="flex items-center justify-end gap-2 mb-2 px-4 md:px-0">
           {viewAllLink && (
             <Link
@@ -85,22 +63,6 @@ export function HorizontalProductCarousel({
               View All <ArrowRight className="size-4" />
             </Link>
           )}
-          <button
-            onClick={() => scroll('left')}
-            className="hidden md:flex size-8 items-center justify-center rounded-full border transition-all hover:bg-orange-50 dark:hover:bg-orange-900/20"
-            style={{ borderColor: 'var(--border)', color: 'var(--foreground)' }}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="hidden md:flex size-8 items-center justify-center rounded-full border transition-all hover:bg-orange-50 dark:hover:bg-orange-900/20"
-            style={{ borderColor: 'var(--border)', color: 'var(--foreground)' }}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="size-4" />
-          </button>
         </div>
       )}
 
@@ -119,19 +81,56 @@ export function HorizontalProductCarousel({
         </div>
       )}
 
-      {/* Carousel track */}
-      <div 
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 md:px-0 pb-6 pt-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      >
-        {products.map((product, i) => (
-          <div 
-            key={product.id} 
-            className="snap-start shrink-0 w-[47vw] min-w-[47vw] sm:w-[32vw] sm:min-w-[32vw] md:w-[260px] md:min-w-[260px] lg:w-[280px] lg:min-w-[280px] flex flex-col"
-          >
-            <ProductCard product={product} index={i} />
-          </div>
-        ))}
+      {/* Carousel track wrapper with arrows */}
+      <div className="relative group">
+        {/* Left arrow – hidden on mobile */}
+        <button
+          onClick={() => scroll('left')}
+          className="hidden md:flex absolute -left-4 lg:-left-6 top-[40%] -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
+          style={{ 
+            background: 'var(--card)', 
+            border: '1px solid var(--border)',
+            color: 'var(--foreground)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderColor = 'var(--primary)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--foreground)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="size-6" />
+        </button>
+
+        {/* Carousel track */}
+        <div 
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 md:px-0 pb-6 pt-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        >
+          {products.map((product, i) => (
+            <div 
+              key={product.id} 
+              className="snap-start shrink-0 w-[47vw] min-w-[47vw] sm:w-[32vw] sm:min-w-[32vw] md:w-[260px] md:min-w-[260px] lg:w-[280px] lg:min-w-[280px] flex flex-col"
+            >
+              <ProductCard product={product} index={i} />
+            </div>
+          ))}
+        </div>
+
+        {/* Right arrow – hidden on mobile */}
+        <button
+          onClick={() => scroll('right')}
+          className="hidden md:flex absolute -right-4 lg:-right-6 top-[40%] -translate-y-1/2 z-10 size-12 items-center justify-center rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
+          style={{ 
+            background: 'var(--card)', 
+            border: '1px solid var(--border)',
+            color: 'var(--foreground)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderColor = 'var(--primary)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--foreground)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="size-6" />
+        </button>
       </div>
     </div>
   )
