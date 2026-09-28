@@ -15,14 +15,18 @@ import { useCart } from '@/lib/cart-context'
 // ─── Categories to feature as carousels on the shop home page ────────────────
 // Matches CATEGORY_GROUPS labels. Fallback: shows whatever products exist.
 const FEATURED_CATEGORIES = [
-  { label: 'Spices & Masala', icon: '🌶️', desc: 'Authentic ground & whole spices' },
-  { label: 'Ganapati & Pooja', icon: '🪔', desc: 'Ritual & devotional essentials' },
-  { label: 'Wheat & Chapati Flour', icon: '🌾', desc: 'Stone-ground flours for soft rotis' },
-  { label: 'Basmati Rice', icon: '🍚', desc: 'Premium aged long-grain basmati' },
-  { label: 'Snacks', icon: '🍿', desc: 'Crunchy bites & savoury treats' },
-  { label: 'Tea & Drinks', icon: '🍵', desc: 'Masala chai & herbal blends' },
-  { label: 'Sweets', icon: '🍮', desc: 'Traditional mithai & desserts' },
-  { label: 'Frozen Foods', icon: '🧊', desc: 'Ready-to-cook frozen favourites' },
+  { label: 'Spices',        icon: '🌶️', desc: 'Authentic ground & whole spices' },
+  { label: 'Rice',          icon: '🍚', desc: 'Basmati, Sona Masoori & more' },
+  { label: 'Flour',         icon: '🌾', desc: 'Atta, besan & specialty flours' },
+  { label: 'Snacks',        icon: '🍿', desc: 'Crunchy bites & savoury treats' },
+  { label: 'Pulses',        icon: '🫘', desc: 'Dal, chana & wholesome legumes' },
+  { label: 'Tea & Drinks',  icon: '🍵', desc: 'Masala chai, juices & sodas' },
+  { label: 'Sweets',        icon: '🍮', desc: 'Traditional mithai & desserts' },
+  { label: 'Pickles',       icon: '🥒', desc: 'Tangy mango, lime & mixed pickles' },
+  { label: 'Vegetables',    icon: '🥦', desc: 'Fresh exotic & everyday vegetables' },
+  { label: 'Fruits',        icon: '🍊', desc: 'Tropical & seasonal fresh fruits' },
+  { label: 'Ready-to-Eat',  icon: '🍱', desc: 'Dal makhani, paneer & more' },
+  { label: 'Noodles',       icon: '🍜', desc: 'Instant noodles & manchurian' },
 ]
 
 // ─── Category quick-link tiles ────────────────────────────────────────────────

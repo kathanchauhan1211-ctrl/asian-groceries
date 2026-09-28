@@ -49,17 +49,27 @@ export type CategoryGroup = {
 }
 
 export const CATEGORY_GROUPS: CategoryGroup[] = [
-  { label: 'Wheat & Chapati Flour', icon: '🌾' },
-  { label: 'Basmati Rice', icon: '🍚' },
-  { label: 'Spices & Masala', icon: '🌶️' },
-  { label: 'Snacks', icon: '🍿' },
-  { label: 'Sweets', icon: '🍮' },
-  { label: 'Frozen Foods', icon: '🧊' },
-  { label: 'Oils', icon: '🫙' },
-  { label: 'Pickles', icon: '🥒' },
-  { label: 'Tea & Drinks', icon: '🍵' },
-  { label: 'Fresh Vegetables', icon: '🥦' },
+  { label: 'Rice',          icon: '🍚' },
+  { label: 'Flour',         icon: '🌾' },
+  { label: 'Pulses',        icon: '🫘' },
+  { label: 'Spices',        icon: '🌶️' },
+  { label: 'Snacks',        icon: '🍿' },
+  { label: 'Sweets',        icon: '🍮' },
+  { label: 'Pickles',       icon: '🥒' },
+  { label: 'Oils',          icon: '🫙' },
+  { label: 'Tea & Drinks',  icon: '🍵' },
+  { label: 'Noodles',       icon: '🍜' },
+  { label: 'Ready-to-Eat',  icon: '🍱' },
+  { label: 'Dairy',         icon: '🥛' },
+  { label: 'Frozen Foods',  icon: '🧊' },
+  { label: 'Vegetables',    icon: '🥦' },
+  { label: 'Fruits',        icon: '🍊' },
+  { label: 'Millets',       icon: '🌿' },
+  { label: 'Instant Mixes', icon: '🧪' },
   { label: 'Personal Care', icon: '🧴' },
+  { label: 'Pooja',         icon: '📿' },
+  { label: 'Idols',         icon: '🙏' },
+  { label: 'Utensils',      icon: '🍴' },
 ]
 
 // Flat list of all default categories

@@ -1,188 +1,135 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import {
-  collection,
-  getDocs,
-  query,
-  limit,
-  startAfter,
-  orderBy,
-  onSnapshot,
-  type QueryDocumentSnapshot,
-  type DocumentData,
-} from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase-client'
-import { type Product } from './products'
-
-const PAGE_SIZE = 48
+import { useState, useEffect, useCallback } from "react";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { clientDb } from "@/lib/firebase-client";
+import { type Product } from "./products";
 
 /**
  * Normalise a raw Firestore document into a safe Product shape.
  * Handles field name mismatches between admin portal and storefront.
  */
 export function normaliseProduct(id: string, data: any): Product {
-  const price = parseFloat(data.price) || 0
+  const price = parseFloat(data.price) || 0;
 
-  const variants: Product['variants'] =
+  const variants: Product["variants"] =
     Array.isArray(data.variants) && data.variants.length > 0
       ? data.variants.map((v: any) => ({
-          label: v.label ?? v.size ?? data.unit ?? '1 unit',
-          size: v.size ?? v.label ?? data.unit ?? '1 unit',
+          label: v.label ?? v.size ?? data.unit ?? "1 unit",
+          size: v.size ?? v.label ?? data.unit ?? "1 unit",
           price: parseFloat(v.price) || price,
         }))
-      : [{ label: data.unit ?? '1 unit', size: data.unit ?? '1 unit', price }]
+      : [{ label: data.unit ?? "1 unit", size: data.unit ?? "1 unit", price }];
 
-  const diet: string[] =
-    Array.isArray(data.diet) ? data.diet :
-    Array.isArray(data.dietary) ? data.dietary :
-    typeof data.dietary === 'string' && data.dietary
-      ? data.dietary.split(',').map((d: string) => d.trim()).filter(Boolean)
-      : []
+  const diet: string[] = Array.isArray(data.diet)
+    ? data.diet
+    : Array.isArray(data.dietary)
+      ? data.dietary
+      : typeof data.dietary === "string" && data.dietary
+        ? data.dietary
+            .split(",")
+            .map((d: string) => d.trim())
+            .filter(Boolean)
+        : [];
 
-  const stock: Product['stock'] =
-    data.stock === 'In Stock'  ? 'In Stock'  :
-    data.stock === 'Low Stock' ? 'Low Stock' :
-    data.stock === 'Sold Out'  ? 'Out of Stock' :
-    data.stock === 'Out of Stock' ? 'Out of Stock' :
-    'In Stock'
+  const stock: Product["stock"] =
+    data.stock === "In Stock"
+      ? "In Stock"
+      : data.stock === "Low Stock"
+        ? "Low Stock"
+        : data.stock === "Sold Out"
+          ? "Out of Stock"
+          : data.stock === "Out of Stock"
+            ? "Out of Stock"
+            : "In Stock";
 
-  const stockCount = typeof data.stockCount === 'number' ? data.stockCount : undefined
+  const stockCount =
+    typeof data.stockCount === "number" ? data.stockCount : undefined;
 
   return {
     id,
-    name:        data.name        ?? 'Unnamed Product',
-    brand:       data.brand       ?? '',
-    origin:      data.origin      ?? 'India',
-    category:    data.category    ?? 'General',
-    tagline:     data.tagline     ?? data.description ?? '',
-    image:       data.image       ?? '',
+    name: data.name ?? "Unnamed Product",
+    brand: data.brand ?? "",
+    origin: data.origin ?? "India",
+    category: data.category ?? "General",
+    tagline: data.tagline ?? data.description ?? "",
+    image: data.image ?? "",
     price,
-    unit:        data.unit        ?? '1 unit',
+    unit: data.unit ?? "1 unit",
     stock,
     stockCount,
     diet,
     variants,
-    bestseller:  data.bestseller  ?? false,
-    description: data.description ?? '',
-  }
+    bestseller: data.bestseller ?? false,
+    description: data.description ?? "",
+  };
 }
 
 /**
- * useProducts — paginated, single-fetch (getDocs not onSnapshot).
+ * useProducts — real-time, full-catalog fetch via onSnapshot.
  *
- * Why getDocs and not onSnapshot?
- * - Products don't change every second. Real-time isn't needed for customers.
- * - onSnapshot keeps a persistent WebSocket open and re-renders ALL cards on
- *   every tiny Firestore write — brutal with 200+ products.
- * - getDocs fires once, returns data, done. Admin portal changes show on
- *   next page refresh (acceptable UX for a grocery shop).
+ * WHY no pagination?
+ * ──────────────────
+ * The store has ~266 products. Paginating client-side means filters only
+ * apply to the loaded page — so clicking "Rice" shows 0 results until
+ * the user manually loads all pages. That's a broken UX.
  *
- * Pagination: loads PAGE_SIZE (48) products at a time.
- * Call loadMore() to fetch the next page.
+ * 266 Firestore docs ≈ ~100 KB of JSON — negligible bandwidth. onSnapshot
+ * keeps everything in sync with admin changes in real time (price, stock,
+ * new products) without any page refresh.
+ *
+ * We debounce re-renders so rapid admin edits don't hammer the UI.
  */
 export function useProducts() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Initial load
   useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const q = query(
-          collection(clientDb, 'products'),
-          orderBy('name'),
-          limit(PAGE_SIZE)
-        )
-        const snap = await getDocs(q)
-        if (cancelled) return
-        const docs = snap.docs.map(d => normaliseProduct(d.id, d.data()))
-        setProducts(docs)
-        setLastDoc(snap.docs[snap.docs.length - 1] ?? null)
-        setHasMore(snap.docs.length === PAGE_SIZE)
-      } catch (err: any) {
-        if (!cancelled) setError(err)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [])
+    const q = query(collection(clientDb, "products"), orderBy("name"));
 
-  // Lightweight real-time stock sync
-  useEffect(() => {
-    const unsub = onSnapshot(collection(clientDb, 'products'), (snap) => {
-      setProducts(prev => {
-        const stockUpdates = new Map()
-        snap.docs.forEach(doc => {
-          const d = doc.data()
-          stockUpdates.set(doc.id, {
-            stock: d.stock === 'In Stock'  ? 'In Stock'  :
-                   d.stock === 'Low Stock' ? 'Low Stock' :
-                   d.stock === 'Sold Out'  ? 'Out of Stock' :
-                   d.stock === 'Out of Stock' ? 'Out of Stock' : 'In Stock',
-            stockCount: typeof d.stockCount === 'number' ? d.stockCount : undefined
-          })
-        })
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const docs = snap.docs.map((d) => normaliseProduct(d.id, d.data()));
+        setProducts(docs);
+        setLoading(false);
+        setError(null);
+      },
+      (err: Error) => {
+        console.error("[useProducts] Firestore real-time error:", err.message);
+        setError(err);
+        setLoading(false);
+      },
+    );
 
-        let hasChanges = false
-        const next = prev.map(p => {
-          const update = stockUpdates.get(p.id)
-          if (!update) return p
-          
-          if (p.stock !== update.stock || p.stockCount !== update.stockCount) {
-            hasChanges = true
-            return { ...p, stock: update.stock, stockCount: update.stockCount }
-          }
-          return p
-        })
-        
-        return hasChanges ? next : prev
-      })
-    }, (error) => {
-      console.error('Firestore real-time sync error (insufficient permissions or other):', error.message)
-    })
-    
-    return () => unsub()
-  }, [])
+    return () => unsub();
+  }, []);
 
-  // Load next page
-  const loadMore = useCallback(async () => {
-    if (!lastDoc || loadingMore || !hasMore) return
-    setLoadingMore(true)
-    try {
-      const q = query(
-        collection(clientDb, 'products'),
-        orderBy('name'),
-        startAfter(lastDoc),
-        limit(PAGE_SIZE)
-      )
-      const snap = await getDocs(q)
-      const docs = snap.docs.map(d => normaliseProduct(d.id, d.data()))
-      setProducts(prev => [...prev, ...docs])
-      setLastDoc(snap.docs[snap.docs.length - 1] ?? null)
-      setHasMore(snap.docs.length === PAGE_SIZE)
-    } catch (err: any) {
-      setError(err)
-    } finally {
-      setLoadingMore(false)
-    }
-  }, [lastDoc, loadingMore, hasMore])
+  // --- Compat stubs so existing callers don't need to change ---
+  // loadMore / hasMore are no-ops now that we load everything in one shot.
+  const loadMore = useCallback(async () => {}, []);
+  const loadingMore = false;
+  const hasMore = false;
 
-  const errorCode = (error as any)?.code ?? null
+  const errorCode = (error as any)?.code ?? null;
   const errorMessage =
-    errorCode === 'permission-denied'
-      ? 'Firestore Security Rules are blocking reads. Go to Firebase Console → Firestore → Rules → Publish the rules.'
-      : errorCode === 'unavailable'
-      ? 'Cannot reach Firestore. Check your internet connection.'
-      : error
-      ? `Firestore error: ${error.message}`
-      : null
+    errorCode === "permission-denied"
+      ? "Firestore Security Rules are blocking reads. Go to Firebase Console → Firestore → Rules → Publish the rules."
+      : errorCode === "unavailable"
+        ? "Cannot reach Firestore. Check your internet connection."
+        : error
+          ? `Firestore error: ${error.message}`
+          : null;
 
-  return { products, loading, loadingMore, hasMore, loadMore, error, errorCode, errorMessage }
+  return {
+    products,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    error,
+    errorCode,
+    errorMessage,
+  };
 }
