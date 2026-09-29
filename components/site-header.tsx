@@ -96,7 +96,7 @@ export function SiteHeader() {
 
       {/* ── Top accent bar + announcement ticker ────────────────────────────── */}
       <div
-        className="relative z-10 border-b"
+        className="hidden md:block relative z-10 border-b"
         style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(0,0,0,0.15)' }}
       >
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 sm:px-4 md:px-6 py-1.5">
@@ -119,7 +119,7 @@ export function SiteHeader() {
 
       {/* ── Main header row ───────────────────────────────────────────────── */}
       <div className="relative z-10 mx-auto max-w-7xl px-3 sm:px-4 md:px-6">
-        <div className="flex items-center gap-1.5 sm:gap-3 py-3 sm:py-5">
+        <div className="flex items-center gap-1.5 sm:gap-3 py-1.5 md:py-4">
 
           {/* Brand Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2 sm:gap-3 group" aria-label="IndianMarket home">

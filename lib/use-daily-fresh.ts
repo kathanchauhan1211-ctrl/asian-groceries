@@ -31,9 +31,25 @@ export function useDailyFresh() {
     const unsub = onSnapshot(
       collection(clientDb, 'settings'),
       (snap) => {
+        const DEFAULT_ROWS: Record<string, Partial<DailyFreshRow>> = {
+          vegetables: { title: 'Vegetables', emoji: '🥦' },
+          fruits: { title: 'Fruits', emoji: '🍎' },
+        }
         const data = snap.docs
           .filter(d => d.id.startsWith('dailyFresh_'))
-          .map(d => ({ id: d.id.replace('dailyFresh_', ''), ...d.data() } as DailyFreshRow))
+          .map(d => {
+            const id = d.id.replace('dailyFresh_', '')
+            const docData = d.data()
+            const defaults = DEFAULT_ROWS[id] || {}
+            return {
+              id,
+              ...docData,
+              title: docData.title ?? defaults.title ?? '',
+              emoji: docData.emoji ?? defaults.emoji ?? '',
+              productIds: docData.productIds ?? [],
+              enabled: docData.enabled ?? true,
+            } as DailyFreshRow
+          })
           .filter(r => r.id !== 'all')
           .filter(r => r.enabled !== false)
         setRows(data)

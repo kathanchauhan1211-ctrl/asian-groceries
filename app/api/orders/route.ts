@@ -26,12 +26,10 @@ interface OrderRequestBody {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Generates a collision-resistant ticket number, e.g. AG-M4KJ2X-A9F3 */
-function generateTicketNumber(): string {
-  const timestamp = Date.now().toString(36).toUpperCase()
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `AG-${timestamp}-${random}`
-}
+/** 
+ * Removed old static generateTicketNumber.
+ * Ticket numbers are now generated transactionally inside the route.
+ */
 
 /** Builds the HTML for the confirmation email */
 function buildOrderEmailHtml(params: {
@@ -111,12 +109,13 @@ export async function POST(req: NextRequest) {
     const { db } = getFirebaseAdmin()
 
     // ── 3. Run atomic Firestore transaction ────────────────────────────────
-    const ticketNumber = generateTicketNumber()
-
     // Build product doc refs outside the transaction so they can be reused
     const productRefs = items.map((item) =>
       db.collection('products').doc(item.productId),
     )
+
+    let ticketNumber = ''
+    let orderRef: any = null
 
     // Holds enriched line items we'll use after the transaction
     let enrichedItems: Array<{
@@ -130,15 +129,34 @@ export async function POST(req: NextRequest) {
 
     let subtotal = 0
 
-    // Use the unguessable ticketNumber as the document ID so clients can fetch it directly
-    // and we can lock down Firestore rules to allow get() but deny list()
-    const orderRef = db.collection('orders').doc(ticketNumber)
+    const now = new Date()
+    const dd = String(now.getDate()).padStart(2, '0')
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const yy = String(now.getFullYear()).slice(-2)
+    const mmyy = `${mm}${yy}`
 
     await db.runTransaction(async (transaction) => {
-      // a) Read all product docs inside the transaction (for consistency)
-      const productSnaps = await Promise.all(
-        productRefs.map((ref) => transaction.get(ref)),
-      )
+      // a) Read all product docs and counter inside the transaction
+      const counterRef = db.collection('counters').doc('order_number')
+      
+      const [counterSnap, ...productSnaps] = await Promise.all([
+        transaction.get(counterRef),
+        ...productRefs.map((ref) => transaction.get(ref))
+      ])
+
+      let count = 1
+      if (counterSnap.exists) {
+        const data = counterSnap.data()!
+        if (data.currentMonth === mmyy) {
+          count = (data.count || 0) + 1
+        }
+      }
+
+      const xxxx = String(count).padStart(4, '0')
+      ticketNumber = `ORD${dd}${mmyy}-${xxxx}`
+      orderRef = db.collection('orders').doc(ticketNumber)
+
+      transaction.set(counterRef, { currentMonth: mmyy, count })
 
       enrichedItems = [] // reset inside transaction for retry safety
       subtotal = 0

@@ -1859,7 +1859,13 @@ export default function AdminProductsPage() {
 
       const merged = DEFAULT_ROWS.map((def) => {
         const found = data.find((r) => r.id === def.id);
-        return found ?? def;
+        return {
+          ...def,
+          ...(found || {}),
+          title: found?.title ?? def.title,
+          emoji: found?.emoji ?? def.emoji,
+          productIds: found?.productIds ?? def.productIds,
+        };
       });
 
       setDailyFreshDocs(merged);

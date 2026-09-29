@@ -35,6 +35,9 @@ export default function PageContent() {
       {/* ═══ Daily Fresh — curated rows from admin ═══ */}
       <DailyFreshSection allProducts={allProducts} productsLoading={productsLoading} />
 
+      {/* ═══ Banners (Dynamic) ═══ */}
+      <BannerModule />
+
       {/* ═══ Collection Cards (Dynamic) ═══ */}
       <CollectionCards
         collections={collections}
@@ -42,8 +45,8 @@ export default function PageContent() {
         onSelectCategory={setActiveCategory}
       />
 
-      {/* ═══ Banners (Dynamic) ═══ */}
-      <BannerModule />
+      {/* ═══ Down Slide ═══ */}
+      <PromoSlider placement="down" />
 
       {/* ═══ Brand Catalog ═══ */}
       <BrandCatalog />

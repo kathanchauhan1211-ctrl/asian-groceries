@@ -36,29 +36,46 @@ const FALLBACK_SLIDES: Slide[] = [
     enabled: true,
   },
   {
-    img: 'https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1600&q=80',
-    brand: 'TRS',
-    label: 'Lentils & Pulses',
-    headline: 'Premium Quality Pulses',
-    sub: "TRS — the UK's #1 South Asian ingredient brand",
-    cta: 'Shop Lentils',
-    href: '/?category=Lentils+%26+Pulses',
+    img: '/images/indian-market-slider.jpg',
+    brand: 'Indian Market',
+    label: '',
+    headline: '',
+    sub: '',
+    cta: '',
+    href: '/shop',
     order: 2,
     enabled: true,
+    placement: 'top',
   },
-].map((s, i) => ({ id: `fallback-${i}`, ...s }))
+]
+const FALLBACK_DOWN_SLIDES: Slide[] = [
+  {
+    img: 'https://images.unsplash.com/photo-1601000676645-a7bba86d26cb?w=1600&q=80',
+    brand: 'Down Ads',
+    label: 'Special Offers',
+    headline: 'Discover More Deals',
+    sub: 'Explore amazing discounts at the bottom of the page',
+    cta: 'Shop Now',
+    href: '/shop',
+    order: 0,
+    enabled: true,
+    placement: 'down',
+  }
+].map((s, i) => ({ id: `fallback-down-${i}`, ...s }))
+
+const ALL_FALLBACKS = [...FALLBACK_SLIDES.map((s, i) => ({ id: `fallback-${i}`, ...s })), ...FALLBACK_DOWN_SLIDES]
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80'
 
-export function PromoSlider() {
-  const [slides, setSlides]       = useState<Slide[]>([])
-  const [loading, setLoading]     = useState(true)
+export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' }) {
+  const [slides, setSlides] = useState<Slide[]>([])
+  const [loading, setLoading] = useState(true)
   const { td } = useTranslation()
 
-  const [current, setCurrent]     = useState(0)
+  const [current, setCurrent] = useState(0)
   const [animating, setAnimating] = useState(false)
-  const [paused, setPaused]       = useState(false)
+  const [paused, setPaused] = useState(false)
 
   const total = slides.length
 
@@ -71,9 +88,16 @@ export function PromoSlider() {
           orderBy('order', 'asc'),
         )
         const snap = await getDocs(q)
-        setSlides(snap.empty ? FALLBACK_SLIDES : snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide)))
+        const allSlides = snap.empty ? ALL_FALLBACKS : snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide))
+        const filtered = allSlides.filter(s => (s.placement || 'top') === placement)
+        // If no slides exist for this placement, use fallbacks for this placement
+        if (filtered.length === 0) {
+          setSlides(ALL_FALLBACKS.filter(s => s.placement === placement))
+        } else {
+          setSlides(filtered)
+        }
       } catch {
-        setSlides(FALLBACK_SLIDES)
+        setSlides(ALL_FALLBACKS.filter(s => s.placement === placement))
       }
       setLoading(false)
     }
@@ -156,6 +180,7 @@ export function PromoSlider() {
                 alt={slide.brand}
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{
+                  objectPosition: 'center 15%',
                   animation: isCurrent && !animating
                     ? `kb-zoom ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
                     : 'none',

@@ -19,22 +19,22 @@ import {
 } from '@/lib/use-featured-collections'
 
 // ─── Status config ────────────────────────────────────────────────────────────
-const STATUSES = ['Pending Payment', 'Accepted', 'Preparing', 'Dispatched', 'Delivered'] as const
+const STATUSES = ['Pending Payment', 'Paid/Processing', 'Preparing', 'Dispatched', 'Completed'] as const
 type Status = typeof STATUSES[number]
 
 const STATUS_CONFIG: Record<Status, { icon: any; pill: string; label: string; next?: Status }> = {
-  'Pending Payment': { icon: Clock,       pill: 'text-amber-400 bg-amber-400/10 border-amber-400/30',      label: 'Pending Payment', next: 'Accepted' },
-  'Accepted':        { icon: CheckCircle, pill: 'text-blue-400 bg-blue-400/10 border-blue-400/30',         label: 'Accepted',        next: 'Preparing' },
+  'Pending Payment': { icon: Clock,       pill: 'text-amber-400 bg-amber-400/10 border-amber-400/30',      label: 'Pending Payment', next: 'Paid/Processing' },
+  'Paid/Processing': { icon: CheckCircle, pill: 'text-blue-400 bg-blue-400/10 border-blue-400/30',         label: 'Paid/Processing', next: 'Preparing' },
   'Preparing':       { icon: Package,     pill: 'text-purple-400 bg-purple-400/10 border-purple-400/30',   label: 'Preparing',       next: 'Dispatched' },
-  'Dispatched':      { icon: Truck,       pill: 'text-orange-400 bg-orange-400/10 border-orange-400/30',   label: 'Dispatched',      next: 'Delivered' },
-  'Delivered':       { icon: CheckCircle, pill: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30', label: 'Delivered' },
+  'Dispatched':      { icon: Truck,       pill: 'text-orange-400 bg-orange-400/10 border-orange-400/30',   label: 'Dispatched',      next: 'Completed' },
+  'Completed':       { icon: CheckCircle, pill: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30', label: 'Completed' },
 }
 
 const NEXT_LABEL: Partial<Record<Status, string>> = {
-  'Pending Payment': 'Accept Order',
-  'Accepted':        'Mark Preparing',
+  'Pending Payment': 'Mark Paid/Processing',
+  'Paid/Processing': 'Mark Preparing',
   'Preparing':       'Mark Dispatched',
-  'Dispatched':      'Mark Delivered',
+  'Dispatched':      'Mark Completed',
 }
 
 // ─── Category assignment popover ──────────────────────────────────────────────
@@ -344,28 +344,30 @@ function OrderCard({
                   &ldquo;{order.orderNotes}&rdquo;
                 </div>
               )}
-              <div className="mt-4">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Truck className="size-3" /> Shipping (DPD)
-                </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    value={dpdId}
-                    onChange={e => setDpdId(e.target.value)}
-                    placeholder="DPD Parcel Number"
-                    className="bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white w-full outline-none focus:border-orange-500"
-                  />
-                  <Button
-                    size="sm"
-                    variant="glass-light"
-                    disabled={loading || dpdId === (order.dpdParcelNumber || '')}
-                    onClick={async () => { setLoading(true); await onStatus(order.id, order.status, dpdId); setLoading(false) }}
-                    className="h-[34px]"
-                  >
-                    Save
-                  </Button>
+              {order.status !== 'Pending Payment' && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Truck className="size-3" /> Shipping (DPD)
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={dpdId}
+                      onChange={e => setDpdId(e.target.value)}
+                      placeholder="DPD Parcel Number"
+                      className="bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white w-full outline-none focus:border-orange-500"
+                    />
+                    <Button
+                      size="sm"
+                      variant="glass-light"
+                      disabled={loading || dpdId === (order.dpdParcelNumber || '')}
+                      onClick={async () => { setLoading(true); await onStatus(order.id, order.status, dpdId); setLoading(false) }}
+                      className="h-[34px]"
+                    >
+                      Save
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -587,9 +589,9 @@ function AdminOrdersContent() {
             </div>
           )}
           <div className="text-right">
-            <p className="text-xs text-slate-500">Revenue (Delivered)</p>
+            <p className="text-xs text-slate-500">Revenue (Completed)</p>
             <p className="text-xl font-bold text-emerald-400">
-              €{orders.filter(o => o.status === 'Delivered').reduce((s, o) => s + (o.grandTotal || 0), 0).toFixed(2)}
+              €{orders.filter(o => o.status === 'Completed').reduce((s, o) => s + (o.grandTotal || 0), 0).toFixed(2)}
             </p>
           </div>
         </div>

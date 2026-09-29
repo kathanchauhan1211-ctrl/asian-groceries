@@ -141,3 +141,43 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: err.message ?? 'Unexpected error' }, { status: 500 })
   }
 }
+
+/**
+ * DELETE /api/admin/orders
+ * URL Params: ?id=ORDER_ID
+ *
+ * Deletes an order from the database.
+ * The caller must supply a valid Firebase ID token in the Authorization header.
+ * Only the admin account (verified by email) is permitted.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get('authorization') ?? ''
+    const idToken = authHeader.replace('Bearer ', '').trim()
+
+    if (!idToken) {
+      return NextResponse.json({ error: 'Unauthorised — missing token' }, { status: 401 })
+    }
+
+    const { auth, db } = getFirebaseAdmin()
+    const decoded = await auth.verifyIdToken(idToken)
+
+    if (decoded.email !== getAdminEmail()) {
+      return NextResponse.json({ error: 'Forbidden — admin only' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const orderId = searchParams.get('id')
+
+    if (!orderId) {
+      return NextResponse.json({ error: 'Missing order ID' }, { status: 400 })
+    }
+
+    await db.collection('orders').doc(orderId).delete()
+
+    return NextResponse.json({ success: true, orderId })
+  } catch (err: any) {
+    console.error('[DELETE /api/admin/orders] Error:', err)
+    return NextResponse.json({ error: err.message ?? 'Unexpected error' }, { status: 500 })
+  }
+}

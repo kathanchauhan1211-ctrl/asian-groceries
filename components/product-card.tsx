@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Check, Minus, Plus, ShoppingBag, Star, X, ChevronDown, AlertTriangle, HelpCircle, Shield, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import { useCart } from '@/lib/cart-context'
@@ -47,6 +48,9 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
     ? `Only ${product.stockCount} left!`
     : (product.stock === 'In Stock' ? 'In stock and ready to ship' : product.stock)
 
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   function handleAdd() {
     if (soldOut || !variant) return
     addItem(product, variant, qty)
@@ -54,10 +58,12 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
     setTimeout(() => { setAdded(false); onClose() }, 900)
   }
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}>
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-20 md:p-6 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}>
       <div
-        className="relative w-full max-w-[65rem] min-h-[35rem] bg-gradient-to-b from-[#1c2c4d] to-[#0c162c] shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row max-h-[95vh]"
+        className="relative w-full max-w-[65rem] md:min-h-[35rem] bg-gradient-to-b from-[#1c2c4d] to-[#0c162c] shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row max-h-full md:max-h-[90vh]"
         onClick={e => e.stopPropagation()}
       >
         {/* iOS style strong top white gradient shine for the modal */}
@@ -66,18 +72,18 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
         <div className="absolute inset-0 rounded-[inherit] shadow-[inset_0_2px_1px_rgba(255,255,255,0.15),inset_0_-3px_5px_rgba(0,0,0,0.4)] pointer-events-none" />
 
         {/* Close Button */}
-        <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white z-20 transition-colors bg-black/30 backdrop-blur-md rounded-full p-2">
+        <button onClick={onClose} className="absolute top-3 right-3 md:top-4 md:right-4 text-white/50 hover:text-white z-20 transition-colors bg-black/30 backdrop-blur-md rounded-full p-2">
           <X className="size-5" />
         </button>
 
         {/* Left side (Image) - Full bleed panel */}
-        <div className="relative w-full md:w-1/2 md:min-h-full aspect-square md:aspect-auto flex items-center justify-center order-1 bg-white border border-gray-100 dark:bg-gray-900 dark:border-white/5 overflow-hidden p-6">
+        <div className="relative w-full md:w-1/2 md:min-h-full h-[35vh] md:h-auto flex items-center justify-center order-1 bg-white border border-gray-100 dark:bg-gray-900 dark:border-white/5 overflow-hidden p-2 md:p-6 shrink-0">
           {product.image ? (
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-contain p-6"
+              className="object-contain p-2 md:p-6"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ) : (
@@ -100,11 +106,32 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
 
           <div className="flex items-center flex-wrap gap-4 mb-5">
             <span className="text-2xl font-semibold text-white">€{(variant?.price ?? product.price ?? 0).toFixed(2)}</span>
+            {variant?.label && (
+              <span className="rounded-full border border-white/20 bg-white/5 px-3 py-1 text-sm font-medium text-white/90">
+                {td(variant.label)}
+              </span>
+            )}
           </div>
 
-          <p className="text-base text-white/70 mb-8 leading-relaxed">
+          <p className="text-base text-white/70 mb-4 leading-relaxed font-medium">
             {td(product.tagline)}
           </p>
+          
+          {product.description && (
+            <p className="text-sm text-white/50 mb-6 leading-relaxed">
+              {td(product.description)}
+            </p>
+          )}
+
+          {product.diet && product.diet.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {product.diet.map(d => (
+                <span key={d} className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
+                  {td(d)}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className={`flex items-center gap-2 text-sm font-medium mb-8 ${soldOut ? 'text-rose-400' : 'text-emerald-400'}`}>
             {!soldOut && <Check className="size-5" />}
@@ -136,7 +163,8 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

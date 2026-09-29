@@ -22,6 +22,7 @@ export interface Slide {
   href: string
   order: number
   enabled: boolean
+  placement?: 'top' | 'down'
 }
 
 const DEFAULT_SLIDE: Omit<Slide, 'id'> = {
@@ -34,6 +35,7 @@ const DEFAULT_SLIDE: Omit<Slide, 'id'> = {
   href: '/',
   order: 0,
   enabled: true,
+  placement: 'top',
 }
 
 // ─── Fallback / seed slides — mirrors promo-slider.tsx FALLBACK_SLIDES ─────────
@@ -61,15 +63,28 @@ const SEED_SLIDES: Omit<Slide, 'id'>[] = [
     enabled:  true,
   },
   {
-    img:      'https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1600&q=80',
-    brand:    'TRS',
-    label:    'Lentils & Pulses',
-    headline: 'Premium Quality Pulses',
-    sub:      "TRS — the UK's #1 South Asian ingredient brand",
-    cta:      'Shop Lentils',
-    href:     '/?category=Lentils+%26+Pulses',
+    img:      '/images/indian-market-slider.jpg',
+    brand:    'Indian Market',
+    label:    '',
+    headline: '',
+    sub:      '',
+    cta:      '',
+    href:     '/shop',
     order:    2,
     enabled:  true,
+    placement: 'top',
+  },
+  {
+    img:      'https://images.unsplash.com/photo-1601000676645-a7bba86d26cb?w=1600&q=80',
+    brand:    'Down Ads',
+    label:    'Special Offers',
+    headline: 'Discover More Deals',
+    sub:      'Explore amazing discounts at the bottom of the page',
+    cta:      'Shop Now',
+    href:     '/shop',
+    order:    0,
+    enabled:  true,
+    placement: 'down',
   },
 ]
 
@@ -100,7 +115,24 @@ function SlideForm({
       <div className="relative w-full overflow-hidden" style={{ height: 180 }}>
         {form.img ? (
           <>
-            <img src={form.img} alt="preview" className="w-full h-full object-cover" />
+            <img 
+              src={form.img} 
+              alt="preview" 
+              className="w-full h-full object-cover" 
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement?.querySelector('.error-msg')?.classList.remove('hidden');
+              }}
+              onLoad={(e) => {
+                e.currentTarget.style.display = 'block';
+                e.currentTarget.parentElement?.querySelector('.error-msg')?.classList.add('hidden');
+              }}
+            />
+            <div className="error-msg hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-100 text-red-500">
+              <ImageIcon className="size-8 mx-auto mb-1 opacity-50" />
+              <p className="text-sm font-bold">Image failed to load</p>
+              <p className="text-xs mt-1 px-4 text-center">Make sure the URL is a direct link to an image (ends in .jpg, .png, etc) and allows external embedding.</p>
+            </div>
             <div
               className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
               style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 40%, transparent 100%)' }}
@@ -223,21 +255,39 @@ function SlideForm({
         </div>
 
         {/* Active toggle */}
-        <div className="sm:col-span-2 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => field('enabled', !form.enabled)}
-            className="relative flex h-6 w-11 items-center rounded-full transition-colors duration-300"
-            style={{ background: form.enabled ? '#F97316' : '#D1D5DB' }}
-          >
-            <span
-              className="absolute size-5 rounded-full bg-white shadow transition-transform duration-300"
-              style={{ transform: form.enabled ? 'translateX(22px)' : 'translateX(2px)' }}
-            />
-          </button>
-          <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
-            {form.enabled ? 'Slide is active (shown on storefront)' : 'Slide is hidden'}
-          </span>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => field('enabled', !form.enabled)}
+              className="relative flex h-6 w-11 items-center rounded-full transition-colors duration-300"
+              style={{ background: form.enabled ? '#F97316' : '#D1D5DB' }}
+            >
+              <span
+                className="absolute size-5 rounded-full bg-white shadow transition-transform duration-300"
+                style={{ transform: form.enabled ? 'translateX(22px)' : 'translateX(2px)' }}
+              />
+            </button>
+            <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+              {form.enabled ? 'Slide is active' : 'Slide is hidden'}
+            </span>
+          </div>
+        </div>
+
+        {/* Placement toggle */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>Placement:</span>
+            <select
+              value={form.placement || 'top'}
+              onChange={e => field('placement', e.target.value)}
+              className="rounded-xl border px-3 py-1.5 text-sm outline-none transition-all focus:ring-2 focus:ring-orange-400"
+              style={{ background: 'var(--secondary)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
+            >
+              <option value="top">Top Slide (Promo)</option>
+              <option value="down">Down Slide (Ads)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -271,6 +321,7 @@ export default function AdminSlidesPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'top' | 'down'>('top')
 
   const slidesRef = collection(clientDb, 'slides')
 
@@ -325,10 +376,17 @@ export default function AdminSlidesPage() {
 
   // ── Move order ──
   async function moveSlide(id: string, dir: 'up' | 'down') {
-    const idx = slides.findIndex(s => s.id === id)
-    if ((dir === 'up' && idx === 0) || (dir === 'down' && idx === slides.length - 1)) return
+    const target = slides.find(s => s.id === id)
+    if (!target) return
+    const targetPlacement = target.placement || 'top'
+    const sameGroup = slides.filter(s => (s.placement || 'top') === targetPlacement)
+    
+    const idx = sameGroup.findIndex(s => s.id === id)
+    if ((dir === 'up' && idx === 0) || (dir === 'down' && idx === sameGroup.length - 1)) return
+    
     const swapIdx = dir === 'up' ? idx - 1 : idx + 1
-    const a = slides[idx], b = slides[swapIdx]
+    const a = sameGroup[idx], b = sameGroup[swapIdx]
+    
     await updateDoc(doc(clientDb, 'slides', a.id!), { order: b.order } as Record<string, any>)
     await updateDoc(doc(clientDb, 'slides', b.id!), { order: a.order } as Record<string, any>)
     await loadSlides()
@@ -367,12 +425,30 @@ export default function AdminSlidesPage() {
         )}
       </div>
 
+      {/* Tabs */}
+      {!editingId && (
+        <div className="flex items-center gap-4 mb-6 border-b" style={{ borderColor: 'var(--border)' }}>
+          <button
+            onClick={() => setActiveTab('top')}
+            className={`pb-3 px-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'top' ? 'text-orange-500 border-orange-500' : 'text-slate-400 border-transparent hover:text-slate-700'}`}
+          >
+            Top Slides (Promo)
+          </button>
+          <button
+            onClick={() => setActiveTab('down')}
+            className={`pb-3 px-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'down' ? 'text-orange-500 border-orange-500' : 'text-slate-400 border-transparent hover:text-slate-700'}`}
+          >
+            Down Slides (Ads)
+          </button>
+        </div>
+      )}
+
       {/* New slide form */}
       {editingId === 'new' && (
         <div className="mb-6">
           <h2 className="mb-3 text-base font-bold" style={{ color: 'var(--foreground)' }}>New Slide</h2>
           <SlideForm
-            slide={DEFAULT_SLIDE}
+            slide={{ ...DEFAULT_SLIDE, placement: activeTab }}
             onSave={handleSave}
             onCancel={() => setEditingId(null)}
             saving={saving}
@@ -387,12 +463,12 @@ export default function AdminSlidesPage() {
             <div key={i} className="h-24 rounded-2xl bg-slate-100 animate-pulse" style={{ background: 'var(--muted)' }} />
           ))}
         </div>
-      ) : slides.length === 0 && editingId !== 'new' ? (
+      ) : slides.filter(s => (s.placement || 'top') === activeTab).length === 0 && editingId !== 'new' ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-16 text-center"
           style={{ borderColor: 'var(--border)' }}>
           <ImageIcon className="size-10 mb-3" style={{ color: 'var(--muted-foreground)' }} />
-          <p className="font-semibold text-lg" style={{ color: 'var(--foreground)' }}>No slides yet</p>
-          <p className="text-sm mt-1 mb-4" style={{ color: 'var(--muted-foreground)' }}>Add a slide manually or load the 3 built-in default slides.</p>
+          <p className="font-semibold text-lg" style={{ color: 'var(--foreground)' }}>No {activeTab === 'top' ? 'Top' : 'Down'} slides yet</p>
+          <p className="text-sm mt-1 mb-4" style={{ color: 'var(--muted-foreground)' }}>Add a slide manually or load the defaults.</p>
           <div className="flex gap-3">
             <button
               onClick={() => setEditingId('new')}
@@ -405,7 +481,8 @@ export default function AdminSlidesPage() {
               onClick={async () => {
                 setSaving(true)
                 try {
-                  for (const slide of SEED_SLIDES) {
+                  const slidesToAdd = SEED_SLIDES.filter(s => s.placement === activeTab)
+                  for (const slide of slidesToAdd) {
                     await addDoc(collection(clientDb, 'slides'), slide)
                   }
                   await loadSlides()
@@ -422,7 +499,7 @@ export default function AdminSlidesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {slides.map((slide, i) => (
+          {slides.filter(s => (s.placement || 'top') === activeTab).map((slide, i, arr) => (
             <div key={slide.id}>
               {/* Edit form inline */}
               {editingId === slide.id ? (
@@ -483,7 +560,7 @@ export default function AdminSlidesPage() {
                     </button>
                     <button
                       onClick={() => moveSlide(slide.id!, 'down')}
-                      disabled={i === slides.length - 1}
+                      disabled={i === arr.length - 1}
                       className="flex size-6 items-center justify-center rounded-md hover:bg-slate-100 transition-colors disabled:opacity-30"
                     >
                       <ArrowRight className="size-3.5 rotate-90" style={{ color: 'var(--muted-foreground)' }} />

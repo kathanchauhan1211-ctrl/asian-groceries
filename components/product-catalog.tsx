@@ -1220,45 +1220,22 @@ export function ProductCatalog({
         {/* ══ Filter Bar ══ */}
         <div
           id="shop-grid"
-          className="fixed left-0 right-0 top-[104px] md:top-[132px] w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-2 pb-2 z-40 border-b border-gray-200 dark:border-gray-800 shadow-sm"
+          className="fixed left-0 right-0 top-[60px] md:top-[116px] w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-2 pb-2 z-40 border-b border-gray-200 dark:border-gray-800 shadow-sm"
         >
           <div className="mx-auto max-w-7xl px-4 md:px-6">
             {prependHeader}
 
             {/* ── MOBILE: Filter & Sort button ── */}
-            <div className="flex flex-col gap-3 md:hidden mb-3">
-              <SearchInput value={query} onChange={(v) => setParam("q", v)} />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setMobileFilterOpen(true)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border py-2.5 text-sm font-bold transition-all"
-                  style={{
-                    background: "var(--card)",
-                    borderColor: "var(--border)",
-                    color: "var(--foreground)",
-                  }}
-                >
-                  <Filter
-                    className="size-4"
-                    style={{ color: "var(--primary)" }}
-                  />
-                  Filters & Sort
-                  {totalActiveFilters > 0 && (
-                    <span
-                      className="flex size-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                      style={{ background: "var(--primary)" }}
-                    >
-                      {totalActiveFilters}
-                    </span>
-                  )}
-                </button>
-                <span
-                  className="text-xs shrink-0"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  {filtered.length} items
-                </span>
+            <div className="flex items-center gap-2 md:hidden mb-2">
+              <div className="flex-1">
+                <SearchInput value={query} onChange={(v) => setParam("q", v)} />
               </div>
+              <span
+                className="text-xs shrink-0 font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full"
+                style={{ color: "var(--foreground)" }}
+              >
+                {filtered.length} items
+              </span>
             </div>
 
             {/* ── DESKTOP: Dookan-style filter bar ── */}

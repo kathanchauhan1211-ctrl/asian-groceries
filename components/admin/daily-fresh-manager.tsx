@@ -354,7 +354,14 @@ export function DailyFreshManager({ allProducts }: { allProducts: AdminProduct[]
       const data = dailyFreshDocs.map(d => ({ id: d.id.replace('dailyFresh_', ''), ...d.data() } as FreshRow))
       const merged = DEFAULT_ROWS.map(def => {
         const found = data.find(r => r.id === def.id)
-        return found ?? def
+        return {
+          ...def,
+          ...(found || {}),
+          title: found?.title ?? def.title,
+          emoji: found?.emoji ?? def.emoji,
+          productIds: found?.productIds ?? def.productIds,
+          enabled: found?.enabled ?? def.enabled,
+        }
       })
       setRows(merged)
       setLoading(false)
