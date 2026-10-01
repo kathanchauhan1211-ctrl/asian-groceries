@@ -142,46 +142,49 @@ export default function PageContent() {
 
         <div className="mx-auto max-w-7xl px-4 md:px-6">
 
-          {hasActiveFilter ? (
-            // ── FILTERED VIEW: full grid with filter bar ──
-            <>
-              <ProductCatalog 
-                hideGridWhenUnfiltered={false} 
-                prependHeader={
-                  <div className="flex items-center justify-between pb-3 mb-2">
-                    <Link
-                      href="/shop"
-                      className="flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-bold shadow-sm transition-all hover:scale-105 active:scale-95"
-                      style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'linear-gradient(to bottom, #1c2c4d, #0c162c)', color: 'white' }}
-                    >
-                      <ChevronLeft className="size-4 text-orange-500" />
-                      Back to eShop
-                    </Link>
+          {/* ── FILTER BAR (Always visible) ── */}
+          <ProductCatalog 
+            hideGridWhenUnfiltered={!hasActiveFilter} 
+            hideExtraFilters={Boolean(searchParams.get('category'))}
+            prependHeader={
+              <div className="flex items-center justify-between pb-3 mb-2">
+                {hasActiveFilter ? (
+                  <Link
+                    href="/shop"
+                    className="flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-bold shadow-sm transition-all hover:scale-105 active:scale-95"
+                    style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'linear-gradient(to bottom, #1c2c4d, #0c162c)', color: 'white' }}
+                  >
+                    <ChevronLeft className="size-4 text-orange-500" />
+                    Back to Shop
+                  </Link>
+                ) : (
+                  <div />
+                )}
 
-                    <button
-                      onClick={() => setOpen(true)}
-                      className="relative flex items-center justify-center rounded-full p-2.5 shadow-sm transition-all hover:scale-105 active:scale-95"
-                      style={{ background: 'linear-gradient(to bottom, #f97316, #ea580c)', color: 'white' }}
-                    >
-                      <ShoppingBag className="size-5" />
-                      {count > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-[10px] font-black text-orange-600 shadow-md border border-orange-200">
-                          {count > 9 ? '9+' : count}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                }
-              />
-            </>
-          ) : (
-            // ── HOME VIEW: category tiles + featured carousels ──
-            <>
+                <button
+                  onClick={() => setOpen(true)}
+                  className="relative flex items-center justify-center rounded-full p-2.5 shadow-sm transition-all hover:scale-105 active:scale-95"
+                  style={{ background: 'linear-gradient(to bottom, #f97316, #ea580c)', color: 'white' }}
+                >
+                  <ShoppingBag className="size-5" />
+                  {count > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-[10px] font-black text-orange-600 shadow-md border border-orange-200">
+                      {count > 9 ? '9+' : count}
+                    </span>
+                  )}
+                </button>
+              </div>
+            }
+          />
+
+          {!hasActiveFilter && (
+            // ── UNFILTERED CONTENT (Only show when no filters are active) ──
+            <div className="mt-8">
               <CategoryTiles />
 
               {loading ? (
                 /* Skeleton carousels */
-                <div className="space-y-8">
+                <div className="space-y-8 mt-12">
                   {[1, 2, 3].map(i => (
                     <div key={i}>
                       <div className="h-8 w-48 rounded-lg bg-gray-200 dark:bg-gray-800 animate-pulse mb-3" />
@@ -194,9 +197,11 @@ export default function PageContent() {
                   ))}
                 </div>
               ) : (
-                <FeaturedCarousels products={allProducts} />
+                <div className="mt-12">
+                  <FeaturedCarousels products={allProducts} />
+                </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

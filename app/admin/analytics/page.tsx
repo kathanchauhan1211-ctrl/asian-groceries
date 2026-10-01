@@ -87,9 +87,9 @@ export default function AdminAnalyticsPage() {
     )
   }
 
-  const revenue = orders.filter(o => o.status === 'Completed').reduce((s, o) => s + (o.grandTotal || 0), 0)
-  const pending = orders.filter(o => o.status !== 'Completed').length
-  const delivered = orders.filter(o => o.status === 'Completed').length
+  const revenue = orders.filter(o => ['Completed', 'Delivered'].includes(o.status)).reduce((s, o) => s + (o.grandTotal || 0), 0)
+  const pending = orders.filter(o => !['Completed', 'Delivered', 'Cancelled', 'Rejected'].includes(o.status)).length
+  const delivered = orders.filter(o => ['Completed', 'Delivered'].includes(o.status)).length
   const inStock = products.filter(p => p.stock === 'In Stock').length
 
   const stats = [
@@ -252,9 +252,10 @@ export default function AdminAnalyticsPage() {
                   }
 
                   const statusColor = 
-                    order.status === 'Completed' || order.status === 'Delivered' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' :
-                    order.status === 'Paid/Processing' || order.status === 'Accepted' ? 'text-blue-400 bg-blue-400/10 border-blue-400/20' :
+                    ['Completed', 'Delivered'].includes(order.status) ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' :
+                    ['Paid/Processing', 'Accepted'].includes(order.status) ? 'text-blue-400 bg-blue-400/10 border-blue-400/20' :
                     order.status === 'Dispatched' ? 'text-orange-400 bg-orange-400/10 border-orange-400/20' :
+                    ['Cancelled', 'Rejected'].includes(order.status) ? 'text-red-400 bg-red-400/10 border-red-400/20' :
                     'text-amber-400 bg-amber-400/10 border-amber-400/20'
 
                   return (

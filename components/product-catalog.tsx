@@ -32,14 +32,17 @@ import {
 } from "@/components/product-card";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type SortKey = "default" | "price-asc" | "price-desc" | "name" | "bestseller";
+type SortKey = "default" | "price-asc" | "price-desc" | "name" | "name-desc" | "bestseller" | "newest" | "quantity-desc";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "default", label: "Featured" },
+  { key: "newest", label: "Newly Added" },
   { key: "bestseller", label: "Best Selling" },
-  { key: "price-asc", label: "Price: Low → High" },
-  { key: "price-desc", label: "Price: High → Low" },
-  { key: "name", label: "Name A–Z" },
+  { key: "price-asc", label: "Lowest Price" },
+  { key: "price-desc", label: "Highest Price" },
+  { key: "name", label: "Letters (A–Z)" },
+  { key: "name-desc", label: "Letters (Z–A)" },
+  { key: "quantity-desc", label: "Quantity (High to Low)" },
 ];
 
 // ─── Flag icon helper ────────────────────────────────────────────────────────
@@ -614,29 +617,24 @@ function MobileFilterDrawer({
   filteredCount: number;
   onClearAll: () => void;
 }) {
-  if (!open) return null;
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        aria-hidden={!open}
         onClick={onClose}
+        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
       />
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-y-auto"
-        style={{
-          background: "var(--card)",
-          maxHeight: "90dvh",
-          borderTop: "1px solid var(--border)",
-        }}
+        role="dialog"
+        aria-modal={open}
+        className={`fixed right-0 top-0 z-50 flex h-dvh w-full max-w-[340px] flex-col shadow-2xl border-l border-white/40 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl transition-transform duration-300 ease-out overflow-hidden ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        <div className="flex justify-center pt-3 pb-1">
-          <div
-            className="h-1 w-10 rounded-full opacity-30"
-            style={{ background: "var(--muted-foreground)" }}
-          />
-        </div>
         <div
-          className="flex items-center justify-between px-5 py-3 border-b"
+          className="flex items-center justify-between px-6 py-4 border-b shrink-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md"
           style={{ borderColor: "var(--border)" }}
         >
           <h2
@@ -654,7 +652,7 @@ function MobileFilterDrawer({
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-7">
           {/* Search */}
           <div className="flex" style={{ minHeight: 44 }}>
             <SearchInput value={searchQuery} onChange={onSearchChange} />
@@ -885,8 +883,8 @@ function MobileFilterDrawer({
         </div>
 
         <div
-          className="sticky bottom-0 flex gap-3 px-5 py-4 border-t"
-          style={{ background: "var(--card)", borderColor: "var(--border)" }}
+          className="shrink-0 flex gap-3 px-6 py-4 border-t bg-white/40 dark:bg-slate-900/40 backdrop-blur-md"
+          style={{ borderColor: "var(--border)" }}
         >
           <button
             onClick={() => {
@@ -920,11 +918,13 @@ export function ProductCatalog({
   externalFilterOpen,
   onCloseExternalFilter,
   hideGridWhenUnfiltered,
+  hideExtraFilters,
   prependHeader,
 }: {
   externalFilterOpen?: boolean;
   onCloseExternalFilter?: () => void;
   hideGridWhenUnfiltered?: boolean;
+  hideExtraFilters?: boolean;
   prependHeader?: React.ReactNode;
 }) {
   const router = useRouter();
@@ -1089,10 +1089,28 @@ export function ProductCatalog({
       result = [...result].sort((a, b) =>
         (a.name ?? "").localeCompare(b.name ?? ""),
       );
+    if (sortParam === "name-desc")
+      result = [...result].sort((a, b) =>
+        (b.name ?? "").localeCompare(a.name ?? ""),
+      );
     if (sortParam === "bestseller")
       result = [...result].sort(
         (a, b) => (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0),
       );
+    if (sortParam === "newest") {
+      result = [...result].sort((a, b) => {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return db - da;
+      });
+    }
+    if (sortParam === "quantity-desc") {
+      result = [...result].sort((a, b) => {
+        const qa = a.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) ?? 0;
+        const qb = b.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) ?? 0;
+        return qb - qa;
+      });
+    }
     return result;
   }, [
     query,
@@ -1220,121 +1238,64 @@ export function ProductCatalog({
         {/* ══ Filter Bar ══ */}
         <div
           id="shop-grid"
-          className="fixed left-0 right-0 top-[60px] md:top-[116px] w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-2 pb-2 z-40 border-b border-gray-200 dark:border-gray-800 shadow-sm"
+          className="sticky top-[60px] md:top-[116px] z-40 mb-6 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-2 pb-2 border-b border-gray-200 dark:border-gray-800 shadow-sm -mx-4 px-4 md:-mx-6 md:px-6"
         >
-          <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="mx-auto max-w-7xl">
             {prependHeader}
 
-            {/* ── MOBILE: Filter & Sort button ── */}
-            <div className="flex items-center gap-2 md:hidden mb-2">
-              <div className="flex-1">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 shadow-sm" style={{ borderColor: 'var(--border)', background: 'var(--card)' }}>
+              
+              {/* Left: Search & Mobile Filter */}
+              <div className="flex items-center gap-2 w-full md:w-auto md:flex-1">
                 <SearchInput value={query} onChange={(v) => setParam("q", v)} />
-              </div>
-              <span
-                className="text-xs shrink-0 font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full"
-                style={{ color: "var(--foreground)" }}
-              >
-                {filtered.length} items
-              </span>
-            </div>
-
-            {/* ── DESKTOP: Dookan-style filter bar ── */}
-            <div
-              className="hidden md:flex items-center justify-between gap-2 rounded-2xl border px-4 py-2.5 shadow-sm"
-              style={{
-                borderColor: "var(--border)",
-                background: "var(--card)",
-              }}
-            >
-              {/* Left: filters */}
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-                <SearchInput value={query} onChange={(v) => setParam("q", v)} />
-
-                {/* Category filter removed — using global SwipeableCategoryBar instead */}
-
-                {/* Brand — only shown if products have brands */}
-                {brandOptions.length > 0 && (
-                  <CheckDropdown
-                    label="Brand"
-                    options={brandOptions}
-                    selected={selectedBrands}
-                    onToggle={(v) =>
-                      toggleListParam("brand", selectedBrands, v)
-                    }
-                    onClear={() => setParam("brand", null)}
-                  />
-                )}
-
-                {/* Origin */}
-                <CheckDropdown
-                  label="Origin"
-                  options={ORIGINS.filter((o) => o.label !== "All").map(
-                    (o) => ({ value: o.label, display: o.label }),
-                  )}
-                  selected={originParam !== "All" ? [originParam] : []}
-                  onToggle={(v) =>
-                    setParam("origin", originParam === v ? null : v)
-                  }
-                  onClear={() => setParam("origin", null)}
-                  renderOption={(opt) => {
-                    const o = ORIGINS.find((x) => x.label === opt.display);
-                    return (
-                      <span className="flex items-center gap-1.5">
-                        <FlagIcon code={o?.code ?? "GLOBAL"} />
-                        {opt.display}
-                      </span>
-                    );
-                  }}
-                />
-
-                {/* Dietary */}
-                <CheckDropdown
-                  label="Dietary"
-                  options={dietOptions}
-                  selected={selectedDiets}
-                  onToggle={(v) => toggleListParam("diet", selectedDiets, v)}
-                  onClear={() => setParam("diet", null)}
-                />
-
-                {/* Price */}
-                <PriceDropdown
-                  min={pMin}
-                  max={pMax}
-                  value={priceRange}
-                  onChange={([lo, hi]) => {
-                    setParam("priceMin", lo !== pMin ? String(lo) : null);
-                    setParam("priceMax", hi !== pMax ? String(hi) : null);
-                  }}
-                />
-
-                {/* Clear all */}
-                {totalActiveFilters > 0 && (
+                
+                {/* Mobile Filter Button */}
+                {!hideExtraFilters && (
                   <button
-                    onClick={clearAll}
-                    className="flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all shrink-0"
-                    style={{
-                      background: "#FEF2F2",
-                      color: "#EF4444",
-                      border: "1px solid #FCA5A5",
-                    }}
+                    onClick={() => setMobileFilterOpen(true)}
+                    className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                   >
-                    <X className="size-3.5" /> Clear {totalActiveFilters}
+                    <Filter className="size-4" style={{ color: "var(--foreground)" }} />
                   </button>
                 )}
               </div>
 
-              {/* Right: result count + sort */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span
-                  className="text-[12px] whitespace-nowrap"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  {filtered.length} products
-                </span>
-                <SortDropdown
-                  value={sortParam}
-                  onChange={(v) => setParam("sort", v === "default" ? null : v)}
-                />
+              {/* Desktop Right: Filters & Sort */}
+              <div className="hidden md:flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  {totalActiveFilters > 0 && (
+                    <button
+                      onClick={clearAll}
+                      className="flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all shadow-sm hover:scale-105 active:scale-95"
+                      style={{ background: "#FEF2F2", color: "#EF4444", border: "1px solid #FCA5A5" }}
+                    >
+                      <X className="size-3.5" /> Clear {totalActiveFilters}
+                    </button>
+                  )}
+
+                  {!hideExtraFilters && (
+                    <button
+                      onClick={() => setMobileFilterOpen(true)}
+                      className="flex items-center gap-1.5 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all hover:border-orange-400 hover:text-orange-600 bg-slate-50 dark:bg-slate-800 shadow-sm hover:shadow active:scale-95"
+                      style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+                    >
+                      <Filter className="size-3.5" />
+                      All Filters
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 border-l pl-3 ml-1" style={{ borderColor: "var(--border)" }}>
+                  <span className="text-[12px] font-medium whitespace-nowrap opacity-70" style={{ color: "var(--foreground)" }}>
+                    {filtered.length} products
+                  </span>
+                  {!hideExtraFilters && (
+                    <SortDropdown
+                      value={sortParam}
+                      onChange={(v) => setParam("sort", v === "default" ? null : v)}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1365,9 +1326,6 @@ export function ProductCatalog({
             )}
           </div>
         </div>
-
-        {/* ── Spacer to prevent grid from hiding behind fixed header ── */}
-        <div className="h-[140px] md:h-[130px] shrink-0" />
 
         <MobileFilterDrawer
           open={!!isDrawerOpen}

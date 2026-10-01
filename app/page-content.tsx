@@ -26,6 +26,19 @@ export default function PageContent() {
     return collections.find(c => c.id === activeCategory) || null
   }, [activeCategory, collections])
 
+  const [popupSearchQuery, setPopupSearchQuery] = useState('')
+
+  const filteredPopupItems = useMemo(() => {
+    if (!popupData) return []
+    if (!popupSearchQuery) return popupData.items
+    const q = popupSearchQuery.toLowerCase()
+    return popupData.items.filter(item => 
+      item.name?.toLowerCase().includes(q) || 
+      item.brand?.toLowerCase().includes(q) ||
+      item.category?.toLowerCase().includes(q)
+    )
+  }, [popupData, popupSearchQuery])
+
   return (
     <>
       {/* ═══ Promo sections (always visible) ═══ */}
@@ -55,7 +68,10 @@ export default function PageContent() {
       {activeCategory && popupData && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
-          onClick={() => setActiveCategory(null)}
+          onClick={() => {
+            setActiveCategory(null)
+            setPopupSearchQuery('')
+          }}
         >
           <div
             className="relative w-full max-w-5xl rounded-t-2xl sm:rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden max-h-[90vh] flex flex-col"
@@ -67,16 +83,28 @@ export default function PageContent() {
             </div>
             {/* Close button */}
             <button
-              onClick={() => setActiveCategory(null)}
+              onClick={() => {
+                setActiveCategory(null)
+                setPopupSearchQuery('')
+              }}
               className="absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             </button>
 
             <div className="overflow-y-auto px-4 py-6 md:px-8">
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder={`Search in ${popupData.title}...`}
+                  value={popupSearchQuery}
+                  onChange={(e) => setPopupSearchQuery(e.target.value)}
+                  className="w-full sm:max-w-xs rounded-full border px-4 py-2 text-sm outline-none transition-all focus:border-orange-500 focus:ring-1 focus:ring-orange-500 bg-slate-50 dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
               <HorizontalRow
                 title={popupData.title}
-                items={popupData.items}
+                items={filteredPopupItems}
                 viewAllHref={popupData.viewAllHref}
               />
             </div>
