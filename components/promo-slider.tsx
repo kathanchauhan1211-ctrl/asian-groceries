@@ -90,7 +90,6 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
         const snap = await getDocs(q)
         const allSlides = snap.empty ? ALL_FALLBACKS : snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide))
         const filtered = allSlides.filter(s => (s.placement || 'top') === placement)
-        // If no slides exist for this placement, use fallbacks for this placement
         if (filtered.length === 0) {
           setSlides(ALL_FALLBACKS.filter(s => s.placement === placement))
         } else {
@@ -132,7 +131,6 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
   const onTouchEnd = (e: React.TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStartX.current
     const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current)
-    // Only trigger if horizontal movement dominates (not a vertical scroll)
     if (Math.abs(dx) > 50 && dy < 60) {
       dx < 0 ? goNext() : goPrev()
     }
@@ -145,10 +143,14 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
         @keyframes slide-caption-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
-      {/* ── Full-width slider shell ── */}
+      {/* ── Slider shell — height adapts to current image (Dookan-style) ── */}
+      {/* NO forced aspect-ratio. The section is a stacking context; only the
+          current slide is visible. The invisible slides are position:absolute
+          so they don't push layout height. We use a hidden sentinel image on
+          the current slide to let the section naturally resize to that image. */}
       <section
         className="relative w-full overflow-hidden bg-black"
-        style={{ aspectRatio: '21/9', minHeight: '180px', maxHeight: '640px' }}
+        style={{ minHeight: 180 }}
         onPointerEnter={(e) => e.pointerType === 'mouse' && setPaused(true)}
         onPointerLeave={(e) => e.pointerType === 'mouse' && setPaused(false)}
         onTouchStart={onTouchStart}
@@ -157,10 +159,24 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
       >
         {/* Loading skeleton */}
         {loading && (
-          <div className="absolute inset-0 animate-pulse" style={{ background: 'var(--muted)' }} />
+          <div className="w-full animate-pulse" style={{ aspectRatio: '21/9', background: 'var(--muted)' }} />
         )}
 
-        {/* Slides */}
+        {/* ── Height sentinel — invisible img that sets the section height
+            to exactly match the current slide's natural image ratio ── */}
+        {!loading && total > 0 && (
+          <img
+            key={`sentinel-${current}`}
+            src={slides[current].img}
+            alt=""
+            aria-hidden="true"
+            className="w-full block"
+            style={{ visibility: 'hidden', pointerEvents: 'none', maxHeight: 700 }}
+            onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
+          />
+        )}
+
+        {/* ── All slides stacked absolutely, only current is opaque ── */}
         {!loading && total > 0 && slides.map((slide, i) => {
           const isCurrent = i === current
           return (
@@ -174,42 +190,26 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
                 transition: `opacity ${TRANS_MS}ms ease-in-out`,
               }}
             >
-              {/* ── Blurred backdrop + contained image wrapper ── */}
-              {/* The kb-zoom animation is applied to this wrapper so both
-                  the blurred backdrop and the sharp image zoom together. */}
-              <div
-                className="absolute inset-0"
+              {/* ── Full image — no crop, no blurry sides, fits naturally ──
+                  width: 100%, height: 100% fills the section which is sized
+                  by the sentinel above. object-fit: fill stretches to fill
+                  the box exactly — since sentinel and image share the same
+                  src and the same natural ratio, there is zero distortion. */}
+              <img
+                src={slide.img}
+                alt={slide.brand}
+                className="absolute inset-0 w-full h-full"
                 style={{
+                  objectFit: 'fill',
                   animation: isCurrent && !animating
                     ? `kb-zoom ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
                     : 'none',
                 }}
-              >
-                {/* Blurred backdrop — fills pillarbox/letterbox gaps
-                    with a soft, stretched version of the same image */}
-                <img
-                  src={slide.img}
-                  alt=""
-                  aria-hidden="true"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{ filter: 'blur(28px) saturate(1.4)', opacity: 0.55, transform: 'scale(1.15)' }}
-                  onError={(e) => {
-                    const img = e.currentTarget
-                    if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG
-                  }}
-                />
-                {/* Main sharp image — object-contain ensures full
-                    image is always visible, never cropped */}
-                <img
-                  src={slide.img}
-                  alt={slide.brand}
-                  className="absolute inset-0 w-full h-full object-contain"
-                  onError={(e) => {
-                    const img = e.currentTarget
-                    if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG
-                  }}
-                />
-              </div>
+                onError={(e) => {
+                  const img = e.currentTarget
+                  if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG
+                }}
+              />
 
               {/* Rich gradient overlay — heavy at bottom for text legibility */}
               <div

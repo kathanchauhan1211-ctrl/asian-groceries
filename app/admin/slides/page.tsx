@@ -331,7 +331,6 @@ export default function AdminSlidesPage() {
     try {
       const snap = await getDocs(query(slidesRef, orderBy('order', 'asc')))
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide))
-      // If no slides in Firestore yet, seed with defaults
       setSlides(data)
     } catch {
       setSlides([])
@@ -341,13 +340,30 @@ export default function AdminSlidesPage() {
 
   useEffect(() => { loadSlides() }, [])
 
+  // ── Re-number all slides in a group so order is always 0,1,2,3... ──
+  async function reorderSlides(updatedSlides: Slide[]) {
+    // Group by placement and write sequential order values
+    const placements = ['top', 'down'] as const
+    for (const p of placements) {
+      const group = updatedSlides
+        .filter(s => (s.placement || 'top') === p)
+        .sort((a, b) => a.order - b.order)
+      for (let i = 0; i < group.length; i++) {
+        if (group[i].order !== i) {
+          await updateDoc(doc(clientDb, 'slides', group[i].id!), { order: i } as Record<string, any>)
+        }
+      }
+    }
+  }
+
   // ── Save (create or update) ──
   async function handleSave(data: Omit<Slide, 'id'>) {
     setSaving(true)
     try {
       if (editingId === 'new') {
-        const newOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) + 1 : 0
-        await addDoc(slidesRef, { ...data, order: newOrder })
+        // Order = count of slides in same placement group
+        const sameGroup = slides.filter(s => (s.placement || 'top') === (data.placement || 'top'))
+        await addDoc(slidesRef, { ...data, order: sameGroup.length })
       } else if (editingId) {
         await updateDoc(doc(clientDb, 'slides', editingId), data as Record<string, any>)
       }
@@ -357,6 +373,7 @@ export default function AdminSlidesPage() {
       await loadSlides()
     } catch (err) {
       console.error('Failed to save slide:', err)
+      alert('Failed to save slide. Please try again.')
     }
     setSaving(false)
   }
@@ -367,28 +384,38 @@ export default function AdminSlidesPage() {
     setDeleting(id)
     try {
       await deleteDoc(doc(clientDb, 'slides', id))
+      // Reload and then renumber so order stays clean
+      const snap = await getDocs(query(slidesRef, orderBy('order', 'asc')))
+      const remaining = snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide))
+      await reorderSlides(remaining)
       await loadSlides()
     } catch (err) {
       console.error('Failed to delete:', err)
+      alert('Failed to delete slide. Check your connection and try again.')
     }
     setDeleting(null)
   }
 
-  // ── Move order ──
+  // ── Move order — swaps two adjacent slides then renumbers whole group ──
   async function moveSlide(id: string, dir: 'up' | 'down') {
     const target = slides.find(s => s.id === id)
     if (!target) return
     const targetPlacement = target.placement || 'top'
-    const sameGroup = slides.filter(s => (s.placement || 'top') === targetPlacement)
-    
+    const sameGroup = slides
+      .filter(s => (s.placement || 'top') === targetPlacement)
+      .sort((a, b) => a.order - b.order)
+
     const idx = sameGroup.findIndex(s => s.id === id)
     if ((dir === 'up' && idx === 0) || (dir === 'down' && idx === sameGroup.length - 1)) return
-    
+
+    // Swap in local array
     const swapIdx = dir === 'up' ? idx - 1 : idx + 1
-    const a = sameGroup[idx], b = sameGroup[swapIdx]
-    
-    await updateDoc(doc(clientDb, 'slides', a.id!), { order: b.order } as Record<string, any>)
-    await updateDoc(doc(clientDb, 'slides', b.id!), { order: a.order } as Record<string, any>)
+    ;[sameGroup[idx], sameGroup[swapIdx]] = [sameGroup[swapIdx], sameGroup[idx]]
+
+    // Write sequential order values — clean 0,1,2,...
+    for (let i = 0; i < sameGroup.length; i++) {
+      await updateDoc(doc(clientDb, 'slides', sameGroup[i].id!), { order: i } as Record<string, any>)
+    }
     await loadSlides()
   }
 
