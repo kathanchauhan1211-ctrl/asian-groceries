@@ -629,7 +629,7 @@ function MobileFilterDrawer({
       <div
         role="dialog"
         aria-modal={open}
-        className={`fixed right-0 top-0 z-50 flex h-dvh w-full max-w-[340px] flex-col shadow-2xl border-l border-white/40 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl transition-transform duration-300 ease-out overflow-hidden ${
+        className={`fixed right-0 inset-y-0 z-50 flex h-full w-full max-w-[340px] flex-col shadow-2xl border-l border-white/40 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl transition-transform duration-300 ease-out overflow-hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
