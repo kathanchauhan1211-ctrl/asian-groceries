@@ -168,23 +168,11 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
   )
 }
 
-// ─── ProductCard ──────────────────────────────────────────────────────────────
-export const ProductCard = memo(function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+function AddToCartButton({ product, variant, soldOut }: { product: Product, variant?: Variant, soldOut: boolean }) {
   const { addItem, lines } = useCart()
-  const { td } = useTranslation()
-  const [variantIndex, setVariantIndex] = useState(0)
-  const [qty] = useState(1)
   const [added, setAdded] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [qty] = useState(1)
 
-  const variant = product.variants?.[variantIndex] ?? product.variants?.[0]
-  const soldOut = product.stock === 'Out of Stock'
-  const stockStyle = STOCK_STYLES[product.stock] ?? STOCK_STYLES['In Stock']
-  const stockLabel = product.stock === 'Low Stock' && typeof product.stockCount === 'number'
-    ? <span className="flex items-center gap-0.5 animate-pulse"><AlertTriangle className="size-2.5" />Only {product.stockCount} left!</span>
-    : stockStyle.label
-
-  // How many of this variant are already in the cart?
   const cartQty = lines
     .filter(l => l.product.id === product.id && l.variant.label === variant?.label)
     .reduce((sum, l) => sum + l.quantity, 0)
@@ -197,6 +185,35 @@ export const ProductCard = memo(function ProductCard({ product, index = 0 }: { p
     setAdded(true)
     setTimeout(() => setAdded(false), 1400)
   }
+
+  return (
+    <Button
+      onClick={handleAdd}
+      disabled={soldOut}
+      variant={added ? 'emerald' : soldOut ? 'secondary' : inCart ? 'glass-light' : 'default'}
+      size="sm"
+      className="w-full rounded-md"
+    >
+      {soldOut ? 'Sold Out'
+        : added ? <><Check className="size-3" /> Added!</>
+          : inCart ? <><Check className="size-3" /> In Cart ({cartQty})</>
+            : <><ShoppingBag className="size-3" /> Add</>}
+    </Button>
+  )
+}
+
+// ─── ProductCard ──────────────────────────────────────────────────────────────
+export const ProductCard = memo(function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+  const { td } = useTranslation()
+  const [variantIndex, setVariantIndex] = useState(0)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const variant = product.variants?.[variantIndex] ?? product.variants?.[0]
+  const soldOut = product.stock === 'Out of Stock'
+  const stockStyle = STOCK_STYLES[product.stock] ?? STOCK_STYLES['In Stock']
+  const stockLabel = product.stock === 'Low Stock' && typeof product.stockCount === 'number'
+    ? <span className="flex items-center gap-0.5 animate-pulse"><AlertTriangle className="size-2.5" />Only {product.stockCount} left!</span>
+    : stockStyle.label
 
   const animClass = index < 12
     ? `card-enter card-enter-${Math.min((index % 6) + 1, 6)}`
@@ -249,18 +266,7 @@ export const ProductCard = memo(function ProductCard({ product, index = 0 }: { p
 
         {/* Add button - Aligned cleanly at the bottom */}
         <div className="mt-4 relative z-10">
-          <Button
-            onClick={handleAdd}
-            disabled={soldOut}
-            variant={added ? 'emerald' : soldOut ? 'secondary' : inCart ? 'glass-light' : 'default'}
-            size="sm"
-            className="w-full rounded-md"
-          >
-            {soldOut ? 'Sold Out'
-              : added ? <><Check className="size-3" /> Added!</>
-                : inCart ? <><Check className="size-3" /> In Cart ({cartQty})</>
-                  : <><ShoppingBag className="size-3" /> Add</>}
-          </Button>
+          <AddToCartButton product={product} variant={variant} soldOut={soldOut} />
         </div>
       </div>
 

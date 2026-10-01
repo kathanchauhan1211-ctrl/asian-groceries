@@ -17,7 +17,8 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import { adminPortalDb, adminPortalAuth } from "@/lib/firebase-admin-client";
-import { type Stock } from "@/lib/products";
+import { type Stock, ORIGINS, DIETS } from "@/lib/products";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
   Plus,
   Trash2,
@@ -293,37 +294,39 @@ function FSelect({
   );
 }
 
-function FCatInput({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  const [focused, setFocused] = useState(false);
-  const listId = "category-list-options";
+function FDietarySelect({ value, onChange }: { value: string, onChange: (v: string) => void }) {
+  const selected = value ? value.split(",").map(s => s.trim()).filter(Boolean) : [];
+  
+  function toggle(d: string) {
+    if (selected.includes(d)) {
+      onChange(selected.filter(x => x !== d).join(", "));
+    } else {
+      onChange([...selected, d].join(", "));
+    }
+  }
+
   return (
-    <>
-      <input
-        type="text"
-        list={listId}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Type or select..."
-        className={inputCls}
-        style={focused ? { ...inputFocus } : { ...inputStyle }}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-      />
-      <datalist id={listId}>
-        {options.map((o) => (
-          <option key={o} value={o} />
-        ))}
-      </datalist>
-    </>
-  );
+    <div className="flex flex-wrap gap-2 pt-1">
+      {DIETS.map(d => {
+        const active = selected.includes(d);
+        return (
+          <button
+            key={d}
+            type="button"
+            onClick={() => toggle(d)}
+            className="rounded-full border px-3 py-1 text-[11px] font-semibold transition-all"
+            style={{
+              background: active ? "rgba(249,115,22,0.15)" : "transparent",
+              color: active ? "#F97316" : "#9CA3AF",
+              borderColor: active ? "rgba(249,115,22,0.3)" : "rgba(255,255,255,0.1)",
+            }}
+          >
+            {d}
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 async function ensureCategoryExists(categoryLabel: string) {
@@ -906,6 +909,7 @@ function ProductRow({
     emoji: string;
     productIds: string[];
   }>;
+  openConfirm: (title: string, message: string, onConfirm: () => Promise<void>) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -944,15 +948,20 @@ function ProductRow({
     }
   }
 
-  async function handleDelete() {
-    if (!confirm(`Delete "${product.name}"?`)) return;
-    setDeleting(true);
-    onDelete();
-    try {
-      await serverDeleteProducts([product.id]);
-    } catch (err: any) {
-      console.error(err.message);
-    }
+  function handleDelete() {
+    openConfirm(
+      "Delete Product",
+      `Are you sure you want to delete "${product.name}"?`,
+      async () => {
+        setDeleting(true);
+        onDelete();
+        try {
+          await serverDeleteProducts([product.id]);
+        } catch (err: any) {
+          console.error(err.message);
+        }
+      }
+    );
   }
 
   // Feed pin indicators
@@ -992,7 +1001,7 @@ function ProductRow({
           />
         </td>
         <td className="px-3 py-2.5 min-w-[150px]">
-          <FCatInput
+          <FSelect
             value={form.category}
             onChange={(v) => setForm((f) => ({ ...f, category: v }))}
             options={categoryOptions}
@@ -1594,8 +1603,8 @@ function CSVImportPanel({
   );
 }
 
-// ─── Add Product Drawer ───────────────────────────────────────────────────────
-function AddProductDrawer({
+// ─── Add Product Modal ───────────────────────────────────────────────────────
+function AddProductModal({
   onClose,
   onAdded,
   categoryOptions,
@@ -1605,6 +1614,8 @@ function AddProductDrawer({
   categoryOptions: string[];
 }) {
   const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "",
     brand: "",
@@ -1629,6 +1640,21 @@ function AddProductDrawer({
       setForm((f) => ({ ...f, category: categoryOptions[0] }));
     }
   }, [categoryOptions]);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { uploadImage } = await import("@/lib/storage");
+      const url = await uploadImage(file, 'products');
+      setForm((f) => ({ ...f, image: url }));
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Failed to upload image. Please try again.');
+    }
+    setUploading(false);
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -1665,7 +1691,6 @@ function AddProductDrawer({
     { k: "unit", label: "Unit / Size", placeholder: "5kg, 500g" },
     { k: "origin", label: "Origin", placeholder: "India" },
     { k: "dietary", label: "Dietary Tags", placeholder: "Halal, Vegan" },
-    { k: "image", label: "Image URL", placeholder: "https://…" },
     {
       k: "description",
       label: "Description",
@@ -1675,17 +1700,12 @@ function AddProductDrawer({
 
   return (
     <div
-      className="fixed inset-y-0 right-0 z-50 flex"
-      style={{ width: "420px" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
     >
       <div
-        className="fixed inset-0"
-        style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
-        onClick={onClose}
-      />
-      <div
-        className="relative ml-auto flex h-full w-full flex-col overflow-hidden"
-        style={{ background: C.surface, borderLeft: `1px solid ${C.border}` }}
+        className="w-full max-w-xl rounded-xl overflow-hidden flex flex-col max-h-[90vh]"
+        style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
         <div
           className="flex items-center justify-between px-6 py-4 shrink-0"
@@ -1699,8 +1719,8 @@ function AddProductDrawer({
           </div>
           <button
             onClick={onClose}
-            className="flex size-7 items-center justify-center rounded-md"
-            style={{ background: "rgba(255,255,255,0.06)", color: "#6B7280" }}
+            className="flex size-7 items-center justify-center rounded-md transition-all hover:bg-white/10"
+            style={{ color: "#9CA3AF" }}
           >
             <X className="size-4" />
           </button>
@@ -1710,12 +1730,62 @@ function AddProductDrawer({
           onSubmit={handleCreate}
           className="flex-1 overflow-y-auto px-6 py-5"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
+            {/* Image upload section */}
+            <div className="col-span-2 space-y-2">
+              <label
+                className="block text-[11px] font-semibold uppercase tracking-wider"
+                style={{ color: "#4B5563" }}
+              >
+                Product Image
+              </label>
+              <div className="flex items-center gap-3">
+                {form.image ? (
+                  <div className="relative size-16 shrink-0 rounded-lg overflow-hidden border border-white/10 bg-black/20">
+                    <img src={form.image} alt="preview" className="w-full h-full object-cover" />
+                    <button 
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, image: "" }))}
+                      className="absolute top-1 right-1 size-5 bg-black/60 rounded-full flex items-center justify-center hover:bg-red-500 transition-colors"
+                    >
+                      <X className="size-3 text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="size-16 shrink-0 rounded-lg border-2 border-dashed border-white/10 flex items-center justify-center bg-white/5">
+                    <Package className="size-6 text-white/20" />
+                  </div>
+                )}
+                
+                <div className="flex-1 space-y-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-semibold transition-all disabled:opacity-50 shrink-0"
+                      style={{ background: "#3b82f6", color: "white" }}
+                    >
+                      {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+                      {uploading ? "Uploading..." : "Upload File"}
+                    </button>
+                    <span className="text-[10px] text-white/40 self-center font-bold">OR</span>
+                    <FInput
+                      value={form.image}
+                      onChange={(v) => setForm((p) => ({ ...p, image: v }))}
+                      placeholder="Paste Image URL..."
+                    />
+                    <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {fields.map((f) => (
               <div
                 key={f.k}
                 className={
-                  f.k === "name" || f.k === "image" || f.k === "description"
+                  f.k === "name" || f.k === "description"
                     ? "col-span-2"
                     : ""
                 }
@@ -1727,14 +1797,27 @@ function AddProductDrawer({
                   {f.label}
                   {f.required && <span style={{ color: "#F97316" }}> *</span>}
                 </label>
-                <FInput
-                  value={(form as any)[f.k]}
-                  onChange={(v) => setForm((p) => ({ ...p, [f.k]: v }))}
-                  placeholder={f.placeholder}
-                  type={f.type || "text"}
-                  step={f.type === "number" ? "0.01" : undefined}
-                  required={f.required}
-                />
+                {f.k === "origin" ? (
+                  <FSelect 
+                    value={(form as any)[f.k]} 
+                    onChange={(v) => setForm((p) => ({ ...p, [f.k]: v }))} 
+                    options={ORIGINS.filter(o => o.label !== 'All').map(o => o.label)} 
+                  />
+                ) : f.k === "dietary" ? (
+                  <FDietarySelect 
+                    value={(form as any)[f.k]} 
+                    onChange={(v) => setForm((p) => ({ ...p, [f.k]: v }))} 
+                  />
+                ) : (
+                  <FInput
+                    value={(form as any)[f.k]}
+                    onChange={(v) => setForm((p) => ({ ...p, [f.k]: v }))}
+                    placeholder={f.placeholder}
+                    type={f.type || "text"}
+                    step={f.type === "number" ? "0.01" : undefined}
+                    required={f.required}
+                  />
+                )}
               </div>
             ))}
 
@@ -1745,7 +1828,7 @@ function AddProductDrawer({
               >
                 Category
               </label>
-              <FCatInput
+              <FSelect
                 value={form.category}
                 onChange={(v) => setForm((p) => ({ ...p, category: v }))}
                 options={categoryOptions}
@@ -1766,7 +1849,7 @@ function AddProductDrawer({
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-2 mt-2">
               <button
                 type="button"
                 onClick={() =>
@@ -1804,24 +1887,33 @@ function AddProductDrawer({
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={creating || !form.name.trim()}
-            className="mt-5 w-full rounded-lg py-2.5 text-[13px] font-semibold text-white transition-all disabled:opacity-50"
-            style={{
-              background: "linear-gradient(135deg,#F97316,#EA580C)",
-              boxShadow: "0 4px 12px rgba(249,115,22,0.2)",
-            }}
-          >
-            {creating ? (
-              <>
-                <Loader2 className="inline size-4 animate-spin mr-1.5" />
-                Adding…
-              </>
-            ) : (
-              "Add Product"
-            )}
-          </button>
+          <div className="mt-6 pt-5 flex items-center justify-end gap-3" style={{ borderTop: `1px solid ${C.border}` }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-[13px] font-semibold text-white rounded-lg transition-all hover:bg-white/5 border border-white/10"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={creating || uploading || !form.name.trim()}
+              className="px-6 py-2 rounded-lg text-[13px] font-semibold text-white transition-all disabled:opacity-50"
+              style={{
+                background: "linear-gradient(135deg,#F97316,#EA580C)",
+                boxShadow: "0 4px 12px rgba(249,115,22,0.2)",
+              }}
+            >
+              {creating ? (
+                <>
+                  <Loader2 className="inline size-4 animate-spin mr-1.5" />
+                  Adding…
+                </>
+              ) : (
+                "Add Product"
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -1832,6 +1924,21 @@ function AddProductDrawer({
 export default function AdminProductsPage() {
   const { products, loading, removeLocally, updateLocally } =
     useAdminProducts();
+    
+  const [confirmConfig, setConfirmConfig] = useState<{title: string, message: string, onConfirm: () => Promise<void>} | null>(null);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
+
+  const openConfirm = (title: string, message: string, onConfirm: () => Promise<void>) => {
+    setConfirmConfig({ title, message, onConfirm });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmConfig) return;
+    setIsConfirmLoading(true);
+    await confirmConfig.onConfirm();
+    setIsConfirmLoading(false);
+    setConfirmConfig(null);
+  };
   const liveCategories = useAdminFilterCategories();
   const categoryOptions = useMemo(
     () => liveCategories.map((c) => c.label),
@@ -1946,38 +2053,43 @@ export default function AdminProductsPage() {
     });
   }
 
-  async function handleDeleteSelected() {
+  function handleDeleteSelected() {
     const ids = [...selected];
-    if (
-      !confirm(
-        `Permanently delete ${ids.length} product${ids.length > 1 ? "s" : ""}?`,
-      )
-    )
-      return;
-    setBulkDeleting(true);
-    removeLocally(ids);
-    setSelected(new Set());
-    try {
-      await serverDeleteProducts(ids);
-      showToast(`${ids.length} product${ids.length > 1 ? "s" : ""} deleted`);
-    } catch (err: any) {
-      showToast(`Delete failed: ${err.message}`, "error");
-    } finally {
-      setBulkDeleting(false);
-    }
+    openConfirm(
+      "Delete Selected Products",
+      `Are you sure you want to permanently delete ${ids.length} product${ids.length > 1 ? "s" : ""}?`,
+      async () => {
+        setBulkDeleting(true);
+        removeLocally(ids);
+        setSelected(new Set());
+        try {
+          await serverDeleteProducts(ids);
+          showToast(`${ids.length} product${ids.length > 1 ? "s" : ""} deleted`);
+        } catch (err: any) {
+          showToast(`Delete failed: ${err.message}`, "error");
+        } finally {
+          setBulkDeleting(false);
+        }
+      }
+    );
   }
 
-  async function handleDeleteCategory(cat: string) {
+  function handleDeleteCategory(cat: string) {
     const ids = (grouped.get(cat) || []).map((p) => p.id);
     if (!ids.length) return;
-    if (!confirm(`Delete all ${ids.length} products in "${cat}"?`)) return;
-    removeLocally(ids);
-    try {
-      await serverDeleteProducts(ids);
-      showToast(`All "${cat}" products deleted`);
-    } catch (err: any) {
-      showToast(`Delete failed: ${err.message}`, "error");
-    }
+    openConfirm(
+      "Delete Category Products",
+      `Are you sure you want to delete all ${ids.length} products in "${cat}"?`,
+      async () => {
+        removeLocally(ids);
+        try {
+          await serverDeleteProducts(ids);
+          showToast(`All "${cat}" products deleted`);
+        } catch (err: any) {
+          showToast(`Delete failed: ${err.message}`, "error");
+        }
+      }
+    );
   }
 
   const uniqueCategories = [
@@ -2354,6 +2466,7 @@ export default function AdminProductsPage() {
                               togglePin={togglePin}
                               dailyFreshDocs={dailyFreshDocs}
                               categoryOptions={categoryOptions}
+                              openConfirm={openConfirm}
                             />
                           ))}
                         </tbody>
@@ -2368,6 +2481,15 @@ export default function AdminProductsPage() {
       </div>
 
       {/* ── Modals (always mounted, regardless of active tab) ── */}
+      <ConfirmModal
+        isOpen={!!confirmConfig}
+        title={confirmConfig?.title || ""}
+        message={confirmConfig?.message || ""}
+        confirmText="Delete"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmConfig(null)}
+        loading={isConfirmLoading}
+      />
       {showCSV && (
         <CSVImportPanel
           onDone={(n) => {
@@ -2378,7 +2500,7 @@ export default function AdminProductsPage() {
         />
       )}
       {showAddDrawer && (
-        <AddProductDrawer
+        <AddProductModal
           onClose={() => setShowAddDrawer(false)}
           onAdded={(msg) => {
             setShowAddDrawer(false);

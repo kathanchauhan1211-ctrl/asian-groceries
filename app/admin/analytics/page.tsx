@@ -5,12 +5,28 @@ import { collection, onSnapshot } from 'firebase/firestore'
 import { adminPortalDb, adminPortalAuth } from '@/lib/firebase-admin-client'
 import { TrendingUp, ShoppingCart, Package, Users, Trash2 } from 'lucide-react'
 import type { Order } from '@/app/lib/order-types'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type AnalyticsOrder = Pick<Order, 'id' | 'ticketNumber' | 'grandTotal' | 'status' | 'createdAt'>
 
 export default function AdminAnalyticsPage() {
   const [orders, setOrders] = useState<AnalyticsOrder[]>([])
   const [products, setProducts] = useState<any[]>([])
+
+  const [confirmConfig, setConfirmConfig] = useState<{title: string, message: string, onConfirm: () => Promise<void>} | null>(null);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
+
+  const openConfirm = (title: string, message: string, onConfirm: () => Promise<void>) => {
+    setConfirmConfig({ title, message, onConfirm });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmConfig) return;
+    setIsConfirmLoading(true);
+    await confirmConfig.onConfirm();
+    setIsConfirmLoading(false);
+    setConfirmConfig(null);
+  };
 
   // Real-time products from adminPortalDb (admin auth context, no pagination cap)
   useEffect(() => {
@@ -43,28 +59,32 @@ export default function AdminAnalyticsPage() {
     return () => clearInterval(id)
   }, [fetchOrders])
 
-  const deleteOrder = async (orderId: string) => {
-    if (!confirm('Are you sure you want to delete this order? This cannot be undone.')) return
-    
-    // Optimistic update
-    setOrders(prev => prev.filter(o => o.id !== orderId))
-    
-    try {
-      const currentUser = adminPortalAuth.currentUser
-      if (!currentUser) return
-      const token = await currentUser.getIdToken()
-      
-      const res = await fetch(`/api/admin/orders?id=${orderId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!res.ok) {
-        throw new Error('Failed to delete')
+  const deleteOrder = (orderId: string) => {
+    openConfirm(
+      'Delete Order',
+      'Are you sure you want to delete this order? This cannot be undone.',
+      async () => {
+        // Optimistic update
+        setOrders(prev => prev.filter(o => o.id !== orderId))
+        
+        try {
+          const currentUser = adminPortalAuth.currentUser
+          if (!currentUser) return
+          const token = await currentUser.getIdToken()
+          
+          const res = await fetch(`/api/admin/orders?id=${orderId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          if (!res.ok) {
+            throw new Error('Failed to delete')
+          }
+        } catch (err) {
+          console.error(err)
+          fetchOrders() // Revert if failed
+        }
       }
-    } catch (err) {
-      console.error(err)
-      fetchOrders() // Revert if failed
-    }
+    )
   }
 
   const revenue = orders.filter(o => o.status === 'Completed').reduce((s, o) => s + (o.grandTotal || 0), 0)
@@ -100,7 +120,17 @@ export default function AdminAnalyticsPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      <ConfirmModal
+        isOpen={!!confirmConfig}
+        title={confirmConfig?.title || ""}
+        message={confirmConfig?.message || ""}
+        confirmText="Delete"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmConfig(null)}
+        loading={isConfirmLoading}
+      />
+      
       <div>
         <h2 className="text-xl font-bold text-white">Analytics & Business Intelligence</h2>
         <p className="mt-0.5 text-sm text-slate-400">Live metrics from your Firestore database</p>

@@ -6,9 +6,12 @@ import {
 } from 'firebase/firestore'
 import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
 import {
-  Plus, Trash2, Check, X, Loader2, Edit3, GripVertical, Save, Image as ImageIcon, Tag
+  Plus, Trash2, Check, X, Loader2, Edit3, GripVertical, Save, Image as ImageIcon, Tag, Upload
 } from 'lucide-react'
 import { type BrandDoc } from '@/lib/use-brands'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { uploadImage } from '@/lib/storage'
+import { useRef } from 'react'
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -30,6 +33,10 @@ export default function AdminBrandsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Form State
   const [name, setName] = useState('')
@@ -120,14 +127,35 @@ export default function AdminBrandsPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this brand?')) return
+  function handleDelete(id: string) {
+    setDeleteId(id)
+  }
+
+  async function confirmDelete() {
+    if (!deleteId) return
+    setIsDeleting(true)
     try {
-      await deleteDoc(doc(clientDb, 'brands', id))
+      await deleteDoc(doc(clientDb, 'brands', deleteId))
+      setDeleteId(null)
     } catch (e) {
       console.error(e)
       alert("Failed to delete brand.")
     }
+    setIsDeleting(false)
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadImage(file, 'brands')
+      setImage(url)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+      alert('Failed to upload image. Please try again.')
+    }
+    setUploading(false)
   }
 
   async function moveUp(index: number) {
@@ -168,7 +196,16 @@ export default function AdminBrandsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-20 pt-6">
+    <div className="mx-auto max-w-4xl space-y-6 pb-20 pt-6 relative">
+      <ConfirmModal 
+        isOpen={!!deleteId}
+        title="Delete Brand"
+        message="Are you sure you want to delete this brand? This cannot be undone."
+        confirmText="Yes, delete brand"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={isDeleting}
+      />
       
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -290,7 +327,20 @@ export default function AdminBrandsPage() {
 
               <div>
                 <label className={labelCls}>Background Image URL (Overrides Emoji & Gradient)</label>
-                <input type="text" value={image} onChange={e => setImage(e.target.value)} className={inputCls} style={inputStyle} placeholder="e.g. /images/brand-bg.jpg" />
+                <div className="flex gap-2 items-center">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-white transition-all disabled:opacity-50 shrink-0"
+                    style={{ background: '#3b82f6' }}
+                  >
+                    {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </button>
+                  <input type="text" value={image} onChange={e => setImage(e.target.value)} className={inputCls} style={inputStyle} placeholder="e.g. /images/brand-bg.jpg" />
+                  <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+                </div>
                 <p className="text-[10px] text-slate-500 mt-1.5">Leave empty to use Emoji + Color Gradient.</p>
               </div>
 

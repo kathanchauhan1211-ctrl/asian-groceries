@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { collection, query, orderBy, onSnapshot, updateDoc, doc } from 'firebase/firestore'
 import { adminPortalDb } from '@/lib/firebase-admin-client'
 import { Button } from '@/components/ui/button'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type UserRequest = {
   id: string
@@ -30,6 +31,21 @@ export default function AdminCustomersPage() {
   const [requests, setRequests] = useState<UserRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
+
+  const [confirmConfig, setConfirmConfig] = useState<{title: string, message: string, onConfirm: () => Promise<void>} | null>(null);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
+
+  const openConfirm = (title: string, message: string, onConfirm: () => Promise<void>) => {
+    setConfirmConfig({ title, message, onConfirm });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmConfig) return;
+    setIsConfirmLoading(true);
+    await confirmConfig.onConfirm();
+    setIsConfirmLoading(false);
+    setConfirmConfig(null);
+  };
 
   // Fetch Users
   const fetchUsers = useCallback(async () => {
@@ -108,16 +124,21 @@ export default function AdminCustomersPage() {
     }
   }
 
-  const handleReject = async (req: UserRequest) => {
-    if (!confirm('Reject this request?')) return
-    setProcessingId(req.id)
-    try {
-      await updateDoc(doc(adminPortalDb, 'userRequests', req.id), { status: 'REJECTED' })
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setProcessingId(null)
-    }
+  const handleReject = (req: UserRequest) => {
+    openConfirm(
+      'Reject Request',
+      'Reject this request?',
+      async () => {
+        setProcessingId(req.id)
+        try {
+          await updateDoc(doc(adminPortalDb, 'userRequests', req.id), { status: 'REJECTED' })
+        } catch (err) {
+          console.error(err)
+        } finally {
+          setProcessingId(null)
+        }
+      }
+    )
   }
 
   const filtered = users.filter(u => {
@@ -129,7 +150,16 @@ export default function AdminCustomersPage() {
   const completedRequests = requests.filter(r => r.status !== 'PENDING')
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 relative">
+      <ConfirmModal
+        isOpen={!!confirmConfig}
+        title={confirmConfig?.title || ""}
+        message={confirmConfig?.message || ""}
+        confirmText="Confirm"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmConfig(null)}
+        loading={isConfirmLoading}
+      />
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Customers Control Panel</h1>

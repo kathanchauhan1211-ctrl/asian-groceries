@@ -16,6 +16,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app'
 import { getFirestore, type Firestore } from 'firebase/firestore'
 import { getAuth, type Auth } from 'firebase/auth'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 const ADMIN_APP_NAME = 'admin-portal'
 
@@ -38,5 +39,6 @@ const adminPortalDb: Firestore = getFirestore(
 )
 
 const adminPortalAuth: Auth = getAuth(adminApp)
+const adminPortalStorage: FirebaseStorage = getStorage(adminApp)
 
-export { adminApp, adminPortalDb, adminPortalAuth }
+export { adminApp, adminPortalDb, adminPortalAuth, adminPortalStorage }

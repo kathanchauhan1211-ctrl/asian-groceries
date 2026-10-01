@@ -5,8 +5,10 @@ import {
   collection, doc, onSnapshot, setDoc, query, orderBy
 } from 'firebase/firestore'
 import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
-import { Plus, Trash2, Check, X, Loader2, Edit3, ChevronDown, ChevronUp, Image as ImageIcon, Settings2 } from 'lucide-react'
+import { Plus, Trash2, Check, X, Loader2, Edit3, ChevronDown, ChevronUp, Image as ImageIcon, Settings2, Upload } from 'lucide-react'
 import { type BannerSlot, type BannerSlide, type BannerSlotPosition, FALLBACK_SLOTS } from '@/lib/use-banners'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { useRef } from 'react'
 
 // ── Shared Glassmorphism Classes ──────────────────────────────────────────────
 const glassCard = "rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl overflow-hidden"
@@ -30,6 +32,23 @@ function SlideEditor({ slide, onSave, onClose }: SlideEditorProps) {
   const [bgColor, setBgColor] = useState(slide?.bgColor ?? '#1E293B')
   const [textColor, setTextColor] = useState(slide?.textColor ?? '#FFFFFF')
   const [active, setActive] = useState(slide?.active ?? true)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const { uploadImage } = await import('@/lib/storage')
+      const url = await uploadImage(file, 'banners')
+      setImage(url)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+      alert('Failed to upload image. Please try again.')
+    }
+    setUploading(false)
+  }
 
   function handleSave() {
     if (!title.trim()) return alert('Title is required')
@@ -89,9 +108,20 @@ function SlideEditor({ slide, onSave, onClose }: SlideEditorProps) {
           <div className="space-y-4">
             <div>
               <label className={labelCls}>Image URL *</label>
-              <div className="flex gap-4 items-center">
+              <div className="flex gap-2 items-center">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-[12px] font-semibold text-white transition-all disabled:opacity-50 shrink-0 border border-white/10"
+                  style={{ background: '#3b82f6' }}
+                >
+                  {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </button>
                 <input type="text" value={image} onChange={e => setImage(e.target.value)}
                   className={glassInput} placeholder="https://..." />
+                <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
                 {image && (
                   <div className="size-12 shrink-0 rounded-xl border border-white/10 bg-cover bg-center shadow-inner"
                     style={{ backgroundImage: `url(${image})` }} />
@@ -181,9 +211,10 @@ interface SlotCardProps {
   badgeColor: string
   onSaveSlot: (updated: BannerSlot) => Promise<void>
   saving: boolean
+  openConfirm: (title: string, message: string, onConfirm: () => Promise<void>) => void
 }
 
-function SlotCard({ slot, label, badge, badgeColor, onSaveSlot, saving }: SlotCardProps) {
+function SlotCard({ slot, label, badge, badgeColor, onSaveSlot, saving, openConfirm }: SlotCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [editingSlide, setEditingSlide] = useState<Partial<BannerSlide> | null>(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
@@ -211,10 +242,15 @@ function SlotCard({ slot, label, badge, badgeColor, onSaveSlot, saving }: SlotCa
     setIsEditorOpen(false)
   }
 
-  async function handleDeleteSlide(id: string) {
-    if (!confirm('Remove this slide from the banner?')) return
-    const newSlides = slot.slides.filter(s => s.id !== id)
-    await onSaveSlot({ ...slot, slides: newSlides })
+  function handleDeleteSlide(id: string) {
+    openConfirm(
+      'Remove Slide',
+      'Remove this slide from the banner?',
+      async () => {
+        const newSlides = slot.slides.filter(s => s.id !== id)
+        await onSaveSlot({ ...slot, slides: newSlides })
+      }
+    )
   }
 
   async function handleIntervalSave() {
@@ -348,6 +384,21 @@ export default function BannersPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
+  const [confirmConfig, setConfirmConfig] = useState<{title: string, message: string, onConfirm: () => Promise<void>} | null>(null);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
+
+  const openConfirm = (title: string, message: string, onConfirm: () => Promise<void>) => {
+    setConfirmConfig({ title, message, onConfirm });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmConfig) return;
+    setIsConfirmLoading(true);
+    await confirmConfig.onConfirm();
+    setIsConfirmLoading(false);
+    setConfirmConfig(null);
+  };
+
   useEffect(() => {
     const unsub = onSnapshot(query(collection(clientDb, 'banners'), orderBy('order', 'asc')), snap => {
       if (snap.empty) {
@@ -387,7 +438,17 @@ export default function BannersPage() {
   const bottomSlot = slots.find(s => s.slotPosition === 'secondary_bottom')
 
   return (
-    <div className="mx-auto max-w-[900px] space-y-8 pb-16 pt-4">
+    <div className="mx-auto max-w-[900px] space-y-8 pb-16 pt-4 relative">
+      <ConfirmModal
+        isOpen={!!confirmConfig}
+        title={confirmConfig?.title || ""}
+        message={confirmConfig?.message || ""}
+        confirmText="Remove"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmConfig(null)}
+        loading={isConfirmLoading}
+      />
+      
       {/* Heavy Header */}
       <div className="relative rounded-3xl p-8 border border-white/10 bg-black/20 backdrop-blur-2xl overflow-hidden shadow-2xl">
         {/* Glows */}
@@ -437,6 +498,7 @@ export default function BannersPage() {
             badgeColor="#F97316"
             onSaveSlot={saveSlot}
             saving={saving}
+            openConfirm={openConfirm}
           />
         ) : (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-md">
@@ -462,6 +524,7 @@ export default function BannersPage() {
               badgeColor="#F59E0B"
               onSaveSlot={saveSlot}
               saving={saving}
+              openConfirm={openConfirm}
             />
           )}
           {bottomSlot && (
@@ -472,6 +535,7 @@ export default function BannersPage() {
               badgeColor="#10B981"
               onSaveSlot={saveSlot}
               saving={saving}
+              openConfirm={openConfirm}
             />
           )}
         </div>

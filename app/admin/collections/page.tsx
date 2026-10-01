@@ -6,11 +6,14 @@ import {
 } from 'firebase/firestore'
 import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
 import {
-  Plus, Trash2, Check, X, Loader2, Edit3, GripVertical, Save, Package, Image as ImageIcon
+  Plus, Trash2, Check, X, Loader2, Edit3, GripVertical, Save, Package, Image as ImageIcon, Upload
 } from 'lucide-react'
 import { type FeaturedCollectionDoc, type AutoRule } from '@/lib/use-featured-collections'
 import { CATEGORY_GROUPS } from '@/lib/products'
 import { DailyFreshManager } from '@/components/admin/daily-fresh-manager'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { uploadImage } from '@/lib/storage'
+import { useRef } from 'react'
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -40,6 +43,23 @@ export default function CollectionsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  
+  const [confirmConfig, setConfirmConfig] = useState<{title: string, message: string, onConfirm: () => Promise<void>} | null>(null);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const openConfirm = (title: string, message: string, onConfirm: () => Promise<void>) => {
+    setConfirmConfig({ title, message, onConfirm });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmConfig) return;
+    setIsConfirmLoading(true);
+    await confirmConfig.onConfirm();
+    setIsConfirmLoading(false);
+    setConfirmConfig(null);
+  };
 
   // Modal state
   const [title, setTitle] = useState('')
@@ -148,9 +168,28 @@ export default function CollectionsPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Delete this collection? It will instantly disappear from the storefront.')) return
-    await deleteDoc(doc(clientDb, 'feed', id))
+  function handleDelete(id: string) {
+    openConfirm(
+      'Delete Collection',
+      'Delete this collection? It will instantly disappear from the storefront.',
+      async () => {
+        await deleteDoc(doc(clientDb, 'feed', id))
+      }
+    )
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadImage(file, 'collections')
+      setImage(url)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+      alert('Failed to upload image. Please try again.')
+    }
+    setUploading(false)
   }
 
   async function moveDoc(index: number, dir: -1 | 1) {
@@ -179,7 +218,16 @@ export default function CollectionsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[860px] space-y-4 pb-12">
+    <div className="mx-auto max-w-[860px] space-y-4 pb-12 relative">
+      <ConfirmModal
+        isOpen={!!confirmConfig}
+        title={confirmConfig?.title || ""}
+        message={confirmConfig?.message || ""}
+        confirmText="Delete"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmConfig(null)}
+        loading={isConfirmLoading}
+      />
       <DailyFreshManager allProducts={allProducts} />
 
       <div className="flex items-center justify-between mb-6 mt-8 pt-8 border-t border-white/10">
@@ -269,10 +317,15 @@ export default function CollectionsPage() {
                         )}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <button
-                            onClick={async () => {
-                              if (!confirm(`Remove "${p.name}" from ${d.title}?`)) return
-                              const nextIds = d.productIds.filter(id => id !== pid)
-                              await setDoc(doc(clientDb, 'feed', d.id), { productIds: nextIds }, { merge: true })
+                            onClick={() => {
+                              openConfirm(
+                                'Remove Product',
+                                `Remove "${p.name}" from ${d.title}?`,
+                                async () => {
+                                  const nextIds = d.productIds.filter(id => id !== pid)
+                                  await setDoc(doc(clientDb, 'feed', d.id), { productIds: nextIds }, { merge: true })
+                                }
+                              )
                             }}
                             className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600 transition-transform hover:scale-110"
                             title="Remove from feed"
@@ -317,9 +370,22 @@ export default function CollectionsPage() {
               </div>
 
               <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
+                <div className="col-span-2 space-y-1">
                   <label className={labelCls}>Card Image URL</label>
-                  <input value={image} onChange={e => setImage(e.target.value)} placeholder="/collections/sale.jpg or https://..." className={inputCls} style={inputStyle} />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold text-white transition-all disabled:opacity-50 shrink-0"
+                      style={{ background: '#3b82f6' }}
+                    >
+                      {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+                      {uploading ? 'Uploading...' : 'Upload'}
+                    </button>
+                    <input value={image} onChange={e => setImage(e.target.value)} placeholder="/collections/sale.jpg or https://..." className={inputCls} style={inputStyle} />
+                    <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>

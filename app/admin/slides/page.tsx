@@ -5,10 +5,10 @@ import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query,
 } from 'firebase/firestore'
 import { adminPortalDb as clientDb } from '@/lib/firebase-admin-client'
-import {
-  Plus, Trash2, Edit3, Save, X, GripVertical, Eye, EyeOff,
-  Image as ImageIcon, Link2, Type, AlignLeft, ArrowLeft, ArrowRight, Check,
-} from 'lucide-react'
+import { uploadImage } from '@/lib/storage'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { Plus, Trash2, Edit3, Save, X, GripVertical, Eye, EyeOff, Image as ImageIcon, Link2, Type, AlignLeft, ArrowLeft, ArrowRight, Check, Upload, Sparkles } from 'lucide-react'
+import { CATEGORIES } from '@/lib/products'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface Slide {
@@ -38,7 +38,6 @@ const DEFAULT_SLIDE: Omit<Slide, 'id'> = {
   placement: 'top',
 }
 
-// ─── Fallback / seed slides — mirrors promo-slider.tsx FALLBACK_SLIDES ─────────
 const SEED_SLIDES: Omit<Slide, 'id'>[] = [
   {
     img:      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=1600&q=80',
@@ -61,31 +60,15 @@ const SEED_SLIDES: Omit<Slide, 'id'>[] = [
     href:     '/?category=Spices',
     order:    1,
     enabled:  true,
-  },
-  {
-    img:      '/images/indian-market-slider.jpg',
-    brand:    'Indian Market',
-    label:    '',
-    headline: '',
-    sub:      '',
-    cta:      '',
-    href:     '/shop',
-    order:    2,
-    enabled:  true,
-    placement: 'top',
-  },
-  {
-    img:      'https://images.unsplash.com/photo-1601000676645-a7bba86d26cb?w=1600&q=80',
-    brand:    'Down Ads',
-    label:    'Special Offers',
-    headline: 'Discover More Deals',
-    sub:      'Explore amazing discounts at the bottom of the page',
-    cta:      'Shop Now',
-    href:     '/shop',
-    order:    0,
-    enabled:  true,
-    placement: 'down',
-  },
+  }
+]
+
+const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80'
+
+// Common categories for the CTA dropdown
+const COMMON_CATEGORIES = [
+  { name: 'Shop All', url: '/shop' },
+  ...CATEGORIES.map(cat => ({ name: cat, url: `/?category=${encodeURIComponent(cat)}` }))
 ]
 
 // ─── SlideForm ────────────────────────────────────────────────────────────────
@@ -104,9 +87,25 @@ function SlideForm({
     ...DEFAULT_SLIDE,
     ...slide,
   })
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   function field(key: keyof typeof form, value: string | boolean | number) {
     setForm(f => ({ ...f, [key]: value }))
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadImage(file, 'slides')
+      field('img', url)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+      alert('Failed to upload image. Please try again.')
+    }
+    setUploading(false)
   }
 
   return (
@@ -119,6 +118,7 @@ function SlideForm({
               src={form.img} 
               alt="preview" 
               className="w-full h-full object-cover" 
+              style={{ objectPosition: 'center center' }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.parentElement?.querySelector('.error-msg')?.classList.remove('hidden');
@@ -131,7 +131,6 @@ function SlideForm({
             <div className="error-msg hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-100 text-red-500">
               <ImageIcon className="size-8 mx-auto mb-1 opacity-50" />
               <p className="text-sm font-bold">Image failed to load</p>
-              <p className="text-xs mt-1 px-4 text-center">Make sure the URL is a direct link to an image (ends in .jpg, .png, etc) and allows external embedding.</p>
             </div>
             <div
               className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
@@ -152,7 +151,7 @@ function SlideForm({
           <div className="flex h-full items-center justify-center bg-slate-100" style={{ background: 'var(--muted)' }}>
             <div className="text-center">
               <ImageIcon className="size-8 mx-auto mb-1" style={{ color: 'var(--muted-foreground)' }} />
-              <p className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>Enter an image URL below to preview</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>Upload or enter an image URL to preview</p>
             </div>
           </div>
         )}
@@ -160,20 +159,44 @@ function SlideForm({
 
       {/* Form fields */}
       <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-        {/* Image URL — full width */}
-        <div className="sm:col-span-2">
-          <label className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
-            <ImageIcon className="size-3.5" /> Image URL
+        
+        {/* Image Upload/URL — full width */}
+        <div className="sm:col-span-2 space-y-3">
+          <label className="flex items-center justify-between text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
+            <span className="flex items-center gap-1.5"><ImageIcon className="size-3.5" /> Image</span>
           </label>
-          <input
-            type="url"
-            placeholder="https://example.com/banner.jpg"
-            value={form.img}
-            onChange={e => field('img', e.target.value)}
-            className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-orange-400"
-            style={{ background: 'var(--secondary)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
-          />
+          
+          <div className="flex gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-all disabled:opacity-50 shrink-0"
+              style={{ background: '#3b82f6' }}
+            >
+              <Upload className="size-4" /> {uploading ? 'Uploading...' : 'Upload File'}
+            </button>
+            <span className="text-xs text-slate-400 font-semibold px-2">OR</span>
+            <input
+              type="url"
+              placeholder="Paste Image URL..."
+              value={form.img}
+              onChange={e => field('img', e.target.value)}
+              className="flex-1 rounded-xl border px-3 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-400"
+              style={{ background: 'var(--secondary)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
+            />
+            <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+          </div>
+
+          <div className="rounded-lg p-3 bg-blue-50 border border-blue-100 flex items-start gap-3">
+            <Sparkles className="size-5 text-blue-500 shrink-0 mt-0.5" />
+            <div className="text-xs text-blue-800">
+              <p className="font-bold mb-1">Recommended Slide Size: 1920x768 (Wide 5:2)</p>
+              <p className="opacity-80 leading-relaxed">
+                <strong>AI Prompt:</strong> "Professional e-commerce promotional banner for Indian groceries. Wide landscape. Vibrant colors, clean typography space on the left, high-quality product photography on the right."
+              </p>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -242,16 +265,31 @@ function SlideForm({
         </div>
 
         <div>
-          <label className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
-            <Link2 className="size-3.5" /> CTA Link
+          <label className="mb-1 flex items-center justify-between text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
+            <span className="flex items-center gap-1.5"><Link2 className="size-3.5" /> Redirect Category Link</span>
           </label>
-          <input
-            placeholder="e.g. /?category=Spices"
-            value={form.href}
-            onChange={e => field('href', e.target.value)}
-            className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-orange-400"
-            style={{ background: 'var(--secondary)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
-          />
+          <div className="flex flex-col gap-2">
+            <select 
+              className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-orange-400"
+              style={{ background: 'var(--secondary)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
+              value={COMMON_CATEGORIES.some(c => c.url === form.href) ? form.href : 'custom'}
+              onChange={e => {
+                if (e.target.value !== 'custom') field('href', e.target.value)
+              }}
+            >
+              <option value="custom">Custom URL...</option>
+              {COMMON_CATEGORIES.map(cat => (
+                <option key={cat.name} value={cat.url}>{cat.name}</option>
+              ))}
+            </select>
+            <input
+              placeholder="e.g. /?category=Spices"
+              value={form.href}
+              onChange={e => field('href', e.target.value)}
+              className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-orange-400"
+              style={{ background: 'var(--secondary)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
+            />
+          </div>
         </div>
 
         {/* Active toggle */}
@@ -302,7 +340,7 @@ function SlideForm({
         </button>
         <button
           onClick={() => onSave(form)}
-          disabled={saving || !form.img || !form.headline}
+          disabled={saving || uploading || !form.img || !form.headline}
           className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
           style={{ background: '#F97316' }}
         >
@@ -320,8 +358,11 @@ export default function AdminSlidesPage() {
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [deleting, setDeleting] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'top' | 'down'>('top')
+  
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [slideToDelete, setSlideToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const slidesRef = collection(clientDb, 'slides')
 
@@ -342,7 +383,6 @@ export default function AdminSlidesPage() {
 
   // ── Re-number all slides in a group so order is always 0,1,2,3... ──
   async function reorderSlides(updatedSlides: Slide[]) {
-    // Group by placement and write sequential order values
     const placements = ['top', 'down'] as const
     for (const p of placements) {
       const group = updatedSlides
@@ -361,7 +401,6 @@ export default function AdminSlidesPage() {
     setSaving(true)
     try {
       if (editingId === 'new') {
-        // Order = count of slides in same placement group
         const sameGroup = slides.filter(s => (s.placement || 'top') === (data.placement || 'top'))
         await addDoc(slidesRef, { ...data, order: sameGroup.length })
       } else if (editingId) {
@@ -378,22 +417,28 @@ export default function AdminSlidesPage() {
     setSaving(false)
   }
 
-  // ── Delete ──
-  async function handleDelete(id: string) {
-    if (!confirm('Delete this slide?')) return
-    setDeleting(id)
+  // ── Delete flow ──
+  function promptDelete(id: string) {
+    setSlideToDelete(id)
+    setDeleteModalOpen(true)
+  }
+
+  async function confirmDelete() {
+    if (!slideToDelete) return
+    setIsDeleting(true)
     try {
-      await deleteDoc(doc(clientDb, 'slides', id))
-      // Reload and then renumber so order stays clean
+      await deleteDoc(doc(clientDb, 'slides', slideToDelete))
       const snap = await getDocs(query(slidesRef, orderBy('order', 'asc')))
       const remaining = snap.docs.map(d => ({ id: d.id, ...d.data() } as Slide))
       await reorderSlides(remaining)
       await loadSlides()
+      setDeleteModalOpen(false)
+      setSlideToDelete(null)
     } catch (err) {
       console.error('Failed to delete:', err)
-      alert('Failed to delete slide. Check your connection and try again.')
+      alert('Failed to delete slide.')
     }
-    setDeleting(null)
+    setIsDeleting(false)
   }
 
   // ── Move order — swaps two adjacent slides then renumbers whole group ──
@@ -408,30 +453,32 @@ export default function AdminSlidesPage() {
     const idx = sameGroup.findIndex(s => s.id === id)
     if ((dir === 'up' && idx === 0) || (dir === 'down' && idx === sameGroup.length - 1)) return
 
-    // Swap in local array
     const swapIdx = dir === 'up' ? idx - 1 : idx + 1
     ;[sameGroup[idx], sameGroup[swapIdx]] = [sameGroup[swapIdx], sameGroup[idx]]
 
-    // Write sequential order values — clean 0,1,2,...
     for (let i = 0; i < sameGroup.length; i++) {
       await updateDoc(doc(clientDb, 'slides', sameGroup[i].id!), { order: i } as Record<string, any>)
     }
     await loadSlides()
   }
 
-  // ── Toggle enabled ──
   async function toggleEnabled(id: string, current: boolean) {
     await updateDoc(doc(clientDb, 'slides', id), { enabled: !current } as Record<string, any>)
     await loadSlides()
   }
 
-  const editingSlide = editingId && editingId !== 'new'
-    ? slides.find(s => s.id === editingId)
-    : undefined
-
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* Header */}
+    <div className="p-6 max-w-4xl mx-auto relative">
+      <ConfirmModal 
+        isOpen={deleteModalOpen}
+        title="Delete Slide"
+        message="Are you sure you want to delete this promotional slide? This action cannot be undone."
+        confirmText="Yes, delete slide"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModalOpen(false)}
+        loading={isDeleting}
+      />
+
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
@@ -452,7 +499,6 @@ export default function AdminSlidesPage() {
         )}
       </div>
 
-      {/* Tabs */}
       {!editingId && (
         <div className="flex items-center gap-4 mb-6 border-b" style={{ borderColor: 'var(--border)' }}>
           <button
@@ -470,7 +516,6 @@ export default function AdminSlidesPage() {
         </div>
       )}
 
-      {/* New slide form */}
       {editingId === 'new' && (
         <div className="mb-6">
           <h2 className="mb-3 text-base font-bold" style={{ color: 'var(--foreground)' }}>New Slide</h2>
@@ -483,7 +528,6 @@ export default function AdminSlidesPage() {
         </div>
       )}
 
-      {/* Slides list */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
@@ -528,7 +572,6 @@ export default function AdminSlidesPage() {
         <div className="space-y-3">
           {slides.filter(s => (s.placement || 'top') === activeTab).map((slide, i, arr) => (
             <div key={slide.id}>
-              {/* Edit form inline */}
               {editingId === slide.id ? (
                 <SlideForm
                   slide={slide}
@@ -537,7 +580,6 @@ export default function AdminSlidesPage() {
                   saving={saving}
                 />
               ) : (
-                /* Slide row */
                 <div
                   className="flex items-center gap-3 rounded-2xl border p-3 transition-all"
                   style={{
@@ -546,7 +588,6 @@ export default function AdminSlidesPage() {
                     opacity: slide.enabled ? 1 : 0.6,
                   }}
                 >
-                  {/* Thumbnail */}
                   <div className="relative shrink-0 size-16 rounded-xl overflow-hidden bg-slate-100">
                     {slide.img
                       ? <img src={slide.img} alt={slide.brand} className="w-full h-full object-cover" />
@@ -554,7 +595,6 @@ export default function AdminSlidesPage() {
                     }
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>
@@ -576,7 +616,6 @@ export default function AdminSlidesPage() {
                     </p>
                   </div>
 
-                  {/* Order controls */}
                   <div className="flex flex-col gap-0.5 shrink-0">
                     <button
                       onClick={() => moveSlide(slide.id!, 'up')}
@@ -594,7 +633,6 @@ export default function AdminSlidesPage() {
                     </button>
                   </div>
 
-                  {/* Action buttons */}
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => toggleEnabled(slide.id!, slide.enabled)}
@@ -613,9 +651,8 @@ export default function AdminSlidesPage() {
                       <Edit3 className="size-4 text-orange-500" />
                     </button>
                     <button
-                      onClick={() => handleDelete(slide.id!)}
-                      disabled={deleting === slide.id}
-                      className="flex size-8 items-center justify-center rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                      onClick={() => promptDelete(slide.id!)}
+                      className="flex size-8 items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
                     >
                       <Trash2 className="size-4 text-red-500" />
                     </button>
@@ -627,7 +664,6 @@ export default function AdminSlidesPage() {
         </div>
       )}
 
-      {/* Live note */}
       <div className="mt-6 rounded-xl border p-4 flex items-start gap-3" style={{ background: 'var(--muted)', borderColor: 'var(--border)' }}>
         <span className="text-xl">💡</span>
         <div>
