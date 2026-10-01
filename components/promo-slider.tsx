@@ -174,22 +174,42 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
                 transition: `opacity ${TRANS_MS}ms ease-in-out`,
               }}
             >
-              {/* Background image */}
-              <img
-                src={slide.img}
-                alt={slide.brand}
-                className="absolute inset-0 w-full h-full object-cover"
+              {/* ── Blurred backdrop + contained image wrapper ── */}
+              {/* The kb-zoom animation is applied to this wrapper so both
+                  the blurred backdrop and the sharp image zoom together. */}
+              <div
+                className="absolute inset-0"
                 style={{
-                  objectPosition: 'center 15%',
                   animation: isCurrent && !animating
                     ? `kb-zoom ${AUTO_MS + TRANS_MS}ms ease-in-out forwards`
                     : 'none',
                 }}
-                onError={(e) => {
-                  const img = e.currentTarget
-                  if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG
-                }}
-              />
+              >
+                {/* Blurred backdrop — fills pillarbox/letterbox gaps
+                    with a soft, stretched version of the same image */}
+                <img
+                  src={slide.img}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ filter: 'blur(28px) saturate(1.4)', opacity: 0.55, transform: 'scale(1.15)' }}
+                  onError={(e) => {
+                    const img = e.currentTarget
+                    if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG
+                  }}
+                />
+                {/* Main sharp image — object-contain ensures full
+                    image is always visible, never cropped */}
+                <img
+                  src={slide.img}
+                  alt={slide.brand}
+                  className="absolute inset-0 w-full h-full object-contain"
+                  onError={(e) => {
+                    const img = e.currentTarget
+                    if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG
+                  }}
+                />
+              </div>
 
               {/* Rich gradient overlay — heavy at bottom for text legibility */}
               <div
