@@ -31,6 +31,8 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   const [step, setStep] = useState(1)
   const [phone, setPhone] = useState('+370 ')
   const [transitHub, setTransitHub] = useState(DESTINATIONS[0].id)
+  const [deliveryMethod, setDeliveryMethod] = useState<'dpd' | 'bus' | 'pickup'>('dpd')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
   const [instructions, setInstructions] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bank_transfer')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -70,6 +72,9 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
           if (data.preferredTerminal) {
             setTransitHub(data.preferredTerminal)
           }
+          if (data.homeAddress) {
+            setDeliveryAddress(data.homeAddress)
+          }
         }
       }).catch(console.error)
     }
@@ -89,8 +94,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   }
 
   const selectedTransit = getDestinationById(transitHub) || DESTINATIONS[0]
-  // Bus delivery always applies — no free delivery
-  const deliveryPrice = selectedTransit.price
+  const deliveryPrice = deliveryMethod === 'bus' ? selectedTransit.price : (deliveryMethod === 'dpd' ? 5.00 : 0.00)
   const grandTotal = subtotal + deliveryPrice
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,7 +115,8 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
         customerPhone: phone,
         customerEmail: user?.email ?? null,
         transitHub,
-        // deliveryFee intentionally omitted — server calculates it from transitHub
+        deliveryMethod,
+        deliveryAddress,
         orderNotes: instructions,
         paymentMethod,
       }
@@ -372,29 +377,91 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
               </div>
             </div>
 
-            <div>
-              <label htmlFor="checkout-destination" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Destination Bus Station
+            <div className="space-y-4">
+              <label className="block text-xs font-semibold text-slate-700">
+                Delivery Method
               </label>
-              <div className="relative">
-                <MapPin className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                <select
-                  id="checkout-destination"
-                  value={transitHub}
-                  onChange={(e) => setTransitHub(e.target.value)}
-                  className="h-11 w-full rounded-md border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
-                >
-                  {DESTINATIONS.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.label.split(' - ')[0]} — €{d.price.toFixed(2)} excl.
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryMethod === 'dpd' ? 'border-accent bg-accent/5' : 'border-slate-200 hover:border-accent/40 bg-white'}`}>
+                  <input type="radio" name="deliveryMethod" value="dpd" checked={deliveryMethod === 'dpd'} onChange={(e) => setDeliveryMethod(e.target.value as any)} className="hidden" />
+                  <Truck className={`size-6 mb-2 ${deliveryMethod === 'dpd' ? 'text-accent' : 'text-slate-400'}`} />
+                  <span className={`text-sm font-bold ${deliveryMethod === 'dpd' ? 'text-slate-900' : 'text-slate-600'}`}>DPD Courier</span>
+                  <span className="text-xs text-slate-500">€5.00</span>
+                </label>
+                <label className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryMethod === 'bus' ? 'border-accent bg-accent/5' : 'border-slate-200 hover:border-accent/40 bg-white'}`}>
+                  <input type="radio" name="deliveryMethod" value="bus" checked={deliveryMethod === 'bus'} onChange={(e) => setDeliveryMethod(e.target.value as any)} className="hidden" />
+                  <Bus className={`size-6 mb-2 ${deliveryMethod === 'bus' ? 'text-accent' : 'text-slate-400'}`} />
+                  <span className={`text-sm font-bold ${deliveryMethod === 'bus' ? 'text-slate-900' : 'text-slate-600'}`}>Bus Terminal</span>
+                  <span className="text-xs text-slate-500">From €4.00</span>
+                </label>
+                <label className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryMethod === 'pickup' ? 'border-accent bg-accent/5' : 'border-slate-200 hover:border-accent/40 bg-white'}`}>
+                  <input type="radio" name="deliveryMethod" value="pickup" checked={deliveryMethod === 'pickup'} onChange={(e) => setDeliveryMethod(e.target.value as any)} className="hidden" />
+                  <Building2 className={`size-6 mb-2 ${deliveryMethod === 'pickup' ? 'text-accent' : 'text-slate-400'}`} />
+                  <span className={`text-sm font-bold ${deliveryMethod === 'pickup' ? 'text-slate-900' : 'text-slate-600'}`}>Store Pickup</span>
+                  <span className="text-xs text-slate-500">Free</span>
+                </label>
               </div>
-              <p className="mt-1.5 text-[11px] text-slate-500">
-                Bus station dispatch fee: <strong className="text-slate-700">€{deliveryPrice.toFixed(2)}</strong> (excl. from product prices)
-              </p>
             </div>
+
+            {deliveryMethod === 'dpd' && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <label htmlFor="checkout-address" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Home Address <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    id="checkout-address"
+                    type="text"
+                    required
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    placeholder="Street, City, Postal Code"
+                    className="h-11 w-full rounded-md border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+                  />
+                </div>
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  DPD Home Delivery fee: <strong className="text-slate-700">€5.00</strong> (excl. from product prices)
+                </p>
+              </div>
+            )}
+
+            {deliveryMethod === 'bus' && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <label htmlFor="checkout-destination" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Destination Bus Station <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <select
+                    id="checkout-destination"
+                    value={transitHub}
+                    onChange={(e) => setTransitHub(e.target.value)}
+                    className="h-11 w-full rounded-md border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+                  >
+                    {DESTINATIONS.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.label.split(' - ')[0]} — €{d.price.toFixed(2)} excl.
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  Bus station dispatch fee: <strong className="text-slate-700">€{deliveryPrice.toFixed(2)}</strong> (excl. from product prices)
+                </p>
+              </div>
+            )}
+
+            {deliveryMethod === 'pickup' && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+                <Building2 className="size-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-blue-900">Pickup from Asian Groceries Store</p>
+                  <p className="text-xs text-blue-700 mt-1">Šaltinių g. 22, Vilnius, Lithuania.</p>
+                  <p className="text-[11px] text-blue-600 mt-0.5">We will notify you when your order is ready for pickup.</p>
+                </div>
+              </div>
+            )}
 
             <Button
               type="button"

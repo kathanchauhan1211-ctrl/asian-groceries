@@ -13,45 +13,19 @@
 
 export type Destination = {
   id: string
-  name: string    // short city name
-  label: string   // full label shown in dropdowns
-  price: number   // delivery fee in EUR
+  name: string
+  label: string
+  price: number
 }
 
 export const DESTINATIONS: Destination[] = [
-  {
-    id: 'kaunas',
-    name: 'Kaunas',
-    label: 'Kaunas - Via DPD Courier',
-    price: 4.5,
-  },
-  {
-    id: 'klaipeda',
-    name: 'Klaipėda',
-    label: 'Klaipėda - Via DPD Courier',
-    price: 6.0,
-  },
-  {
-    id: 'siauliai',
-    name: 'Šiauliai',
-    label: 'Šiauliai - Via DPD Courier',
-    price: 5.0,
-  },
-  {
-    id: 'panevezys',
-    name: 'Panevėžys',
-    label: 'Panevėžys - Via DPD Courier',
-    price: 4.5,
-  },
-  {
-    id: 'alytus',
-    name: 'Alytus',
-    label: 'Alytus - Via DPD Courier',
-    price: 4.0,
-  },
+  { id: 'kaunas', name: 'Kaunas', label: 'Kaunas - Autobusų Stotis', price: 4.5 },
+  { id: 'klaipeda', name: 'Klaipėda', label: 'Klaipėda - Autobusų Stotis', price: 6.0 },
+  { id: 'siauliai', name: 'Šiauliai', label: 'Šiauliai - Autobusų Stotis', price: 5.0 },
+  { id: 'panevezys', name: 'Panevėžys', label: 'Panevėžys - Autobusų Stotis', price: 4.5 },
+  { id: 'alytus', name: 'Alytus', label: 'Alytus - Autobusų Stotis', price: 4.0 },
 ]
 
-/** Quick lookup by id — returns undefined if not found */
 export function getDestinationById(id: string): Destination | undefined {
   return DESTINATIONS.find((d) => d.id === id)
 }

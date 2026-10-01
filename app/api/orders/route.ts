@@ -17,9 +17,9 @@ interface OrderRequestBody {
   customerName: string
   customerPhone: string
   customerEmail: string | null
-  transitHub: string
-  // NOTE: deliveryFee is intentionally NOT accepted from the client.
-  // The server calculates it from transitHub to prevent price tampering.
+  transitHub: string // Used for bus terminal or empty for others
+  deliveryMethod: string // 'dpd', 'bus', 'pickup'
+  deliveryAddress: string // Home address or empty
   orderNotes: string
   paymentMethod: string
 }
@@ -38,6 +38,7 @@ function buildOrderEmailHtml(params: {
   grandTotal: number
   items: Array<{ productName: string; variantLabel: string; quantity: number; lineTotal: number }>
   transitHub: string
+  deliveryMethod: string
   paymentMethod: string
 }): string {
   const itemRows = params.items
@@ -73,7 +74,7 @@ function buildOrderEmailHtml(params: {
 
       <p style="font-size:13px;color:#475569;">
         <strong>Ticket:</strong> ${params.ticketNumber}<br/>
-        <strong>Destination:</strong> ${params.transitHub}<br/>
+        <strong>Destination/Address:</strong> ${params.transitHub || params.deliveryMethod === 'dpd' ? 'Home Delivery' : 'Store Pickup'}<br/>
         <strong>Payment:</strong> ${params.paymentMethod.replace('_', ' ')}
       </p>
       <p style="font-size:12px;color:#94a3b8;">
@@ -89,21 +90,30 @@ export async function POST(req: NextRequest) {
   try {
     // ── 1. Parse & basic validate ──────────────────────────────────────────
     const body: OrderRequestBody = await req.json()
-    const { items, customerName, customerPhone, customerEmail, transitHub, orderNotes, paymentMethod } = body
+    const { items, customerName, customerPhone, customerEmail, transitHub, deliveryMethod, deliveryAddress, orderNotes, paymentMethod } = body
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
     }
-    if (!customerName || !customerPhone || !transitHub) {
+    if (!customerName || !customerPhone) {
       return NextResponse.json({ error: 'Missing required customer fields.' }, { status: 400 })
     }
 
     // ── Server-side delivery fee lookup (prevents client price tampering) ──────
-    const destination = getDestinationById(transitHub)
-    if (!destination) {
-      return NextResponse.json({ error: `Unknown transit hub: ${transitHub}` }, { status: 400 })
+    let deliveryFee = 0
+    if (deliveryMethod === 'bus') {
+      const destination = getDestinationById(transitHub)
+      if (!destination) {
+        return NextResponse.json({ error: `Unknown transit hub: ${transitHub}` }, { status: 400 })
+      }
+      deliveryFee = destination.price
+    } else if (deliveryMethod === 'dpd') {
+      deliveryFee = 5.00 // Fixed DPD price
+    } else if (deliveryMethod === 'pickup') {
+      deliveryFee = 0.00
+    } else {
+      return NextResponse.json({ error: 'Invalid delivery method.' }, { status: 400 })
     }
-    const deliveryFee = destination.price
 
     // ── 2. Init Admin SDK ──────────────────────────────────────────────────
     const { db } = getFirebaseAdmin()
@@ -236,6 +246,8 @@ export async function POST(req: NextRequest) {
         customerPhone,
         customerEmail: customerEmail ?? null,
         transitHub,
+        deliveryMethod,
+        deliveryAddress,
         orderNotes: orderNotes ?? '',
         paymentMethod,
         paymentStatus: 'Pending Payment - Bank Transfer',
@@ -281,6 +293,7 @@ export async function POST(req: NextRequest) {
               items: enrichedItems,
               transitHub,
               paymentMethod,
+              deliveryMethod,
             }),
           })
         } catch (emailErr) {
@@ -310,7 +323,8 @@ export async function POST(req: NextRequest) {
               <p><strong>Ticket:</strong> ${ticketNumber}</p>
               <p><strong>Customer:</strong> ${customerName} ${customerEmail ? `(${customerEmail})` : ''}</p>
               <p><strong>Phone:</strong> ${customerPhone}</p>
-              <p><strong>Destination:</strong> ${transitHub}</p>
+              <p><strong>Delivery Method:</strong> ${deliveryMethod.toUpperCase()}</p>
+              <p><strong>Destination/Address:</strong> ${deliveryMethod === 'bus' ? transitHub : (deliveryMethod === 'dpd' ? deliveryAddress : 'Store Pickup')}</p>
               <p><strong>Payment:</strong> ${paymentMethod.replace('_', ' ')}</p>
               <hr style="border:none;border-top:1px solid #e2e8f0;margin:12px 0;"/>
               <p style="font-size:13px;">${itemsSummaryText}</p>

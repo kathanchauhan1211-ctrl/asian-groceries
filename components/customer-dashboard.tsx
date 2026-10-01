@@ -599,20 +599,24 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
 // ─── Address Section ─────────────────────────────────────────────────────────
 function AddressSection({ user }: { user: { uid: string } }) {
   const [preferredTerminal, setPreferredTerminal] = useState(TERMINAL_OPTIONS[0].id)
+  const [homeAddress, setHomeAddress] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving]   = useState(false)
   const [saved,  setSaved]    = useState(false)
 
   useEffect(() => {
     getDoc(doc(clientDb, 'users', user.uid)).then(d => {
-      if (d.exists() && d.data().preferredTerminal) setPreferredTerminal(d.data().preferredTerminal)
+      if (d.exists()) {
+        if (d.data().preferredTerminal) setPreferredTerminal(d.data().preferredTerminal)
+        if (d.data().homeAddress) setHomeAddress(d.data().homeAddress)
+      }
     }).catch(console.error)
   }, [user.uid])
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await setDoc(doc(clientDb, 'users', user.uid), { preferredTerminal }, { merge: true })
+      await setDoc(doc(clientDb, 'users', user.uid), { preferredTerminal, homeAddress }, { merge: true })
       setSaved(true); setIsEditing(false)
       setTimeout(() => setSaved(false), 3000)
     } catch (e) { console.error(e) }
@@ -640,12 +644,12 @@ function AddressSection({ user }: { user: { uid: string } }) {
               <MapPin className="size-5" style={{ color: 'var(--im-orange)' }} />
             </div>
             <div>
-              <h3 className="font-bold text-foreground text-sm">Preferred Bus Station</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Used for courier dispatch</p>
+              <h3 className="font-bold text-foreground text-sm">Delivery Addresses</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Used for checkout</p>
             </div>
           </div>
           {!isEditing ? (
-            <Button size="sm" variant="glass-light" onClick={() => setIsEditing(true)} className="gap-1.5"><Edit3 className="size-3.5" /> Change</Button>
+            <Button size="sm" variant="glass-light" onClick={() => setIsEditing(true)} className="gap-1.5"><Edit3 className="size-3.5" /> Edit</Button>
           ) : (
             <div className="flex gap-2">
               <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}><X className="size-3.5" /></Button>
@@ -656,35 +660,78 @@ function AddressSection({ user }: { user: { uid: string } }) {
           )}
         </div>
 
-        {isEditing ? (
-          <div className="space-y-2.5">
-            {TERMINAL_OPTIONS.map(t => (
-              <label key={t.id} className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${preferredTerminal === t.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80 hover:bg-muted/50'}`}>
-                <div className={`size-4 rounded-full border-2 flex items-center justify-center transition-colors ${preferredTerminal === t.id ? 'border-primary' : 'border-muted-foreground/40'}`}>
-                  {preferredTerminal === t.id && <div className="size-2 rounded-full bg-primary" />}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">{t.label}</p>
-                  <p className="text-xs text-muted-foreground">€{t.price.toFixed(2)} dispatch fee (excl.)</p>
-                </div>
-                <input type="radio" name="terminal" value={t.id} checked={preferredTerminal === t.id} onChange={() => setPreferredTerminal(t.id)} className="hidden" />
-              </label>
-            ))}
+        {(!homeAddress && !isEditing) && (
+          <div className="mb-5 flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/25 px-4 py-3 text-sm font-medium text-amber-600 dark:text-amber-400">
+            <AlertCircle className="size-4 shrink-0" /> You haven't added a home address for DPD deliveries. Please add one.
           </div>
-        ) : (
-          <div className="rounded-xl bg-muted border border-border p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-bold text-foreground">{terminal.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Via Autobusų Stotis Courier</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground font-semibold">Dispatch fee</p>
-                <p className="text-base font-bold" style={{ color: 'var(--im-orange)' }}>€{terminal.price.toFixed(2)}</p>
+        )}
+
+        {isEditing ? (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-2">Home Address (DPD Delivery)</label>
+              <input 
+                type="text" 
+                value={homeAddress} 
+                onChange={e => setHomeAddress(e.target.value)} 
+                className="w-full rounded-xl border border-border bg-background text-foreground text-sm px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground transition-all"
+                placeholder="Street, City, Postal Code" 
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-2">Preferred Bus Station</label>
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-2">
+                {TERMINAL_OPTIONS.map(t => (
+                  <label key={t.id} className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${preferredTerminal === t.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80 hover:bg-muted/50'}`}>
+                    <div className={`size-4 rounded-full border-2 flex items-center justify-center transition-colors ${preferredTerminal === t.id ? 'border-primary' : 'border-muted-foreground/40'}`}>
+                      {preferredTerminal === t.id && <div className="size-2 rounded-full bg-primary" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">{t.label}</p>
+                      <p className="text-xs text-muted-foreground">€{t.price.toFixed(2)} dispatch fee (excl.)</p>
+                    </div>
+                    <input type="radio" name="terminal" value={t.id} checked={preferredTerminal === t.id} onChange={() => setPreferredTerminal(t.id)} className="hidden" />
+                  </label>
+                ))}
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-border flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-              <CheckCircle2 className="size-3.5" /> Active preferred station
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-xl bg-muted border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-foreground">Home Address</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Used for DPD Deliveries</p>
+                </div>
+                <div className="flex size-8 items-center justify-center rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-border">
+                  <Truck className="size-4 text-slate-500" />
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-border">
+                {homeAddress ? (
+                  <p className="text-sm text-foreground font-medium">{homeAddress}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No home address specified.</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="rounded-xl bg-muted border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-foreground">{terminal.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Via Autobusų Stotis Courier</p>
+                </div>
+                <div className="text-right flex flex-col items-end">
+                  <p className="text-xs text-muted-foreground font-semibold">Dispatch fee</p>
+                  <p className="text-base font-bold" style={{ color: 'var(--im-orange)' }}>€{terminal.price.toFixed(2)}</p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-border flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                <CheckCircle2 className="size-3.5" /> Active preferred station
+              </div>
             </div>
           </div>
         )}

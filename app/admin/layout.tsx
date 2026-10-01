@@ -15,6 +15,7 @@ import { ADMIN_EMAIL } from '@/lib/admin-config'
 const NAV = [
   { href: '/admin', label: 'Dashboard', exact: true },
   { href: '/admin/orders', label: 'Orders' },
+  { href: '/admin/track', label: 'Tracking' },
   { href: '/admin/customers', label: 'Customers' },
   { href: '/admin/products', label: 'Products' },
   { href: '/admin/collections', label: 'Collections' },
