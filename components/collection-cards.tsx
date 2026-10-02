@@ -16,7 +16,7 @@ export function CollectionCards({ collections, activeCategory, onSelectCategory 
   if (!collections || collections.length === 0) return null
 
   return (
-    <section className="mx-auto max-w-[1600px] px-4 md:px-6 py-6 md:py-8">
+    <section className="mx-auto max-w-7xl px-4 md:px-6 py-6 md:py-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
           {td('Shop by Collection')}
