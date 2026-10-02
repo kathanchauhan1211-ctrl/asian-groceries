@@ -34,7 +34,7 @@ export function CollectionCards({ collections, activeCategory, onSelectCategory 
               key={cat.id}
               onClick={() => onSelectCategory(isActive ? null : cat.id)}
               className={`relative snap-start flex-shrink-0 cursor-pointer overflow-hidden rounded-lg border border-border transition-all duration-300 w-[42vw] sm:w-[28vw] md:w-[22vw] lg:w-[22%] aspect-[3/4] ${
-                isActive ? 'ring-2 ring-orange-500 shadow-xl scale-[1.02]' : 'shadow-md hover:shadow-xl hover:scale-[1.01]'
+                isActive ? 'ring-2 ring-purple-600 shadow-xl scale-[1.02]' : 'shadow-md hover:shadow-xl hover:scale-[1.01]'
               }`}
             >
               <Image 
@@ -60,7 +60,7 @@ export function CollectionCards({ collections, activeCategory, onSelectCategory 
                        </p>
                      )}
                      {isActive && (
-                       <span className="mt-2 h-1 w-8 bg-orange-500 rounded-full" />
+                       <span className="mt-2 h-1 w-8 bg-purple-600 rounded-full" />
                      )}
                   </div>
                 </>
@@ -68,7 +68,7 @@ export function CollectionCards({ collections, activeCategory, onSelectCategory 
               {/* Show active indicator even if no title */}
               {isActive && !(cat.title || cat.description) && (
                 <div className="absolute bottom-4 inset-x-0 flex justify-center">
-                  <span className="h-1 w-8 bg-orange-500 rounded-full shadow-md" />
+                  <span className="h-1 w-8 bg-purple-600 rounded-full shadow-md" />
                 </div>
               )}
             </div>

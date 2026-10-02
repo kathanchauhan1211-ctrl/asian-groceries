@@ -36,7 +36,22 @@ export function BrandCatalog() {
     }
   }
 
-  if (loading || activeBrands.length === 0) return null
+  if (loading) {
+    return (
+      <section className="mx-auto max-w-[1600px] px-4 md:px-6 py-4 md:py-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded-lg" />
+        </div>
+        <div className="flex gap-4 md:gap-5 overflow-hidden">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="flex-shrink-0 w-[40vw] sm:w-[28vw] md:w-[200px] lg:w-[220px] h-[80px] bg-muted animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  if (activeBrands.length === 0) return null
 
   return (
     <section className="mx-auto max-w-[1600px] px-4 md:px-6 py-4 md:py-6">

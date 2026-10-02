@@ -40,8 +40,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   },
   'Dispatched': {
     label: 'On the way',
-    color: 'text-orange-700 dark:text-orange-400',
-    bg: 'bg-orange-50 dark:bg-orange-900/20',
+    color: 'text-orange-700 dark:text-purple-500',
+    bg: 'bg-purple-50 dark:bg-purple-900/20',
     border: 'border-orange-200 dark:border-orange-800',
     icon: <Truck className="h-3 w-3" />,
   },
@@ -147,8 +147,8 @@ export default function HomepageStatus() {
                   {/* Animated pulse dot for active statuses */}
                   {order.status !== 'Delivered' && (
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg?.color.includes('amber') ? 'bg-amber-400' : cfg?.color.includes('blue') ? 'bg-blue-400' : cfg?.color.includes('purple') ? 'bg-purple-400' : 'bg-orange-400'}`} />
-                      <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${cfg?.color.includes('amber') ? 'bg-amber-500' : cfg?.color.includes('blue') ? 'bg-blue-500' : cfg?.color.includes('purple') ? 'bg-purple-500' : 'bg-orange-500'}`} />
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg?.color.includes('amber') ? 'bg-amber-400' : cfg?.color.includes('blue') ? 'bg-blue-400' : cfg?.color.includes('purple') ? 'bg-purple-400' : 'bg-purple-500'}`} />
+                      <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${cfg?.color.includes('amber') ? 'bg-amber-500' : cfg?.color.includes('blue') ? 'bg-blue-500' : cfg?.color.includes('purple') ? 'bg-purple-500' : 'bg-purple-600'}`} />
                     </span>
                   )}
                 </div>

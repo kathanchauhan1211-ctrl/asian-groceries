@@ -13,8 +13,8 @@ import { LogoSVG } from '@/components/logo-svg'
 export const AnimatedPlaceholderLogo = ({ size = 70 }: { size?: number }) => (
   <div className="relative flex items-center justify-center w-full h-full bg-white dark:bg-gray-900 overflow-hidden">
     {/* Expanding circular lines (Opens and closes) */}
-    <div className="absolute w-[80%] h-[80%] rounded-full border-[3px] border-orange-500/30 animate-[ping_3s_ease-out_infinite]" />
-    <div className="absolute w-[60%] h-[60%] rounded-full border-[2px] border-orange-400/40 animate-[ping_3s_ease-out_infinite_1s]" />
+    <div className="absolute w-[80%] h-[80%] rounded-full border-[3px] border-purple-600/30 animate-[ping_3s_ease-out_infinite]" />
+    <div className="absolute w-[60%] h-[60%] rounded-full border-[2px] border-purple-500/40 animate-[ping_3s_ease-out_infinite_1s]" />
     
     {/* The actual logo stays placed exactly in the center */}
     <div className="relative z-10 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 drop-shadow-sm">
@@ -145,11 +145,11 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
           <div className="mt-auto flex flex-col sm:flex-row items-center gap-4 pt-4">
             {/* Qty stepper */}
             <div className="flex items-center rounded-xl border border-white/10 h-12 bg-black/20 text-white w-full sm:w-auto shrink-0 shadow-inner">
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 hover:text-orange-400 h-full flex items-center justify-center transition-colors">
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 hover:text-purple-500 h-full flex items-center justify-center transition-colors">
                 <Minus className="size-4" />
               </button>
               <span className="w-8 text-center font-bold">{qty}</span>
-              <button onClick={() => setQty(q => q + 1)} className="px-4 hover:text-orange-400 h-full flex items-center justify-center transition-colors">
+              <button onClick={() => setQty(q => q + 1)} className="px-4 hover:text-purple-500 h-full flex items-center justify-center transition-colors">
                 <Plus className="size-4" />
               </button>
             </div>

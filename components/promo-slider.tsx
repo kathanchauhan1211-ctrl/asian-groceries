@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
 import { clientDb } from '@/lib/firebase-client'
@@ -69,6 +70,7 @@ const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80'
 
 export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' }) {
+  const router = useRouter()
   const [slides, setSlides] = useState<Slide[]>([])
   const [loading, setLoading] = useState(true)
   const { td } = useTranslation()
@@ -193,7 +195,12 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
             <div
               key={slide.id}
               aria-hidden={!isCurrent}
-              className="absolute inset-0"
+              onClick={() => {
+                if (slide.href) {
+                  router.push(slide.href)
+                }
+              }}
+              className="absolute inset-0 cursor-pointer"
               style={{
                 zIndex: isCurrent ? 2 : 1,
                 opacity: isCurrent ? 1 : 0,

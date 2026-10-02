@@ -36,7 +36,7 @@ export function ConfirmModal({
 
   const variantColors = {
     danger: 'bg-red-500 hover:bg-red-600',
-    warning: 'bg-orange-500 hover:bg-orange-600',
+    warning: 'bg-purple-600 hover:bg-purple-700',
     primary: 'bg-blue-600 hover:bg-blue-700',
   }
 
@@ -59,7 +59,7 @@ export function ConfirmModal({
         </button>
 
         <div className="flex flex-col items-center text-center">
-          <div className={`mb-4 flex size-12 items-center justify-center rounded-full ${variant === 'danger' ? 'bg-red-100 text-red-500' : 'bg-orange-100 text-orange-500'}`}>
+          <div className={`mb-4 flex size-12 items-center justify-center rounded-full ${variant === 'danger' ? 'bg-red-100 text-red-500' : 'bg-purple-100 text-purple-600'}`}>
             <AlertTriangle className="size-6" />
           </div>
           

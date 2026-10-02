@@ -355,7 +355,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
             {/* Customer name — read-only from profile OR editable for guests */}
             {user ? (
               <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 flex items-center gap-3">
-                <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 shrink-0">
+                <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 text-purple-700 shrink-0">
                   <User className="size-4" />
                 </div>
                 <div className="min-w-0">
@@ -377,7 +377,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
                     onChange={(e) => setGuestName(e.target.value)}
                     required
                     placeholder="Enter your full name"
-                    className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   />
                 </div>
               </div>

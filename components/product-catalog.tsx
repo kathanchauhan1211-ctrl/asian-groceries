@@ -114,7 +114,7 @@ function CheckDropdown({
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-all whitespace-nowrap hover:border-orange-400 hover:text-orange-600"
+        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-all whitespace-nowrap hover:border-purple-500 hover:text-purple-700"
         style={{
           background: has ? "var(--primary)" : "var(--card)",
           color: has ? "#fff" : "var(--foreground)",
@@ -162,7 +162,7 @@ function CheckDropdown({
                         : [...p, opt.value],
                     )
                   }
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-[13px] transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/10"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-[13px] transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/10"
                   style={{
                     color: checked ? "var(--primary)" : "var(--foreground)",
                   }}
@@ -239,7 +239,7 @@ function SortDropdown({
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-all whitespace-nowrap hover:border-orange-400"
+        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-all whitespace-nowrap hover:border-purple-500"
         style={{
           background: value !== "default" ? "var(--primary)" : "var(--card)",
           color: value !== "default" ? "#fff" : "var(--foreground)",
@@ -272,7 +272,7 @@ function SortDropdown({
                 onChange(opt.key);
                 setOpen(false);
               }}
-              className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/10"
+              className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/10"
               style={{
                 fontWeight: value === opt.key ? 700 : 400,
                 color:
@@ -329,7 +329,7 @@ function PriceDropdown({
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-all whitespace-nowrap hover:border-orange-400"
+        className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-all whitespace-nowrap hover:border-purple-500"
         style={{
           background: active ? "var(--primary)" : "var(--card)",
           color: active ? "#fff" : "var(--foreground)",
@@ -509,7 +509,7 @@ function SearchInput({
 
   return (
     <div className="relative flex-1 min-w-[200px] md:max-w-[320px]">
-      <div className="flex items-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/60 shadow-inner border border-transparent focus-within:border-orange-500/50 focus-within:bg-white dark:focus-within:bg-[#0B1120] focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
+      <div className="flex items-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/60 shadow-inner border border-transparent focus-within:border-purple-600/50 focus-within:bg-white dark:focus-within:bg-[#0B1120] focus-within:ring-2 focus-within:ring-purple-600/20 transition-all">
         <PackageSearch className="ml-3 size-4.5 shrink-0 text-slate-400 dark:text-slate-500" />
         <input
           type="text"
@@ -551,7 +551,7 @@ function FilterChip({
       {label}
       <button
         onClick={onRemove}
-        className="flex size-4 items-center justify-center rounded-full hover:bg-orange-500 hover:text-white transition-colors"
+        className="flex size-4 items-center justify-center rounded-full hover:bg-purple-600 hover:text-white transition-colors"
         aria-label={`Remove ${label} filter`}
       >
         <X className="size-2.5" />
@@ -1282,7 +1282,7 @@ export function ProductCatalog({
                   {!hideExtraFilters && (
                     <button
                       onClick={() => setMobileFilterOpen(true)}
-                      className="flex items-center gap-1.5 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all hover:border-orange-400 hover:text-orange-600 bg-slate-50 dark:bg-slate-800 shadow-sm hover:shadow active:scale-95"
+                      className="flex items-center gap-1.5 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all hover:border-purple-500 hover:text-purple-700 bg-slate-50 dark:bg-slate-800 shadow-sm hover:shadow active:scale-95"
                       style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                     >
                       <Filter className="size-3.5" />

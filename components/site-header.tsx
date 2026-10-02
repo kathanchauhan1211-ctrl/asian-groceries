@@ -102,7 +102,7 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 sm:px-4 md:px-6 py-1.5">
           {/* Store info — left */}
           <div className="hidden md:flex items-center gap-1.5 shrink-0">
-            <MapPin className="size-3 text-orange-400 shrink-0" />
+            <MapPin className="size-3 text-purple-500 shrink-0" />
             <span className="text-[11px] font-medium text-white/50">Saltiniµ g. 22, Vilnius</span>
           </div>
 
@@ -130,7 +130,7 @@ export function SiteHeader() {
               <LogoSVG size={36} className="sm:w-[42px] sm:h-[42px]" />
             </span>
             <span className="block leading-none">
-              <span className="block font-serif text-base xs:text-lg sm:text-2xl font-bold tracking-tight text-white group-hover:text-orange-300 transition-colors duration-200">
+              <span className="block font-serif text-base xs:text-lg sm:text-2xl font-bold tracking-tight text-white group-hover:text-purple-400 transition-colors duration-200">
                 IndianMarket
               </span>
               <span className="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/50 mt-0.5">
@@ -171,8 +171,8 @@ export function SiteHeader() {
               <Switch
                 value={theme === 'dark'}
                 onToggle={toggleTheme}
-                iconOn={<Moon className="size-3.5 text-orange-300" />}
-                iconOff={<Sun className="size-3.5 text-orange-400" />}
+                iconOn={<Moon className="size-3.5 text-purple-400" />}
+                iconOff={<Sun className="size-3.5 text-purple-500" />}
               />
             ) : (
               <div className="w-12 h-6" />
@@ -204,13 +204,13 @@ export function SiteHeader() {
                         key={lang.name}
                         onClick={() => { setActiveLang(lang.name); setLangOpen(false) }}
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${activeLang === lang.name
-                            ? 'bg-orange-500/20 text-orange-300 font-semibold'
+                            ? 'bg-purple-600/20 text-purple-400 font-semibold'
                             : 'text-white/80 hover:bg-white/10'
                           }`}
                       >
                         <span className="text-base">{lang.flag}</span>
                         {lang.name}
-                        {activeLang === lang.name && <span className="ml-auto text-orange-400">✓</span>}
+                        {activeLang === lang.name && <span className="ml-auto text-purple-500">✓</span>}
                       </button>
                     ))}
                   </LiquidGlassBox>
@@ -254,7 +254,7 @@ export function SiteHeader() {
                 <Button
                   href="/auth"
                   id="btn-header-login"
-                  variant="orange"
+                  variant="default"
                   size="default"
                   className="gap-1.5 px-2.5 sm:gap-2 sm:px-4"
                 >
@@ -274,7 +274,7 @@ export function SiteHeader() {
                   >
                     <span
                       className="flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm"
-                      style={{ background: 'linear-gradient(135deg, var(--im-orange, #F97316), #ea580c)' }}
+                      style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
                     >
                       {(user.displayName ?? user.email ?? '?').charAt(0).toUpperCase()}
                     </span>
@@ -295,7 +295,7 @@ export function SiteHeader() {
                           <div className="flex items-center gap-3">
                             <span
                               className="flex size-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
-                              style={{ background: 'linear-gradient(135deg, var(--im-orange, #F97316), #ea580c)' }}
+                              style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
                             >
                               {(user.displayName ?? user.email ?? '?').charAt(0).toUpperCase()}
                             </span>
@@ -311,7 +311,7 @@ export function SiteHeader() {
                           <Link
                             href="/dashboard"
                             onClick={() => setProfileOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-orange-300 transition-colors"
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-purple-400 transition-colors"
                           >
                             <User className="size-4" /> My Account
                           </Link>
@@ -336,7 +336,7 @@ export function SiteHeader() {
       </div>
 
       {/* ── Bottom accent border ─────────────────────────────────────────────── */}
-      <div className="h-[3px] bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
+      <div className="h-[3px] bg-gradient-to-r from-purple-600 via-amber-400 to-purple-600" />
     </header>
   )
 }

@@ -15,7 +15,7 @@ export function SpiceDecor() {
         }}
       >
         {/* Star Anise Group */}
-        <svg className="absolute -left-4 top-1/4 w-32 h-32 animate-[spin_40s_linear_infinite] text-orange-400" viewBox="0 0 100 100" fill="currentColor">
+        <svg className="absolute -left-4 top-1/4 w-32 h-32 animate-[spin_40s_linear_infinite] text-purple-500" viewBox="0 0 100 100" fill="currentColor">
           <path d="M50 5 L58 38 L90 30 L65 52 L85 80 L50 65 L15 80 L35 52 L10 30 L42 38 Z" />
           <circle cx="50" cy="50" r="8" fill="#140308" />
         </svg>

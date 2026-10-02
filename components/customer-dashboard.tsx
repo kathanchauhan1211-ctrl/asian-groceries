@@ -241,7 +241,7 @@ function OverviewSection({ orders, user, onSection }: {
         <div className="relative">
           <p className="text-orange-200 text-sm font-medium mb-1">Welcome back 👋</p>
           <h2 className="text-2xl md:text-3xl font-bold text-white">{user.displayName || 'Customer'}</h2>
-          <p className="text-orange-100 text-sm mt-2">
+          <p className="text-purple-100 text-sm mt-2">
             <span className="text-white font-bold">{orders.length}</span> order{orders.length !== 1 ? 's' : ''} placed &nbsp;·&nbsp; <span className="text-white font-bold">€{totalSpent.toFixed(2)}</span> total spent
           </p>
         </div>
@@ -833,7 +833,7 @@ function OrdersSection({ orders, loading }: { orders: LiveOrder[]; loading: bool
         <div className={`${card} py-16 text-center`}>
           <Package className="size-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="font-semibold text-muted-foreground">No orders yet</p>
-          <Button href="/" variant="orange" size="lg" className="mt-4 rounded-full">
+          <Button href="/" variant="default" size="lg" className="mt-4 rounded-full">
             <ShoppingBag className="size-4" /> Start Shopping
           </Button>
         </div>
@@ -933,7 +933,7 @@ function BasketSection() {
         <div className={`${card} py-16 text-center`}>
           <ShoppingCart className="size-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="font-semibold text-muted-foreground">Your basket is empty</p>
-          <Button href="/" variant="orange" size="lg" className="mt-4 rounded-full">
+          <Button href="/" variant="default" size="lg" className="mt-4 rounded-full">
             <ShoppingBag className="size-4" /> Shop Now
           </Button>
         </div>

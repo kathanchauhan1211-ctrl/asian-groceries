@@ -253,7 +253,21 @@ function SmallBanner({ slot }: { slot: BannerSlot }) {
 export function BannerModule() {
   const { slots, loading } = useBanners()
 
-  if (loading || !slots || slots.length === 0) return null
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 md:px-6 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:h-[420px]">
+          <div className="lg:col-span-2 rounded-2xl bg-muted animate-pulse border border-border min-h-[300px]" />
+          <div className="lg:col-span-1 flex flex-col gap-4 h-full">
+            <div className="flex-1 rounded-2xl bg-muted animate-pulse border border-border min-h-[150px]" />
+            <div className="flex-1 rounded-2xl bg-muted animate-pulse border border-border min-h-[150px]" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!slots || slots.length === 0) return null
 
   const heroSlot = slots.find(s => s.slotPosition === 'main')
   const topSlot = slots.find(s => s.slotPosition === 'secondary_top')

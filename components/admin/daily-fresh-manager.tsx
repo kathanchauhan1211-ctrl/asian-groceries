@@ -104,7 +104,7 @@ function ProductSearch({
             <button
               key={p.id}
               onMouseDown={() => { onAdd(p.id); setQ(''); setOpen(false) }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-orange-500/10"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-purple-600/10"
             >
               {p.image ? (
                 <img src={p.image} alt="" className="size-8 rounded-lg object-cover shrink-0 border border-white/10" />
@@ -216,7 +216,7 @@ function RowCard({
             <input
               value={local.title}
               onChange={e => update({ title: e.target.value })}
-              className="bg-transparent text-white font-black text-[16px] outline-none border-b border-transparent focus:border-orange-500/40 transition-colors w-48"
+              className="bg-transparent text-white font-black text-[16px] outline-none border-b border-transparent focus:border-purple-600/40 transition-colors w-48"
               placeholder="Row title"
             />
             <p className="text-[11px] mt-0.5" style={{ color: C.muted }}>
