@@ -146,29 +146,26 @@ export default function PageContent() {
           <ProductCatalog 
             hideGridWhenUnfiltered={!hasActiveFilter} 
             hideExtraFilters={Boolean(searchParams.get('category'))}
-            prependHeader={
-              <div className="flex items-center justify-between pb-3 mb-2">
-                {hasActiveFilter ? (
+            appendControls={
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+                {hasActiveFilter && (
                   <Link
                     href="/shop"
-                    className="flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-bold shadow-sm transition-all hover:scale-105 active:scale-95"
-                    style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'linear-gradient(to bottom, #1c2c4d, #0c162c)', color: 'white' }}
+                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 sm:px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95"
                   >
-                    <ChevronLeft className="size-4 text-orange-500" />
-                    Back to Shop
+                    <ChevronLeft className="size-3 text-orange-500" />
+                    <span className="hidden sm:inline">Back</span>
                   </Link>
-                ) : (
-                  <div />
                 )}
-
                 <button
                   onClick={() => setOpen(true)}
-                  className="relative flex items-center justify-center rounded-full p-2.5 shadow-sm transition-all hover:scale-105 active:scale-95"
-                  style={{ background: 'linear-gradient(to bottom, #f97316, #ea580c)', color: 'white' }}
+                  className="relative flex items-center justify-center rounded-xl px-3 py-1.5 shadow-sm transition-all active:scale-95 border"
+                  style={{ background: 'linear-gradient(to bottom, #f97316, #ea580c)', borderColor: '#ea580c', color: 'white' }}
                 >
-                  <ShoppingBag className="size-5" />
+                  <ShoppingBag className="size-4 shrink-0" />
+                  <span className="hidden lg:inline ml-1.5 text-xs font-bold">Basket</span>
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-[10px] font-black text-orange-600 shadow-md border border-orange-200">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[9px] font-black text-orange-600 shadow-md border border-orange-200">
                       {count > 9 ? '9+' : count}
                     </span>
                   )}

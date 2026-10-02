@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { adminPortalDb } from '@/lib/firebase-admin-client'
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion } from 'firebase/firestore'
 import { Truck, Bus, Building2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -14,7 +14,7 @@ export default function AdminTrackPage() {
   const [activeTab, setActiveTab] = useState<'dpd' | 'bus' | 'pickup'>('bus')
 
   useEffect(() => {
-    const q = query(collection(adminPortalDb, 'orders'), orderBy('createdAt', 'desc'))
+    const q = query(collection(adminPortalDb, 'tracking'), orderBy('createdAt', 'desc'))
     const unsub = onSnapshot(q, snap => {
       setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })))
       setLoading(false)
@@ -28,6 +28,13 @@ export default function AdminTrackPage() {
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     try {
+      await updateDoc(doc(adminPortalDb, 'tracking', orderId), { 
+        status: newStatus,
+        events: arrayUnion({
+          status: newStatus,
+          timestamp: new Date()
+        })
+      })
       await updateDoc(doc(adminPortalDb, 'orders', orderId), { status: newStatus })
     } catch (e) {
       console.error('Failed to update status', e)

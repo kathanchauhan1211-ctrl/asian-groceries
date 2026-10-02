@@ -11,13 +11,13 @@ export async function GET(req: NextRequest) {
     }
 
     const { db } = getFirebaseAdmin()
-    const orderSnap = await db.collection('orders').doc(ticket).get()
+    const trackSnap = await db.collection('tracking').doc(ticket).get()
 
-    if (!orderSnap.exists) {
-      return NextResponse.json({ error: 'Order not found.' }, { status: 404 })
+    if (!trackSnap.exists) {
+      return NextResponse.json({ error: 'Order tracking info not found.' }, { status: 404 })
     }
 
-    const order = orderSnap.data()!
+    const order = trackSnap.data()!
 
     return NextResponse.json({
       ticketNumber: order.ticketNumber,

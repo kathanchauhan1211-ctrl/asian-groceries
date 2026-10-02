@@ -893,6 +893,7 @@ function ProductRow({
   togglePin,
   categoryOptions,
   dailyFreshDocs,
+  openConfirm,
 }: {
   product: AdminProduct;
   selected: boolean;
@@ -932,6 +933,24 @@ function ProductRow({
         ? product.dietary.join(", ")
         : "",
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { uploadImage } = await import("@/lib/storage");
+      const url = await uploadImage(file, 'products');
+      setForm((p) => ({ ...p, image: url }));
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Failed to upload image. Please try again.');
+    }
+    setUploading(false);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -1030,12 +1049,30 @@ function ProductRow({
             options={STOCK_OPTIONS}
           />
         </td>
-        <td className="px-3 py-2.5 min-w-[200px]">
-          <FInput
-            value={form.image}
-            onChange={(v) => setForm((f) => ({ ...f, image: v }))}
-            placeholder="https://…"
-          />
+        <td className="px-3 py-2.5 min-w-[240px]">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              title="Upload Image"
+              className="flex size-7 items-center justify-center shrink-0 rounded-md transition-all disabled:opacity-50"
+              style={{
+                background: "#3b82f6",
+                color: "white",
+              }}
+            >
+              {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+            </button>
+            <div className="flex-1">
+              <FInput
+                value={form.image}
+                onChange={(v) => setForm((f) => ({ ...f, image: v }))}
+                placeholder="https://…"
+              />
+            </div>
+            <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+          </div>
         </td>
         <td className="px-4 py-2.5">
           <div className="flex items-center gap-1.5">

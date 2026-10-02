@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { ProductCard } from '@/components/product-card'
@@ -19,12 +19,28 @@ export function HorizontalProductCarousel({
 }) {
   const { td } = useTranslation()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [isPaused, setIsPaused] = useState(false)
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return
     const amount = direction === 'left' ? -300 : 300
     scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+        }
+      }
+    }, 4000); // Swipe every 4 seconds
+    return () => clearInterval(interval);
+  }, [isPaused]);
 
   if (!products.length) return null
 
@@ -82,7 +98,13 @@ export function HorizontalProductCarousel({
       )}
 
       {/* Carousel track wrapper with arrows */}
-      <div className="relative group">
+      <div 
+        className="relative group"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
+      >
         {/* Left arrow – hidden on mobile */}
         <button
           onClick={() => scroll('left')}

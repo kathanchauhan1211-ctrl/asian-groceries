@@ -920,12 +920,14 @@ export function ProductCatalog({
   hideGridWhenUnfiltered,
   hideExtraFilters,
   prependHeader,
+  appendControls,
 }: {
   externalFilterOpen?: boolean;
   onCloseExternalFilter?: () => void;
   hideGridWhenUnfiltered?: boolean;
   hideExtraFilters?: boolean;
   prependHeader?: React.ReactNode;
+  appendControls?: React.ReactNode;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -986,11 +988,10 @@ export function ProductCatalog({
       if (value === null || value === "") params.delete(key);
       else params.set(key, value);
       const queryString = params.toString();
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
-        scroll: false,
-      });
+      const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      window.history.pushState(null, '', newUrl);
     },
-    [router, searchParams, pathname],
+    [searchParams, pathname],
   );
 
   const toggleListParam = useCallback(
@@ -1234,7 +1235,7 @@ export function ProductCatalog({
 
   return (
     <section id="shop" className="scroll-mt-24">
-      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
+      <div className="mx-auto max-w-7xl px-4 pt-0 pb-6 md:px-6">
         {/* ══ Filter Bar ══ */}
         <div
           id="shop-grid"
@@ -1258,6 +1259,11 @@ export function ProductCatalog({
                     <Filter className="size-4" style={{ color: "var(--foreground)" }} />
                   </button>
                 )}
+
+                {/* Mobile append controls */}
+                <div className="md:hidden flex shrink-0">
+                  {appendControls}
+                </div>
               </div>
 
               {/* Desktop Right: Filters & Sort */}
@@ -1295,6 +1301,7 @@ export function ProductCatalog({
                       onChange={(v) => setParam("sort", v === "default" ? null : v)}
                     />
                   )}
+                  {appendControls}
                 </div>
               </div>
             </div>

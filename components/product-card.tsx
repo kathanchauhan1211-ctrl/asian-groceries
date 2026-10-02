@@ -85,6 +85,8 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
               fill
               className="object-contain p-2 md:p-6"
               sizes="(max-width: 768px) 100vw, 50vw"
+              priority={true}
+              unoptimized={true}
             />
           ) : (
             <AnimatedPlaceholderLogo size={120} />
@@ -234,7 +236,8 @@ export const ProductCard = memo(function ProductCard({ product, index = 0 }: { p
               className="object-cover object-center group-hover:opacity-75 transition-opacity"
               placeholder="blur"
               blurDataURL={BLUR_DATA}
-              loading="lazy"
+              priority={true}
+              unoptimized={true}
             />
           ) : (
             <AnimatedPlaceholderLogo size={70} />

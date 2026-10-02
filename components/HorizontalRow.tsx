@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Product } from '@/lib/products'
@@ -20,6 +20,7 @@ type HorizontalRowProps = {
  */
 export function HorizontalRow({ title, items, viewAllHref, rows = 1 }: HorizontalRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [isPaused, setIsPaused] = useState(false)
 
   const scroll = (direction: number) => {
     if (scrollRef.current) {
@@ -27,6 +28,21 @@ export function HorizontalRow({ title, items, viewAllHref, rows = 1 }: Horizonta
       scrollRef.current.scrollBy({ left: direction * 260, behavior: 'smooth' })
     }
   }
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          scrollRef.current.scrollBy({ left: 260, behavior: 'smooth' });
+        }
+      }
+    }, 4000); // Swipe every 4 seconds
+    return () => clearInterval(interval);
+  }, [isPaused]);
 
   const isMultiRow = rows > 1
 
@@ -40,7 +56,13 @@ export function HorizontalRow({ title, items, viewAllHref, rows = 1 }: Horizonta
         </Link>
       </header>
 
-      <div className="relative group">
+      <div 
+        className="relative group"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
+      >
         {/* Left arrow – hidden on mobile */}
         <button
           onClick={() => scroll(-1)}

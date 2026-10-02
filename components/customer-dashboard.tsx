@@ -599,16 +599,30 @@ function ProfileSection({ user, photoURL, onPhotoUpdate, onNameUpdate }: {
 // ─── Address Section ─────────────────────────────────────────────────────────
 function AddressSection({ user }: { user: { uid: string } }) {
   const [preferredTerminal, setPreferredTerminal] = useState(TERMINAL_OPTIONS[0].id)
-  const [homeAddress, setHomeAddress] = useState('')
+  const [street1, setStreet1] = useState('')
+  const [street2, setStreet2] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [city, setCity] = useState('')
+  
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving]   = useState(false)
   const [saved,  setSaved]    = useState(false)
 
   useEffect(() => {
-    getDoc(doc(clientDb, 'users', user.uid)).then(d => {
+    getDoc(doc(clientDb, 'addresses', user.uid)).then(d => {
       if (d.exists()) {
-        if (d.data().preferredTerminal) setPreferredTerminal(d.data().preferredTerminal)
-        if (d.data().homeAddress) setHomeAddress(d.data().homeAddress)
+        const data = d.data()
+        if (data.preferredTerminal) setPreferredTerminal(data.preferredTerminal)
+        if (data.homeAddress) {
+          if (typeof data.homeAddress === 'string') {
+            setStreet1(data.homeAddress)
+          } else {
+            setStreet1(data.homeAddress.street1 || '')
+            setStreet2(data.homeAddress.street2 || '')
+            setPostalCode(data.homeAddress.postalCode || '')
+            setCity(data.homeAddress.city || '')
+          }
+        }
       }
     }).catch(console.error)
   }, [user.uid])
@@ -616,7 +630,10 @@ function AddressSection({ user }: { user: { uid: string } }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await setDoc(doc(clientDb, 'users', user.uid), { preferredTerminal, homeAddress }, { merge: true })
+      await setDoc(doc(clientDb, 'addresses', user.uid), { 
+        preferredTerminal, 
+        homeAddress: { street1, street2, postalCode, city } 
+      }, { merge: true })
       setSaved(true); setIsEditing(false)
       setTimeout(() => setSaved(false), 3000)
     } catch (e) { console.error(e) }
@@ -660,7 +677,7 @@ function AddressSection({ user }: { user: { uid: string } }) {
           )}
         </div>
 
-        {(!homeAddress && !isEditing) && (
+        {(!street1 && !isEditing) && (
           <div className="mb-5 flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/25 px-4 py-3 text-sm font-medium text-amber-600 dark:text-amber-400">
             <AlertCircle className="size-4 shrink-0" /> You haven't added a home address for DPD deliveries. Please add one.
           </div>
@@ -668,15 +685,53 @@ function AddressSection({ user }: { user: { uid: string } }) {
 
         {isEditing ? (
           <div className="space-y-6">
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-2">Home Address (DPD Delivery)</label>
-              <input 
-                type="text" 
-                value={homeAddress} 
-                onChange={e => setHomeAddress(e.target.value)} 
-                className="w-full rounded-xl border border-border bg-background text-foreground text-sm px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground transition-all"
-                placeholder="Street, City, Postal Code" 
-              />
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-2">Home Address (DPD Delivery)</h4>
+              
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1.5">Street Address 1 <span className="text-red-500">*</span></label>
+                <input 
+                  type="text" 
+                  value={street1} 
+                  onChange={e => setStreet1(e.target.value)} 
+                  className="w-full rounded-xl border border-border bg-background text-foreground text-sm px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground transition-all"
+                  placeholder="Street name and house/apartment number" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1.5">Street Address 2 <span className="text-muted-foreground font-normal">(Optional)</span></label>
+                <input 
+                  type="text" 
+                  value={street2} 
+                  onChange={e => setStreet2(e.target.value)} 
+                  className="w-full rounded-xl border border-border bg-background text-foreground text-sm px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground transition-all"
+                  placeholder="Suite, building, floor, etc." 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">Postal Code <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    value={postalCode} 
+                    onChange={e => setPostalCode(e.target.value)} 
+                    className="w-full rounded-xl border border-border bg-background text-foreground text-sm px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground transition-all"
+                    placeholder="e.g. LT-12345" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">City <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    value={city} 
+                    onChange={e => setCity(e.target.value)} 
+                    className="w-full rounded-xl border border-border bg-background text-foreground text-sm px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground transition-all"
+                    placeholder="e.g. Vilnius" 
+                  />
+                </div>
+              </div>
             </div>
             
             <div>
@@ -710,8 +765,12 @@ function AddressSection({ user }: { user: { uid: string } }) {
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-border">
-                {homeAddress ? (
-                  <p className="text-sm text-foreground font-medium">{homeAddress}</p>
+                {street1 ? (
+                  <div className="text-sm text-foreground font-medium">
+                    <p>{street1}</p>
+                    {street2 && <p>{street2}</p>}
+                    <p>{postalCode} {city}</p>
+                  </div>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">No home address specified.</p>
                 )}

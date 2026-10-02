@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { PageHero } from '@/components/page-hero'
 import { useSearchParams } from 'next/navigation'
-import { Search, Loader2, Truck, Bus, Building2, CheckCircle2, ArrowRight, PackageOpen, MapPin } from 'lucide-react'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { clientDb } from '@/lib/firebase-client'
+import { Search, Loader2, Truck, Bus, Building2, CheckCircle2, ArrowRight, PackageOpen, MapPin, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 type TabType = 'dpd' | 'bus' | 'pickup'
@@ -24,15 +26,16 @@ export default function TrackPageContent() {
 
     setLoading(true)
     setError('')
-    setOrder(null)
-
-    try {
-      const res = await fetch(`/api/track?ticket=${encodeURIComponent(ticket)}`)
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to track order.')
+    
+    const unsub = onSnapshot(doc(clientDb, 'tracking', ticket.toUpperCase()), (docSnap) => {
+      if (!docSnap.exists()) {
+        setError('Order tracking info not found.')
+        setOrder(null)
+        setLoading(false)
+        return
       }
+      
+      const data = docSnap.data()
       setOrder(data)
       
       // Auto-switch tab based on delivery method
@@ -40,11 +43,13 @@ export default function TrackPageContent() {
       else if (data.deliveryMethod === 'pickup') setActiveTab('pickup')
       else setActiveTab('dpd')
       
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
       setLoading(false)
-    }
+    }, (err) => {
+      setError(err.message)
+      setLoading(false)
+    })
+
+    return () => unsub()
   }
 
   useEffect(() => {
@@ -103,29 +108,29 @@ export default function TrackPageContent() {
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20">
         
         {/* Tabs */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl flex gap-1 mb-8 shadow-sm max-w-2xl mx-auto">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-black/20 dark:border-slate-800 p-1.5 rounded-2xl flex gap-1 mb-8 shadow-sm max-w-2xl mx-auto">
           <button 
             onClick={() => { setActiveTab('dpd'); setOrder(null); setError(''); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'dpd' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.05)] dark:shadow-none' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'dpd' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-black/10 dark:border-transparent shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
           >
             <Truck className={`size-4 ${activeTab === 'dpd' ? 'text-orange-500' : ''}`} /> DPD Courier
           </button>
           <button 
             onClick={() => { setActiveTab('bus'); setOrder(null); setError(''); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'bus' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.05)] dark:shadow-none' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'bus' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-black/10 dark:border-transparent shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
           >
             <Bus className={`size-4 ${activeTab === 'bus' ? 'text-orange-500' : ''}`} /> Bus Terminal
           </button>
           <button 
             onClick={() => { setActiveTab('pickup'); setOrder(null); setError(''); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'pickup' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.05)] dark:shadow-none' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'pickup' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-black/10 dark:border-transparent shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
           >
             <Building2 className={`size-4 ${activeTab === 'pickup' ? 'text-orange-500' : ''}`} /> Store Pickup
           </button>
         </div>
 
         {/* Content Area */}
-        <div className="bg-white dark:bg-[#131A2A] border border-slate-200 dark:border-slate-800/60 rounded-[32px] p-6 sm:p-10 shadow-2xl shadow-slate-200/50 dark:shadow-none min-h-[300px] flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
+        <div className="bg-white dark:bg-[#131A2A] border-2 border-black/20 dark:border-slate-800/60 rounded-[32px] p-6 sm:p-10 shadow-2xl shadow-slate-200/50 dark:shadow-none min-h-[300px] flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
           
           {/* Subtle background decoration */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 size-[300px] bg-slate-50 dark:bg-slate-800/30 rounded-full blur-3xl pointer-events-none" />
@@ -179,9 +184,9 @@ export default function TrackPageContent() {
               
               {order && (
                 <div className="text-left space-y-4">
-                  <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-black/20 dark:border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-black/10 dark:border-white/5">
                         <MapPin className="size-5 text-slate-500" />
                       </div>
                       <div>
@@ -191,7 +196,7 @@ export default function TrackPageContent() {
                     </div>
                   </div>
                   
-                  <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 p-6 rounded-2xl shadow-inner relative overflow-hidden">
+                  <div className="bg-blue-50/50 dark:bg-blue-900/10 border-2 border-blue-500/20 dark:border-blue-800/30 p-6 rounded-2xl shadow-inner relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                       <CheckCircle2 className="size-24" />
                     </div>
@@ -200,6 +205,33 @@ export default function TrackPageContent() {
                       <CheckCircle2 className="size-8 text-blue-500" /> {order.status || 'Pending'}
                     </p>
                   </div>
+                  
+                  {/* Timeline History */}
+                  {order.events && order.events.length > 0 && (
+                    <div className="mt-6 border-t border-black/10 dark:border-slate-800/60 pt-6">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                        <Clock className="size-4 text-slate-400" /> Tracking History
+                      </h4>
+                      <div className="space-y-4">
+                        {[...order.events].reverse().map((ev: any, idx: number) => (
+                          <div key={idx} className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                              <div className={`size-3 rounded-full ${idx === 0 ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-slate-300 dark:bg-slate-700'}`} />
+                              {idx !== order.events.length - 1 && <div className="w-0.5 h-full bg-slate-200 dark:bg-slate-800 my-1" />}
+                            </div>
+                            <div className="pb-4">
+                              <p className={`text-sm font-bold ${idx === 0 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>{ev.status}</p>
+                              {ev.timestamp && (
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {new Date(ev.timestamp.seconds ? ev.timestamp.seconds * 1000 : ev.timestamp).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -222,9 +254,9 @@ export default function TrackPageContent() {
               
               {order && (
                 <div className="text-left space-y-4">
-                  <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-black/20 dark:border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-black/10 dark:border-white/5">
                         <MapPin className="size-5 text-slate-500" />
                       </div>
                       <div>
@@ -234,7 +266,7 @@ export default function TrackPageContent() {
                     </div>
                   </div>
                   
-                  <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 p-6 rounded-2xl shadow-inner relative overflow-hidden">
+                  <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border-2 border-emerald-500/20 dark:border-emerald-800/30 p-6 rounded-2xl shadow-inner relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                       <CheckCircle2 className="size-24" />
                     </div>
@@ -243,6 +275,33 @@ export default function TrackPageContent() {
                       <CheckCircle2 className="size-8 text-emerald-500" /> {order.status || 'Pending'}
                     </p>
                   </div>
+
+                  {/* Timeline History */}
+                  {order.events && order.events.length > 0 && (
+                    <div className="mt-6 border-t border-black/10 dark:border-slate-800/60 pt-6">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                        <Clock className="size-4 text-slate-400" /> Tracking History
+                      </h4>
+                      <div className="space-y-4">
+                        {[...order.events].reverse().map((ev: any, idx: number) => (
+                          <div key={idx} className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                              <div className={`size-3 rounded-full ${idx === 0 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-300 dark:bg-slate-700'}`} />
+                              {idx !== order.events.length - 1 && <div className="w-0.5 h-full bg-slate-200 dark:bg-slate-800 my-1" />}
+                            </div>
+                            <div className="pb-4">
+                              <p className={`text-sm font-bold ${idx === 0 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>{ev.status}</p>
+                              {ev.timestamp && (
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {new Date(ev.timestamp.seconds ? ev.timestamp.seconds * 1000 : ev.timestamp).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -32,7 +32,13 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
   const [phone, setPhone] = useState('+370 ')
   const [transitHub, setTransitHub] = useState(DESTINATIONS[0].id)
   const [deliveryMethod, setDeliveryMethod] = useState<'dpd' | 'bus' | 'pickup'>('dpd')
-  const [deliveryAddress, setDeliveryAddress] = useState('')
+  
+  // Structured Address State
+  const [street1, setStreet1] = useState('')
+  const [street2, setStreet2] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [city, setCity] = useState('')
+
   const [instructions, setInstructions] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bank_transfer')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -68,12 +74,24 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
           if (data.phone && phone === '+370 ') setPhone(data.phone)
           if (data.displayName) setProfileName(data.displayName)
           else if (data.firstName) setProfileName(`${data.firstName} ${data.surname || ''}`.trim())
-          
+        }
+      }).catch(console.error)
+
+      getDoc(doc(clientDb, 'addresses', user.uid)).then(d => {
+        if (d.exists()) {
+          const data = d.data()
           if (data.preferredTerminal) {
             setTransitHub(data.preferredTerminal)
           }
           if (data.homeAddress) {
-            setDeliveryAddress(data.homeAddress)
+            if (typeof data.homeAddress === 'string') {
+              setStreet1(data.homeAddress)
+            } else {
+              setStreet1(data.homeAddress.street1 || '')
+              setStreet2(data.homeAddress.street2 || '')
+              setPostalCode(data.homeAddress.postalCode || '')
+              setCity(data.homeAddress.city || '')
+            }
           }
         }
       }).catch(console.error)
@@ -105,6 +123,11 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
     try {
       // Build a safe payload — no client-side prices sent.
       // The server recalculates all prices from the database.
+      // Format the delivery address as a single string for the backend API
+      const formattedAddress = deliveryMethod === 'dpd' 
+        ? [street1, street2, postalCode, city].filter(Boolean).join(', ') 
+        : ''
+
       const safePayload = {
         items: lines.map((l) => ({
           productId: l.product.id,
@@ -116,7 +139,7 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
         customerEmail: user?.email ?? null,
         transitHub,
         deliveryMethod,
-        deliveryAddress,
+        deliveryAddress: formattedAddress,
         orderNotes: instructions,
         paymentMethod,
       }
@@ -404,23 +427,73 @@ export function CheckoutForm({ onComplete }: { onComplete: (ticketNum: string) =
             </div>
 
             {deliveryMethod === 'dpd' && (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <label htmlFor="checkout-address" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Home Address <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-3 bg-slate-50 dark:bg-slate-900/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Home Delivery Address</h4>
+                
+                <div>
+                  <label htmlFor="checkout-street1" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Street Address 1 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      id="checkout-street1"
+                      type="text"
+                      required
+                      value={street1}
+                      onChange={(e) => setStreet1(e.target.value)}
+                      placeholder="Street name and house/apartment number"
+                      className="h-11 w-full rounded-md border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="checkout-street2" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Street Address 2 <span className="text-slate-400 font-normal">(Optional)</span>
+                  </label>
                   <input
-                    id="checkout-address"
+                    id="checkout-street2"
                     type="text"
-                    required
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    placeholder="Street, City, Postal Code"
-                    className="h-11 w-full rounded-md border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+                    value={street2}
+                    onChange={(e) => setStreet2(e.target.value)}
+                    placeholder="Suite, building, floor, etc."
+                    className="h-11 w-full rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
                   />
                 </div>
-                <p className="mt-1.5 text-[11px] text-slate-500">
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="checkout-postal" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Postal Code <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="checkout-postal"
+                      type="text"
+                      required
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="e.g. LT-12345"
+                      className="h-11 w-full rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="checkout-city" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="checkout-city"
+                      type="text"
+                      required
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Vilnius"
+                      className="h-11 w-full rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-accent focus:ring-1 focus:ring-accent/50 hover:bg-slate-50"
+                    />
+                  </div>
+                </div>
+
+                <p className="mt-1.5 text-[11px] text-slate-500 pt-1">
                   DPD Home Delivery fee: <strong className="text-slate-700">€5.00</strong> (excl. from product prices)
                 </p>
               </div>

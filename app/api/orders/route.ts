@@ -267,6 +267,23 @@ export async function POST(req: NextRequest) {
         totalWeight: 0, // weight not tracked server-side without variant weightKg in DB
         createdAt: FieldValue.serverTimestamp(),
       })
+
+      // f) Write the tracking document inside the transaction
+      const trackingRef = db.collection('tracking').doc(orderRef.id)
+      transaction.set(trackingRef, {
+        ticketNumber,
+        customerName,
+        deliveryMethod,
+        transitHub,
+        deliveryAddress,
+        status: 'Pending Payment',
+        events: [{
+          status: 'Pending Payment',
+          timestamp: FieldValue.serverTimestamp()
+        }],
+        dpdParcelNumber: null,
+        createdAt: FieldValue.serverTimestamp(),
+      })
     })
 
     // Compute grandTotal in outer scope (subtotal + deliveryFee are declared above the transaction)
