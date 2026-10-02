@@ -170,10 +170,12 @@ function Sidebar({
             <Button
               key={item.id}
               onClick={() => { onSection(item.id); onClose() }}
-              variant={active ? 'orange' : 'ghost'}
+              variant="ghost"
               size="sm"
               className={`w-full justify-between gap-3 px-3 py-2.5 h-auto ${
-                active ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                active 
+                  ? 'bg-foreground text-background hover:bg-foreground/90 dark:bg-white/20 dark:text-white dark:hover:bg-white/25 shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <span className="flex items-center gap-2.5">{item.icon}{item.label}</span>
@@ -187,8 +189,7 @@ function Sidebar({
         })}
       </nav>
 
-      {/* Sign out */}
-      <div className="shrink-0 p-3 border-t border-border pb-24 md:pb-3">
+      <div className="shrink-0 p-3 border-t border-border">
         <Button
           onClick={onSignOut}
           variant="ghost"
@@ -205,9 +206,9 @@ function Sidebar({
     <>
       {/* Mobile drawer overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={onClose}>
+        <div className="fixed inset-x-0 bottom-0 top-[88px] z-[60] md:hidden flex flex-col" onClick={onClose}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="absolute left-0 top-0 bottom-0 w-72 z-50" onClick={e => e.stopPropagation()}>
+          <div className="relative w-[280px] h-full shadow-2xl bg-card" onClick={e => e.stopPropagation()}>
             {content}
           </div>
         </div>
@@ -255,10 +256,10 @@ function OverviewSection({ orders, user, onSection }: {
         ].map(stat => (
           <div key={stat.label} className={`${card} p-5`}>
             <div className="flex size-9 items-center justify-center rounded-xl mb-3" style={{ background: stat.accentBg }}>
-              <span style={{ color: stat.accentColor }}>{stat.icon}</span>
+              <span className="text-foreground">{stat.icon}</span>
             </div>
             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{stat.label}</p>
-            <p className="text-2xl font-bold text-foreground mt-1" style={{ color: stat.accentColor }}>{stat.value}</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -760,8 +761,8 @@ function AddressSection({ user }: { user: { uid: string } }) {
                   <p className="font-bold text-foreground">Home Address</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Used for DPD Deliveries</p>
                 </div>
-                <div className="flex size-8 items-center justify-center rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-border">
-                  <Truck className="size-4 text-slate-500" />
+                <div className="flex size-8 items-center justify-center rounded-lg bg-background shadow-sm border border-border">
+                  <Truck className="size-4 text-muted-foreground" />
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-border">
@@ -1123,9 +1124,9 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
   return (
     // One unified panel — sidebar + content as a single component
     // lg:pl-[120px] clears the fixed floating island on desktop
-    <div className="flex min-h-[calc(100dvh-130px)] bg-background lg:pl-[120px]">
+    <div className="flex h-[calc(100dvh-88px)] lg:h-[calc(100dvh-110px)] bg-background lg:pl-[120px]">
       {/* The single joined card that holds sidebar + content */}
-      <div className="flex flex-col md:flex-row flex-1 border border-border rounded-none md:rounded-2xl overflow-hidden shadow-sm bg-card m-0 md:m-4">
+      <div className="flex flex-col md:flex-row flex-1 border border-border rounded-none overflow-hidden shadow-sm bg-card m-0">
 
       <Sidebar
         section={section}
@@ -1156,7 +1157,7 @@ export function CustomerDashboard({ onSelectTab }: { onSelectTab: (tab: string) 
 
         {/* Scrollable content — full width, no extra centering */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="w-full">
+          <div className="w-full pb-8">
             {section === 'overview'  && <OverviewSection  orders={orders}  user={user}  onSection={setSection} />}
             {section === 'profile'   && <ProfileSection   user={user}  photoURL={photoURL} onPhotoUpdate={setPhotoURL} onNameUpdate={updateUserProfile} />}
             {section === 'address'   && <AddressSection   user={user} />}

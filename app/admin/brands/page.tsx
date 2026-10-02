@@ -12,6 +12,12 @@ import { type BrandDoc } from '@/lib/use-brands'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { uploadImage } from '@/lib/storage'
 import { useRef } from 'react'
+import { CATEGORIES } from '@/lib/products'
+
+const COMMON_CATEGORIES = [
+  { name: 'Shop All', url: '/shop' },
+  ...CATEGORIES.map(cat => ({ name: cat, url: `/?category=${encodeURIComponent(cat)}` }))
+]
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -319,8 +325,22 @@ export default function AdminBrandsPage() {
               </div>
 
               <div>
-                <label className={labelCls}>Search Link</label>
-                <input type="text" value={href} onChange={e => setHref(e.target.value)} className={inputCls} style={inputStyle} placeholder="e.g. /?q=aashirvaad" />
+                <label className={labelCls}>Redirect Category Link</label>
+                <div className="flex flex-col gap-2">
+                  <select 
+                    className={inputCls} style={{ ...inputStyle, padding: '10px 12px' }}
+                    value={COMMON_CATEGORIES.some(c => c.url === href) ? href : 'custom'}
+                    onChange={e => {
+                      if (e.target.value !== 'custom') setHref(e.target.value)
+                    }}
+                  >
+                    <option value="custom">Custom URL...</option>
+                    {COMMON_CATEGORIES.map(cat => (
+                      <option key={cat.name} value={cat.url}>{cat.name}</option>
+                    ))}
+                  </select>
+                  <input type="text" value={href} onChange={e => setHref(e.target.value)} className={inputCls} style={inputStyle} placeholder="e.g. /?category=Spices" />
+                </div>
               </div>
 
               <hr style={{ borderColor: C.border }} />

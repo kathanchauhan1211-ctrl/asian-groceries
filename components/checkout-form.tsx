@@ -19,6 +19,7 @@ import {
   Building2,
   User,
   MessageCircle,
+  Truck,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { PaymentMethodSelector, type PaymentMethod, BANK_DETAILS } from './payment-method-selector'

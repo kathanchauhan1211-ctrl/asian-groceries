@@ -92,21 +92,23 @@ export default function PageContent() {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             </button>
 
-            <div className="overflow-y-auto px-4 py-6 md:px-8">
-              <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder={`Search in ${popupData.title}...`}
-                  value={popupSearchQuery}
-                  onChange={(e) => setPopupSearchQuery(e.target.value)}
-                  className="w-full sm:max-w-xs rounded-full border px-4 py-2 text-sm outline-none transition-all focus:border-orange-500 focus:ring-1 focus:ring-orange-500 bg-slate-50 dark:bg-slate-800 dark:border-slate-700"
+            <div className="overflow-y-auto px-4 pt-6 md:px-8">
+              <div className="w-full pb-[120px] lg:pb-10">
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder={`Search in ${popupData.title}...`}
+                    value={popupSearchQuery}
+                    onChange={(e) => setPopupSearchQuery(e.target.value)}
+                    className="w-full sm:max-w-xs rounded-full border px-4 py-2 text-sm outline-none transition-all focus:border-orange-500 focus:ring-1 focus:ring-orange-500 bg-slate-50 dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <HorizontalRow
+                  title={popupData.title}
+                  items={filteredPopupItems}
+                  viewAllHref={popupData.viewAllHref}
                 />
               </div>
-              <HorizontalRow
-                title={popupData.title}
-                items={filteredPopupItems}
-                viewAllHref={popupData.viewAllHref}
-              />
             </div>
           </div>
         </div>

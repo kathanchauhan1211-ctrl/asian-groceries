@@ -9,6 +9,12 @@ import { Plus, Trash2, Check, X, Loader2, Edit3, ChevronDown, ChevronUp, Image a
 import { type BannerSlot, type BannerSlide, type BannerSlotPosition, FALLBACK_SLOTS } from '@/lib/use-banners'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { useRef } from 'react'
+import { CATEGORIES } from '@/lib/products'
+
+const COMMON_CATEGORIES = [
+  { name: 'Shop All', url: '/shop' },
+  ...CATEGORIES.map(cat => ({ name: cat, url: `/?category=${encodeURIComponent(cat)}` }))
+]
 
 // ── Shared Glassmorphism Classes ──────────────────────────────────────────────
 const glassCard = "rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl overflow-hidden"
@@ -130,8 +136,23 @@ function SlideEditor({ slide, onSave, onClose }: SlideEditorProps) {
             </div>
             <div>
               <label className={labelCls}>Destination Link</label>
-              <input type="text" value={link} onChange={e => setLink(e.target.value)}
-                className={glassInput} placeholder="/shop?category=..." />
+              <div className="flex flex-col gap-2">
+                <select 
+                  className={glassInput}
+                  style={{ padding: '10px 16px' }}
+                  value={COMMON_CATEGORIES.some(c => c.url === link) ? link : 'custom'}
+                  onChange={e => {
+                    if (e.target.value !== 'custom') setLink(e.target.value)
+                  }}
+                >
+                  <option value="custom">Custom URL...</option>
+                  {COMMON_CATEGORIES.map(cat => (
+                    <option key={cat.name} value={cat.url}>{cat.name}</option>
+                  ))}
+                </select>
+                <input type="text" value={link} onChange={e => setLink(e.target.value)}
+                  className={glassInput} placeholder="/shop?category=..." />
+              </div>
             </div>
           </div>
 

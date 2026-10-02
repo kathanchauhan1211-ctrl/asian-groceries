@@ -136,11 +136,13 @@ export default function CollectionsPage() {
   }
 
   async function handleSave() {
-    if (!title.trim()) return alert('Title is required')
+    if (!title.trim() && !image) return alert('Either Title or Image is required')
     setSaving(true)
     try {
       const isNew = editingId === 'new'
-      const id = isNew ? title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString().slice(-4) : editingId!
+      const id = isNew 
+        ? (title.trim() ? title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'collection') + '-' + Date.now().toString().slice(-4) 
+        : editingId!
 
       const payload: FeaturedCollectionDoc = {
         id,

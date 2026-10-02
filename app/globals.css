@@ -65,8 +65,8 @@
   --accent-foreground: #FFFFFF;
   --destructive: #EF4444; /* Red 500 */
   --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0; /* Slate 200 */
-  --input: #E2E8F0;
+  --border: #000000; /* Black borders in light mode */
+  --input: #000000;
   --ring: #F97316;
   --radius: 0.5rem;
 

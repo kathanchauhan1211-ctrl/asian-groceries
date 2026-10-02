@@ -70,7 +70,7 @@ function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: It
       className="nav-item-btn relative flex flex-col items-center justify-center gap-[5px] px-3"
       style={{ minWidth: 64, minHeight: 64 }}
     >
-      {/* Active orange pill background (Glassy iOS style) */}
+      {/* Active theme pill background (Glassy iOS style) */}
       {active && (
         <span
           className="absolute inset-1 rounded-full overflow-hidden"
@@ -78,8 +78,8 @@ function Item({ href, icon: Icon, label, active, badge, onClick, cartPulse }: It
             animation: 'active-pill-in 0.22s cubic-bezier(0.34,1.4,0.64,1) both',
           }}
         >
-          {/* Base Orange Background */}
-          <span className="absolute inset-0 bg-gradient-to-b from-[#ff8c00] to-[#e64d00]" />
+          {/* Base Theme Background */}
+          <span className="absolute inset-0 bg-gradient-to-b from-[#6E226F] to-[#3E0F3A]" />
           {/* Top White Gel Reflection */}
           <span className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/60 to-white/0" />
           {/* Inner 3D Shadow */}
@@ -170,7 +170,7 @@ export function FloatingNavigation() {
 
       {/* ── Mobile: floating bottom island ─────────────── */}
       <div
-        className="fixed left-1/2 z-40 lg:hidden"
+        className="fixed left-1/2 z-[100] lg:hidden"
         style={{
           bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
           animation: 'island-float 6s ease-in-out infinite',
@@ -194,7 +194,7 @@ export function FloatingNavigation() {
 
       {/* ── Desktop: left vertical island ──────────────── */}
       <div
-        className="fixed left-5 top-1/2 z-40 hidden lg:block"
+        className="fixed left-5 top-1/2 z-[100] hidden lg:block"
         style={{ animation: 'island-float-v 7s ease-in-out infinite' }}
       >
         <div

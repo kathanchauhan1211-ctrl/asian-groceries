@@ -50,7 +50,7 @@ function HeroBanner({ slot }: { slot: BannerSlot }) {
 
   return (
     <div
-      className="group relative lg:col-span-2 rounded-2xl overflow-hidden min-h-[300px] lg:min-h-0"
+      className="group relative lg:col-span-2 rounded-2xl border border-border overflow-hidden min-h-[300px] lg:min-h-0"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}
@@ -156,7 +156,7 @@ function SmallBanner({ slot }: { slot: BannerSlot }) {
 
   return (
     <div
-      className="relative flex-1 rounded-2xl overflow-hidden min-h-[185px]"
+      className="relative flex-1 rounded-2xl border border-border overflow-hidden min-h-[185px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}

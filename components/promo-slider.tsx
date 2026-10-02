@@ -8,7 +8,7 @@ import { clientDb } from '@/lib/firebase-client'
 import { useTranslation } from '@/lib/translation-context'
 import { type Slide } from '@/app/admin/slides/page'
 
-const AUTO_MS = 4000
+const AUTO_MS = 3000
 const TRANS_MS = 500
 
 // Reliable fallback images — landscape format, high-res
@@ -75,7 +75,6 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
 
   const [current, setCurrent] = useState(0)
   const [animating, setAnimating] = useState(false)
-  const [paused, setPaused] = useState(false)
 
   const total = slides.length
 
@@ -105,22 +104,42 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
   }, [])
 
   const goTo = useCallback((idx: number) => {
-    if (animating || total === 0) return
-    const next = ((idx % total) + total) % total
-    setAnimating(true)
-    setCurrent(next)
-    setTimeout(() => setAnimating(false), TRANS_MS)
-  }, [animating, total])
+    if (total === 0) return
+    setCurrent((c) => {
+      if (c === idx) return c;
+      const next = ((idx % total) + total) % total
+      setAnimating(true)
+      setTimeout(() => setAnimating(false), TRANS_MS)
+      return next
+    })
+  }, [total])
 
-  const goNext = useCallback(() => goTo(current + 1), [current, goTo])
-  const goPrev = useCallback(() => goTo(current - 1), [current, goTo])
+  const goNext = useCallback(() => {
+    if (total === 0) return
+    setCurrent((c) => {
+      const next = (c + 1) % total
+      setAnimating(true)
+      setTimeout(() => setAnimating(false), TRANS_MS)
+      return next
+    })
+  }, [total])
+
+  const goPrev = useCallback(() => {
+    if (total === 0) return
+    setCurrent((c) => {
+      const next = ((c - 1) % total + total) % total
+      setAnimating(true)
+      setTimeout(() => setAnimating(false), TRANS_MS)
+      return next
+    })
+  }, [total])
 
   // Auto-advance
   useEffect(() => {
-    if (paused || total === 0) return
-    const t = setTimeout(goNext, AUTO_MS)
-    return () => clearTimeout(t)
-  }, [current, paused, goNext, total])
+    if (total === 0) return
+    const t = setInterval(goNext, AUTO_MS)
+    return () => clearInterval(t)
+  }, [goNext, total])
 
   // Touch / swipe
   const touchStartX = useRef(0)
@@ -157,8 +176,6 @@ export function PromoSlider({ placement = 'top' }: { placement?: 'top' | 'down' 
       `}</style>
       <section
         className="promo-slider-shell relative w-full overflow-hidden bg-black"
-        onPointerEnter={(e) => e.pointerType === 'mouse' && setPaused(true)}
-        onPointerLeave={(e) => e.pointerType === 'mouse' && setPaused(false)}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         aria-label="Promotional slideshow"
